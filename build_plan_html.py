@@ -714,6 +714,11 @@ def build(md):
     <span><b>10&prime;</b> memory rules</span>
     <span><b>5&prime;</b> buffer</span>
   </div>
+  <div class="legend" aria-label="Reading priority legend">
+    <span class="item"><span class="prio must">MUST</span> read the named sections, take notes</span>
+    <span class="item"><span class="prio skim">SKIM</span> headings/examples until you can explain the decision rule</span>
+    <span class="item"><span class="prio ref">REFERENCE</span> open only for a lab, mock error, or unclear term</span>
+  </div>
   %s
 </section>
 
