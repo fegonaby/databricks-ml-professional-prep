@@ -713,7 +713,6 @@ def build(md):
 
 <section class="phase" aria-labelledby="july-h">
   <h2 id="july-h">July — first-pass reading &amp; core labs</h2>
-  <p class="phase-sub">Every objective touched once by Jul 31. Expand any day for its full reading list, code patterns and tasks.</p>
   <div class="legend" aria-label="Reading priority legend">
     <span class="item"><span class="prio must">MUST</span> read the named sections, take notes</span>
     <span class="item"><span class="prio skim">SKIM</span> headings/examples until you can explain the decision rule</span>
