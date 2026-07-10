@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Databricks ML Pro — Study Plan</title>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #FBF8F5;
+    --surface: #FFFFFF;
+    --surface2: #F3EBE4;
+    --ink: #281A0F;
+    --ink2: #6E5B4C;
+    --ink3: #9A8878;
+    --line: #E6D9CD;
+    --accent: #C93F0F;
+    --accent-strong: #A93408;
+    --accent-soft: #F8DFD2;
+    --teal: #0F6B68;
+    --teal-soft: #D9ECEA;
+    --gate: #7A5D00;
+    --gate-soft: #F2E7C4;
+    --done: #2E7D4F;
+    --done-soft: #DDEEE2;
+    --shadow: 0 1px 3px rgba(40, 26, 15, 0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #171110;
+      --surface: #201816;
+      --surface2: #2B211D;
+      --ink: #F3EAE2;
+      --ink2: #BCA895;
+      --ink3: #8D7A6B;
+      --line: #3B2E27;
+      --accent: #FF7A45;
+      --accent-strong: #FF8F62;
+      --accent-soft: #46220F;
+      --teal: #55B5AF;
+      --teal-soft: #17403E;
+      --gate: #D9B44A;
+      --gate-soft: #3B2F12;
+      --done: #6FBE8F;
+      --done-soft: #1E3B2A;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171110;
+    --surface: #201816;
+    --surface2: #2B211D;
+    --ink: #F3EAE2;
+    --ink2: #BCA895;
+    --ink3: #8D7A6B;
+    --line: #3B2E27;
+    --accent: #FF7A45;
+    --accent-strong: #FF8F62;
+    --accent-soft: #46220F;
+    --teal: #55B5AF;
+    --teal-soft: #17403E;
+    --gate: #D9B44A;
+    --gate-soft: #3B2F12;
+    --done: #6FBE8F;
+    --done-soft: #1E3B2A;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #FBF8F5;
+    --surface: #FFFFFF;
+    --surface2: #F3EBE4;
+    --ink: #281A0F;
+    --ink2: #6E5B4C;
+    --ink3: #9A8878;
+    --line: #E6D9CD;
+    --accent: #C93F0F;
+    --accent-strong: #A93408;
+    --accent-soft: #F8DFD2;
+    --teal: #0F6B68;
+    --teal-soft: #D9ECEA;
+    --gate: #7A5D00;
+    --gate-soft: #F2E7C4;
+    --done: #2E7D4F;
+    --done-soft: #DDEEE2;
+    --shadow: 0 1px 3px rgba(40, 26, 15, 0.07);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 96px; }
+
+  a { color: var(--accent-strong); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+  .mono { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent-strong);
+  }
+
+  /* ── Sticky progress bar ─────────────────────────── */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 20px;
+  }
+  .topbar-inner {
+    max-width: 980px; margin: 0 auto;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .topbar .label { font-size: 13px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
+  .meter {
+    flex: 1; height: 8px; border-radius: 4px; background: var(--surface2);
+    overflow: hidden;
+  }
+  .meter-fill {
+    height: 100%; width: 0%;
+    background: var(--accent);
+    border-radius: 0 4px 4px 0;
+    transition: width 0.35s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .meter-fill { transition: none; }
+    * { scroll-behavior: auto !important; }
+  }
+  .topbar .count { font-size: 13px; font-weight: 700; white-space: nowrap; }
+
+  /* ── Masthead ────────────────────────────────────── */
+  header.masthead { padding: 44px 0 8px; }
+  h1 {
+    margin: 6px 0 4px;
+    font-size: clamp(28px, 5vw, 40px);
+    line-height: 1.1; letter-spacing: -0.015em; font-weight: 800;
+    text-wrap: balance;
+  }
+  .masthead .sub { margin: 0; color: var(--ink2); font-size: 15px; }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px; margin: 26px 0 0;
+  }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .stat .num { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat .num small { font-size: 14px; font-weight: 600; color: var(--ink2); margin-left: 2px; }
+  .stat .cap { font-size: 12px; color: var(--ink2); margin-top: 2px; }
+  .stat.hot { border-color: var(--accent); }
+  .stat.hot .num { color: var(--accent-strong); }
+
+  /* ── Panels ──────────────────────────────────────── */
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px 22px; margin-top: 28px; box-shadow: var(--shadow);
+  }
+  .panel h2 { margin: 0 0 4px; font-size: 17px; letter-spacing: -0.01em; }
+  .panel .note { margin: 0 0 16px; font-size: 13px; color: var(--ink2); }
+
+  /* Domain-weight bars: single measure, single hue, direct labels */
+  .bars { display: grid; gap: 14px; }
+  .bar-row { display: grid; grid-template-columns: minmax(140px, 200px) 1fr 52px; gap: 12px; align-items: center; }
+  .bar-name { font-size: 14px; font-weight: 600; }
+  .bar-name .sub { display: block; font-weight: 400; font-size: 12px; color: var(--ink3); }
+  .bar-track { height: 14px; background: var(--surface2); border-radius: 4px; }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; }
+  .bar-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ── Phases & weeks ──────────────────────────────── */
+  .phase { margin-top: 44px; }
+  .phase > .phase-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .phase h2 { margin: 4px 0 2px; font-size: 24px; letter-spacing: -0.015em; }
+  .phase .phase-sub { color: var(--ink2); font-size: 14px; margin: 0 0 6px; }
+
+  .week { margin-top: 22px; }
+  .week-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 0 2px 8px;
+  }
+  .week-head h3 { margin: 0; font-size: 15px; }
+  .week-head .range { font-size: 12.5px; color: var(--ink3); }
+
+  ul.days { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .day {
+    display: grid; grid-template-columns: 74px 1fr 40px; gap: 14px; align-items: start;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .day.today { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .day.overdue { border-left: 3px solid var(--gate); padding-left: 12px; }
+  .day.checked { opacity: 0.62; }
+  .day.checked .day-title { text-decoration: line-through; text-decoration-color: var(--ink3); }
+
+  .day-date { padding-top: 1px; }
+  .day-date .dow { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); }
+  .day-date .dom { display: block; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .day-main { min-width: 0; }
+  .day-titleline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .day-title { font-size: 15px; font-weight: 650; }
+  .day-focus { margin: 3px 0 0; font-size: 13.5px; color: var(--ink2); }
+
+  .today-pill {
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em;
+    background: var(--accent); color: #fff;
+    padding: 2px 7px; border-radius: 99px;
+  }
+  :root[data-theme="dark"] .today-pill { color: #1a0d05; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .today-pill { color: #1a0d05; } }
+
+  .badge {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 4px; white-space: nowrap;
+  }
+  .badge.read  { background: var(--surface2); color: var(--ink2); }
+  .badge.lab   { background: var(--accent-soft); color: var(--accent-strong); }
+  .badge.mock  { background: var(--teal); color: #fff; }
+  :root[data-theme="dark"] .badge.mock { color: #06201f; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.mock { color: #06201f; } }
+  .badge.drill { background: var(--teal-soft); color: var(--teal); }
+  .badge.review{ background: var(--done-soft); color: var(--done); }
+  .badge.gate  { background: var(--gate-soft); color: var(--gate); }
+  .badge.rest  { background: transparent; color: var(--ink3); border: 1px dashed var(--line); }
+  .badge.exam  { background: var(--accent); color: #fff; }
+  :root[data-theme="dark"] .badge.exam { color: #1a0d05; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.exam { color: #1a0d05; } }
+
+  .day-check { justify-self: end; padding-top: 2px; }
+  .day-check input {
+    width: 22px; height: 22px; margin: 0;
+    accent-color: var(--done);
+    cursor: pointer;
+  }
+
+  .day.milestone { background: linear-gradient(0deg, var(--surface), var(--surface)); border-width: 1px; }
+  .day.milestone.mockday { border-color: var(--teal); }
+  .day.milestone.examday { border-color: var(--accent); border-width: 2px; }
+
+  .gate-row {
+    display: flex; gap: 10px; align-items: center;
+    font-size: 12.5px; color: var(--gate);
+    padding: 7px 14px; margin-top: 6px;
+    background: var(--gate-soft); border-radius: 6px;
+  }
+  .gate-row strong { font-weight: 700; }
+
+  /* ── Legend & footer ─────────────────────────────── */
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
+  .legend .item { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--ink2); }
+
+  .timebox {
+    display: flex; flex-wrap: wrap; gap: 6px 18px;
+    font-size: 12.5px; color: var(--ink2);
+    margin-top: 10px;
+  }
+  .timebox span b { color: var(--ink); font-weight: 650; }
+
+  footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2); }
+  footer p { margin: 4px 0; }
+
+  @media (max-width: 560px) {
+    .day { grid-template-columns: 58px 1fr 34px; gap: 10px; }
+    .bar-row { grid-template-columns: 110px 1fr 44px; }
+  }
+</style>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="label">Plan progress</span>
+    <div class="meter" role="progressbar" aria-label="Sessions completed" aria-valuemin="0" aria-valuemax="35" aria-valuenow="0" id="meter">
+      <div class="meter-fill" id="meterFill"></div>
+    </div>
+    <span class="count mono" id="meterCount">0 / 35</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Databricks Certified ML Professional</div>
+  <h1>Seven weeks to exam day</h1>
+  <p class="sub">Fri Jul 10 → Fri Aug 28, 2026 · weekdays only · 60–90 min standard session · Fridays 2–3 h with lab</p>
+
+  <div class="stats">
+    <div class="stat hot">
+      <div class="num" id="countdown">—</div>
+      <div class="cap">days until the exam · Fri Aug 28, 2:00 PM EDT</div>
+    </div>
+    <div class="stat">
+      <div class="num">59<small>scored Qs</small></div>
+      <div class="cap">multiple choice · 120 minutes · ~2 min each</div>
+    </div>
+    <div class="stat">
+      <div class="num">80<small>%+</small></div>
+      <div class="cap">readiness target on two unseen mocks</div>
+    </div>
+    <div class="stat">
+      <div class="num">3<small>+1</small></div>
+      <div class="cap">scheduled mocks + one contingency set</div>
+    </div>
+  </div>
+</header>
+
+<section class="panel" aria-labelledby="weights-h">
+  <h2 id="weights-h">Where the questions come from</h2>
+  <p class="note">Domain weights from the September 2025 exam guide — monitoring &amp; drift is the single heaviest topic inside MLOps.</p>
+  <div class="bars">
+    <div class="bar-row">
+      <span class="bar-name">Model Development<span class="sub">SparkML · Optuna/Ray · MLflow · Feature Store</span></span>
+      <div class="bar-track"><div class="bar-fill" style="width:44%"></div></div>
+      <span class="bar-val">44%</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">MLOps<span class="sub">lifecycle · testing · DABs · monitoring &amp; drift</span></span>
+      <div class="bar-track"><div class="bar-fill" style="width:44%"></div></div>
+      <span class="bar-val">44%</span>
+    </div>
+    <div class="bar-row">
+      <span class="bar-name">Model Deployment<span class="sub">rollouts · traffic split · custom serving</span></span>
+      <div class="bar-track"><div class="bar-fill" style="width:12%"></div></div>
+      <span class="bar-val">12%</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═════════════ JULY ═════════════ -->
+<section class="phase" aria-labelledby="july-h">
+  <div class="phase-head">
+    <h2 id="july-h">July — first-pass reading &amp; core labs</h2>
+  </div>
+  <p class="phase-sub">Every objective touched once by Jul 31. Standard timebox below; Fridays add the mandatory lab.</p>
+  <div class="timebox">
+    <span><b>10′</b> retrieval / due retests</span>
+    <span><b>30′</b> MUST reading</span>
+    <span><b>35′</b> hands-on</span>
+    <span><b>10′</b> memory rules</span>
+    <span><b>5′</b> buffer</span>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Day 1 · Orientation</h3><span class="range mono">Fri Jul 10</span></div>
+    <ul class="days">
+      <li class="day" data-date="2026-07-10" data-id="d0710">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Jul 10</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Orientation, lifecycle &amp; setup</span><span class="badge read">Setup</span></div>
+          <p class="day-focus">Exam guide end-to-end (10 samples) · ML lifecycle · ANSI SQL baseline · workspace/CLI preflight · shortlist mock sources</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 10 complete"></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Week 1 · Model Development I</h3><span class="range mono">Jul 13–17</span></div>
+    <ul class="days">
+      <li class="day" data-date="2026-07-13" data-id="d0713">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Jul 13</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">SparkML I — the object model</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Estimator vs Transformer · Pipeline vs PipelineModel · when SparkML vs single-node</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 13 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-14" data-id="d0714">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Jul 14</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">SparkML II — metrics, tuning, inference modes</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Log Loss vs AUROC vs F1 · CrossValidator vs TrainValidationSplit · batch / streaming / real-time</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 14 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-15" data-id="d0715">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Jul 15</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Scaling I — pandas Function APIs &amp; UDFs</span><span class="badge read">Read</span></div>
+          <p class="day-focus">applyInPandas per-group models · mapInPandas · vectorized pandas UDF scoring</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 15 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-16" data-id="d0716">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Jul 16</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Scaling II — Optuna, Ray, parallelism</span><span class="badge read">Read</span></div>
+          <p class="day-focus">MlflowStorage + MlflowSparkStudy · Spark vs Ray · vertical / horizontal / model parallelism</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 16 complete"></div>
+      </li>
+      <li class="day milestone" data-date="2026-07-17" data-id="d0717">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Jul 17</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Advanced MLflow + Lab 1</span><span class="badge lab">Lab 1</span><span class="badge gate">Mocks locked</span></div>
+          <p class="day-focus">Nested runs · signatures · custom PyFunc → build the Week 1 PyFunc reused in Lab 3 · lock 4 unseen mock attempts today</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 17 complete"></div>
+      </li>
+    </ul>
+    <div class="gate-row"><strong>Weekly gate:</strong>&nbsp;mastery set closed-book — 80% advances, below 80% becomes Monday's first 20-minute repair.</div>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Week 2 · Feature Store, registry, testing, DABs</h3><span class="range mono">Jul 20–24</span></div>
+    <ul class="days">
+      <li class="day" data-date="2026-07-20" data-id="d0720">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Jul 20</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Feature Store I — training sets &amp; point-in-time</span><span class="badge read">Read</span></div>
+          <p class="day-focus">FeatureLookup · create_training_set · timestamp_lookup_key prevents leakage</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 20 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-21" data-id="d0721">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Jul 21</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Feature Store II — online, streaming, on-demand</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Legacy OnlineTableSpec SDK vs current Online Feature Store · publish modes · FeatureFunction</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 21 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-22" data-id="d0722">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Jul 22</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Model lifecycle — UC registry, aliases, PyFunc packaging</span><span class="badge read">Read</span></div>
+          <p class="day-focus">@champion / @challenger aliases · latest ≠ production · artifacts &amp; code_paths</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 22 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-23" data-id="d0723">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Jul 23</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Validation testing for ML</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Test taxonomy · change-impact rules · minimum complete test scope</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 23 complete"></div>
+      </li>
+      <li class="day milestone" data-date="2026-07-24" data-id="d0724">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Jul 24</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">MLOps, CI/CD, DABs + Lab 2</span><span class="badge lab">Lab 2</span></div>
+          <p class="day-focus">Deploy-code pattern · bundle targets/resources · point-in-time training + score_batch + bundle validate</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 24 complete"></div>
+      </li>
+    </ul>
+    <div class="gate-row"><strong>Weekly gate:</strong>&nbsp;80% on the Week 2 mastery set — feature APIs, aliases, test scope, DAB anatomy.</div>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Week 3 · Monitoring (heaviest) + deployment</h3><span class="range mono">Jul 27–31</span></div>
+    <ul class="days">
+      <li class="day" data-date="2026-07-27" data-id="d0727">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Jul 27</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Drift theory &amp; statistical tests</span><span class="badge read">Read</span></div>
+          <p class="day-focus">KS + Wasserstein + PSI (numeric) · Chi-square + TV + L∞ + JS (categorical) · p-values vs distances</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 27 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-28" data-id="d0728">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Jul 28</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Monitoring profiles &amp; output tables</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Snapshot / TimeSeries / Inference profiles · profile_metrics + drift_metrics · baselines</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 28 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-29" data-id="d0729">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Jul 29</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Custom metrics, slices, alerts, endpoint health</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Aggregate / derived / drift metrics · SQL drift query drill · AI Gateway inference tables</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 29 complete"></div>
+      </li>
+      <li class="day" data-date="2026-07-30" data-id="d0730">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Jul 30</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Deployment strategies &amp; serving rollout</span><span class="badge read">Read</span></div>
+          <p class="day-focus">Canary vs blue-green vs shadow vs A/B · served entities + traffic split · route optimization</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 30 complete"></div>
+      </li>
+      <li class="day milestone" data-date="2026-07-31" data-id="d0731">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Jul 31</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Custom serving + querying + Lab 3</span><span class="badge lab">Lab 3</span><span class="badge gate">Exit gate</span></div>
+          <p class="day-focus">Deploy the Week 1 PyFunc · canary + rollback artifact · monitoring chain diagram · July exit gate must close today</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Jul 31 complete"></div>
+      </li>
+    </ul>
+    <div class="gate-row"><strong>July exit gate:</strong>&nbsp;every objective has an artifact · 3 labs done · mocks locked · unclear topics queued for August.</div>
+  </div>
+</section>
+
+<!-- ═════════════ AUGUST ═════════════ -->
+<section class="phase" aria-labelledby="aug-h">
+  <div class="phase-head">
+    <h2 id="aug-h">August — baseline, repair, drills, mocks, taper</h2>
+  </div>
+  <p class="phase-sub">Diagnose early with Mock 1, repair what the data says, qualify with two unseen mocks at 80%+.</p>
+
+  <div class="week">
+    <div class="week-head"><h3>Week 4 · Baseline mock + first repairs</h3><span class="range mono">Aug 3–7</span></div>
+    <ul class="days">
+      <li class="day milestone mockday" data-date="2026-08-03" data-id="d0803">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Aug 3</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Mock Exam 1 — diagnostic baseline</span><span class="badge mock">Mock 1</span></div>
+          <p class="day-focus">120 min, unseen, no notes · record confidence per answer · score is diagnostic, not pass/fail</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 3 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-04" data-id="d0804">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Aug 4</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Review Mock 1</span><span class="badge review">Review</span></div>
+          <p class="day-focus">Verify every miss against official docs · tag by domain and cause · extract memory rules</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 4 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-05" data-id="d0805">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Aug 5</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Weak area 1 — recall, reread, scenarios</span><span class="badge review">Repair</span></div>
+          <p class="day-focus">Blank-page recall → official page for largest error cluster → 5 unseen scenarios</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 5 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-06" data-id="d0806">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Aug 6</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Weak area 2 — recall, reread, scenarios</span><span class="badge review">Repair</span></div>
+          <p class="day-focus">Same method for second-largest cluster · finish with 5-minute verbal explanation</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 6 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-07" data-id="d0807">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Aug 7</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Targeted lab repair</span><span class="badge lab">Lab</span></div>
+          <p class="day-focus">Rebuild only the workflow Mock 1 exposed — end-to-end demo as a menu, not a checklist</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 7 complete"></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Week 5 · Official questions, drills, guide refresh</h3><span class="range mono">Aug 10–14</span></div>
+    <ul class="days">
+      <li class="day" data-date="2026-08-10" data-id="d0810">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Aug 10</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Official samples 1–5 — rationale drill</span><span class="badge drill">Drill</span></div>
+          <p class="day-focus">Explain every option: why right, why wrong, which phrase identifies the objective</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 10 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-11" data-id="d0811">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Aug 11</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Official samples 6–10 — rationale drill</span><span class="badge drill">Drill</span></div>
+          <p class="day-focus">Same method · reasoning errors go to the error log, memorized correctness doesn't count</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 11 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-12" data-id="d0812">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Aug 12</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Drill set 1 — features &amp; MLflow</span><span class="badge drill">Drill</span></div>
+          <p class="day-focus">10 scenarios closed-book · check §9 answer key · update error log</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 12 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-13" data-id="d0813">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Aug 13</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Drill set 2 — MLOps, testing, monitoring, serving</span><span class="badge drill">Drill</span></div>
+          <p class="day-focus">10 scenarios closed-book · same attempt / review / log rhythm</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 13 complete"></div>
+      </li>
+      <li class="day milestone" data-date="2026-08-14" data-id="d0814">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Aug 14</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Guide refresh + gap analysis + system check</span><span class="badge gate">Mandatory</span></div>
+          <p class="day-focus">Re-download the exam guide, diff vs Day 1 · gap table · first Webassessor check on the exam laptop</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 14 complete"></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Week 6 · Qualifying mocks + remediation</h3><span class="range mono">Aug 17–21</span></div>
+    <ul class="days">
+      <li class="day milestone mockday" data-date="2026-08-17" data-id="d0817">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Aug 17</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Mock Exam 2 — readiness</span><span class="badge mock">Mock 2</span></div>
+          <p class="day-focus">Unseen, 120 min · target 80%+ with ≥10 min left to review</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 17 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-18" data-id="d0818">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Aug 18</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Review Mock 2</span><span class="badge review">Review</span></div>
+          <p class="day-focus">Score/tag → doc verification → memory rules · remediation follows weighted errors, not hunches</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 18 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-19" data-id="d0819">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Aug 19</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Weak-domain repair</span><span class="badge review">Repair</span></div>
+          <p class="day-focus">Blank-page recall + exact official section + 5 scenarios per weak domain · cold retests first</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 19 complete"></div>
+      </li>
+      <li class="day milestone mockday" data-date="2026-08-20" data-id="d0820">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Aug 20</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Mock Exam 3 — readiness</span><span class="badge mock">Mock 3</span></div>
+          <p class="day-focus">Final reserved unseen mock · 80%+, no major domain collapse</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 20 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-21" data-id="d0821">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Aug 21</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Review Mock 3 + cross-mock synthesis</span><span class="badge review">Review</span></div>
+          <p class="day-focus">Normalize errors by domain · repeated/low-confidence clusters · distractor-pattern list</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 21 complete"></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="week">
+    <div class="week-head"><h3>Final week · Taper</h3><span class="range mono">Aug 24–28</span></div>
+    <ul class="days">
+      <li class="day" data-date="2026-08-24" data-id="d0824">
+        <div class="day-date"><span class="dow">Mon</span><span class="dom mono">Aug 24</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Conditional readiness day</span><span class="badge gate">Branch</span></div>
+          <p class="day-focus">Both mocks ≥80% → objective audit · exactly one missed → contingency mock today · both missed → remediation, not retakes</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 24 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-25" data-id="d0825">
+        <div class="day-date"><span class="dow">Tue</span><span class="dom mono">Aug 25</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Contingency review or final weak areas</span><span class="badge review">Repair</span></div>
+          <p class="day-focus">20 min per weak area: blank recall → exact doc → cold scenarios · 30 min mixed retests</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 25 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-26" data-id="d0826">
+        <div class="day-date"><span class="dow">Wed</span><span class="dom mono">Aug 26</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Light mixed practice + logistics</span><span class="badge drill">Drill</span></div>
+          <p class="day-focus">20–25 questions at 2-min pace · second Webassessor system check on the exam laptop</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 26 complete"></div>
+      </li>
+      <li class="day" data-date="2026-08-27" data-id="d0827">
+        <div class="day-date"><span class="dow">Thu</span><span class="dom mono">Aug 27</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">Memory day, then rest</span><span class="badge rest">Rest</span></div>
+          <p class="day-focus">Cheat sheets · top 20 memory rules · error log · ID and room ready · sleep — nothing new today</p>
+        </div>
+        <div class="day-check"><input type="checkbox" aria-label="Mark Aug 27 complete"></div>
+      </li>
+      <li class="day milestone examday" data-date="2026-08-28" data-id="d0828">
+        <div class="day-date"><span class="dow">Fri</span><span class="dom mono">Aug 28</span></div>
+        <div class="day-main">
+          <div class="day-titleline"><span class="day-title">EXAM DAY — 2:00–4:00 PM EDT</span><span class="badge exam">Exam</span></div>
+          <p class="day-focus">Light 20–30 min rule review only · domain → requirement → Databricks-native pattern → eliminate · flag and move on</p>
+        </div>
+        <div class="day-check" aria-hidden="true"></div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="legend" aria-label="Badge legend">
+    <span class="item"><span class="badge read">Read</span> reading day</span>
+    <span class="item"><span class="badge lab">Lab</span> mandatory lab</span>
+    <span class="item"><span class="badge mock">Mock</span> timed 120-min exam</span>
+    <span class="item"><span class="badge drill">Drill</span> scenarios / samples</span>
+    <span class="item"><span class="badge review">Review</span> review &amp; repair</span>
+    <span class="item"><span class="badge gate">Gate</span> checkpoint</span>
+  </div>
+</section>
+
+<footer>
+  <p><strong>Missed a day?</strong> Do its MUST items in the next catch-up block (Sat Jul 18 / Sat Jul 25) and keep the calendar — never shift every later date.</p>
+  <p>Full plan with links, code patterns, drills and answer key: <a href="databricks-ml-professional-plan.md">databricks-ml-professional-plan.md</a> · tracked at <a href="https://github.com/fegonaby/databricks-ml-professional-prep">fegonaby/databricks-ml-professional-prep</a></p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  var STORE_KEY = "dbml-plan-v1";
+  var checks = {};
+  try { checks = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch (e) { checks = {}; }
+
+  var days = Array.prototype.slice.call(document.querySelectorAll(".day[data-id]"));
+  var boxes = [];
+
+  // Local midnight today, for date comparisons
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  function parseLocalDate(iso) {
+    var p = iso.split("-");
+    return new Date(+p[0], +p[1] - 1, +p[2]);
+  }
+
+  function updateMeter() {
+    var done = boxes.filter(function (b) { return b.checked; }).length;
+    var total = boxes.length;
+    var pct = total ? Math.round((done / total) * 100) : 0;
+    document.getElementById("meterFill").style.width = pct + "%";
+    document.getElementById("meterCount").textContent = done + " / " + total;
+    var meter = document.getElementById("meter");
+    meter.setAttribute("aria-valuenow", String(done));
+    meter.setAttribute("aria-valuemax", String(total));
+  }
+
+  days.forEach(function (day) {
+    var id = day.getAttribute("data-id");
+    var date = parseLocalDate(day.getAttribute("data-date"));
+    var box = day.querySelector("input[type=checkbox]");
+
+    if (date.getTime() === today.getTime()) {
+      day.classList.add("today");
+      var pill = document.createElement("span");
+      pill.className = "today-pill";
+      pill.textContent = "Today";
+      day.querySelector(".day-titleline").appendChild(pill);
+    }
+
+    if (!box) return;
+    boxes.push(box);
+
+    if (checks[id]) { box.checked = true; day.classList.add("checked"); }
+    if (date < today && !box.checked) { day.classList.add("overdue"); }
+
+    box.addEventListener("change", function () {
+      checks[id] = box.checked;
+      day.classList.toggle("checked", box.checked);
+      if (box.checked) { day.classList.remove("overdue"); }
+      else if (date < today) { day.classList.add("overdue"); }
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(checks)); } catch (e) {}
+      updateMeter();
+    });
+  });
+
+  updateMeter();
+
+  // Countdown to exam day
+  var exam = new Date(2026, 7, 28);
+  var daysLeft = Math.max(0, Math.round((exam - today) / 86400000));
+  document.getElementById("countdown").textContent = String(daysLeft);
+})();
+</script>
+</body>
+</html>
