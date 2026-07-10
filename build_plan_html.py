@@ -180,8 +180,9 @@ def _inline(text):
                   lambda m: stash("<code>%s</code>" % html.escape(m.group(1))), text)
     text = html.escape(text, quote=False)
     # markdown links
-    text = re.sub(r"\[([^\]]+)\]\((https?://[^)\s]+)\)",
-                  lambda m: stash('<a href="%s">%s</a>' % (m.group(2), m.group(1))), text)
+    text = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)",
+                  lambda m: stash('<a href="%s">%s</a>' %
+                                  (html.escape(m.group(2), quote=True), m.group(1))), text)
     # bare URLs
     text = re.sub(r"(https?://[^\s<)\]]+)",
                   lambda m: stash('<a href="%s">%s</a>' % (m.group(1), m.group(1))), text)

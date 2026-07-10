@@ -66,6 +66,20 @@ Exam-guide "online tables" = legacy SDK objective
 [REFERENCE] Open only when a lab, mock error, or unclear term requires it.
 ```
 
+**API-syntax standard:** the exam is multiple choice, so the goal is reliable code recognition plus the ability to reconstruct each core call—not memorizing every optional argument in the documentation.
+```text
+[WRITE]     Reproduce the owning class/module, exact method, and key named parameters.
+[RECOGNIZE] Given four snippets, select the valid method and explain its side effect/trap.
+
+For every exam-named API learn five things:
+owner → exact method → key parameters → return/side effect → nearest distractor
+```
+All core code patterns in MUST sections are **[WRITE]** unless marked recognition/reference-only. CRUD/admin methods adjacent to an objective are **[RECOGNIZE]**. Mock errors can promote a method from RECOGNIZE to WRITE, but third-party trivia does not automatically become core syllabus.
+
+**API companion:** use [the Markdown method/parameter reference](databricks-ml-professional-api-methods.md) for notes and [the searchable HTML reference](databricks-ml-professional-api-methods.html) for daily recall. The plan controls **when** to study; the companion controls **which exact calls and parameters** to write or recognize.
+
+**Document boundary:** keep calendar actions, decision rules, labs, mastery gates, and practice scheduling here. Keep canonical code shapes, parameter tables, CRUD variants, version-specific APIs, and syntax traps in the API companion. When a recall task says "reconstruct," study the companion example once, close it, write the call from memory, then verify.
+
 **Standard-session timebox (maximum 90 min):**
 ```text
 10 min  Closed-book retrieval: yesterday + the topic from 7 days ago
@@ -197,14 +211,9 @@ Streaming  → continuously arriving records, Structured Streaming pipeline
 Real-time  → request/response, low latency, Model Serving endpoint
 ```
 
-**Do (35 min):** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today:
-```python
-stream_df = spark.readStream.table("catalog.schema.events")
-stream_predictions = fitted_pipeline_model.transform(stream_df)
-query = stream_predictions.writeStream.option(
-    "checkpointLocation", checkpoint_path
-).toTable("catalog.schema.streaming_predictions")
-```
+**API recall:** use [API companion §1](databricks-ml-professional-api-methods.html#1-spark-ml-pipelines-tuning-evaluation-and-scoring). Reconstruct the pipeline fit/transform chain, the tiny tuning-grid/evaluator chain, and the `readStream` → model `transform` → checkpointed `writeStream` shape.
+
+**Do (35 min):** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today.
 
 ### Wed Jul 15 — Scaling I: pandas Function APIs & UDFs
 
@@ -263,32 +272,9 @@ Model parallelism → model itself cannot fit one accelerator/node;
                     splits the model, with the highest communication and engineering complexity.
 ```
 
-**Distributed execution patterns (write or run):**
-```python
-from mlflow.optuna.storage import MlflowStorage
-from mlflow.pyspark.optuna.study import MlflowSparkStudy
+**API recall:** use [API companion §2](databricks-ml-professional-api-methods.html#2-pandas-function-apis-optuna-and-ray). Write the Optuna storage → Spark study → `optimize` chain and the Ray cluster setup → `Tuner.fit()` → two-layer shutdown chain without looking.
 
-storage = MlflowStorage(experiment_id=experiment_id)
-study = MlflowSparkStudy(study_name="distributed-hpo", storage=storage)
-study.optimize(objective, n_trials=20, n_jobs=4)
-```
-```python
-import ray
-from ray import tune
-from ray.util.spark import setup_ray_cluster, shutdown_ray_cluster
-
-setup_ray_cluster(min_worker_nodes=2, max_worker_nodes=2)
-ray.init()
-results = tune.Tuner(
-    tune.with_resources(train_one, {"cpu": 1}),
-    param_space={"learning_rate": tune.loguniform(1e-4, 1e-1)},
-    tune_config=tune.TuneConfig(num_samples=20),
-).fit()
-ray.shutdown()
-shutdown_ray_cluster()
-```
-
-**Do:** run the distributed Optuna pattern when supported; otherwise annotate exactly what `MlflowStorage`, `MlflowSparkStudy`, `n_trials`, and `n_jobs` control. For Ray, write the full setup → `Tuner.fit()` → shutdown lifecycle. Answer at least three explicit scaling cases: (1) model fits but one node lacks RAM, (2) dataset is huge but a model replica fits each worker, and (3) the model cannot fit one accelerator. Justify vertical, data-parallel/horizontal, or model-parallel selection and name the coordination/cost trade-off.
+**Do:** run the distributed Optuna pattern when supported; otherwise annotate exactly what `MlflowStorage`, `MlflowSparkStudy`, `n_trials`, and `n_jobs` control. For Ray, reconstruct and annotate the lifecycle from the companion. Answer at least three explicit scaling cases: (1) model fits but one node lacks RAM, (2) dataset is huge but a model replica fits each worker, and (3) the model cannot fit one accelerator. Justify vertical, data-parallel/horizontal, or model-parallel selection and name the coordination/cost trade-off.
 
 ### Fri Jul 17 — Advanced MLflow + **Lab 1**
 
@@ -310,17 +296,19 @@ Existing unsigned version → downstream limitations (no input enforcement, fewe
 Input example → recommended; MLflow can infer the required signature from it automatically
 ```
 
-**Custom PyFunc pattern:**
-```python
-import mlflow.pyfunc
+**API recall:** use [API companion §3](databricks-ml-professional-api-methods.html#3-mlflow-tracking-api). From memory, write one experiment with a parent run, two `nested=True` child runs, param/metric/tag/artifact logging, and `search_runs` ordered by the validation metric. Explain `step`, the parent-run filter tag, and singular versus plural logging methods.
 
-class CustomModel(mlflow.pyfunc.PythonModel):
-    def load_context(self, context):          # runs once — load artifacts
-        self.model = load_model(context.artifacts["model_file"])
-
-    def predict(self, context, model_input):  # runs per batch/request
-        return self.model.predict(model_input)
+**Do not confuse the MLflow APIs:**
+```text
+mlflow fluent Tracking API                → experiments, runs, params, metrics, tags, artifacts
+MlflowClient                              → lower-level tracking/registry metadata operations
+mlflow.pyfunc                             → package/load/predict with a generic Python model
+FeatureEngineeringClient.log_model        → log model together with feature-lookup metadata
+mlflow.deployments client.predict         → query a deployed serving endpoint
 ```
+
+**Custom PyFunc recall:** use [API companion §4](databricks-ml-professional-api-methods.html#4-mlflow-models-and-custom-pyfunc) to reconstruct `PythonModel`, `load_context`, `predict`, signature inference, and `log_model` once. Then close it and write the owning module, required methods, and packaging arguments from memory.
+
 ```text
 artifacts        → files packaged with the model
 code_paths       → Python modules packaged with the model
@@ -334,7 +322,7 @@ Custom PyFunc use case: real-time feature engineering inside predict()
 3. **Runnable critical path (40–50 min):** build the **Week 1 PyFunc** used later in Lab 3; add one computed request-time feature in `predict`, load one artifact in `load_context`, declare dependencies, log the required signature/input example, register once in UC, and validate it locally.
 4. Spend 10–15 minutes explaining the estimator/evaluator/tuning/logging/PyFunc choices. Put larger grids, streaming execution, and extra run comparisons in the stretch backlog.
 
-**Week 1 mastery check (no notes, 80% required):** Estimator vs Transformer · Pipeline vs PipelineModel · metric selection · CV vs TVS · batch/streaming/real-time · applyInPandas vs mapInPandas vs pandas UDF · Spark vs Ray · MlflowStorage vs callback · parent vs child runs · signature requirements.
+**Week 1 mastery check (no notes, 80% required):** Estimator vs Transformer · Pipeline vs PipelineModel · metric selection · CV vs TVS · batch/streaming/real-time · applyInPandas vs mapInPandas vs pandas UDF · Spark vs Ray · MlflowStorage vs callback · parent vs child runs · Tracking/PyFunc/Deployments API selection · programmatic logging/search syntax · signature requirements.
 
 ---
 
@@ -352,27 +340,8 @@ Custom PyFunc use case: real-time feature engineering inside predict()
 
 **Focus:** feature governance, reuse, and lineage; `FeatureEngineeringClient.create_table` / `write_table`; primary and timestamp keys; training sets; point-in-time joins.
 
-**Must memorize pattern:**
-```python
-from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
+**API recall:** use [API companion §6](databricks-ml-professional-api-methods.html#6-feature-engineering-and-point-in-time-lookups). Reconstruct `FeatureLookup` → `create_training_set` → `load_df`, including the point-in-time parameter and the later `log_model`/`score_batch` pair.
 
-fe = FeatureEngineeringClient()
-
-feature_lookups = [
-    FeatureLookup(
-        table_name="catalog.schema.customer_features",
-        feature_names=["feature_1", "feature_2"],
-        lookup_key="customer_id",
-        timestamp_lookup_key="event_ts",   # ← point-in-time correctness
-    )
-]
-
-training_set = fe.create_training_set(
-    df=training_df, feature_lookups=feature_lookups,
-    label="label", exclude_columns=["customer_id"],
-)
-train_df = training_set.load_df()
-```
 ```text
 Typical UC feature table = Delta table + PK constraint; a constrained simple SELECT view can be used for offline training/evaluation only
 For time series, the time column is in the PK and designated TIMESERIES
@@ -406,109 +375,27 @@ Streaming feature freshness       → Structured Streaming writes to feature tab
 
 **Terminology:** the live Sept 2025 exam guide explicitly tests configuring **online tables with the Databricks SDK**. Current 2026 docs use **Databricks Online Feature Store**, backed by Lakebase, and no longer support creating legacy online tables for new workflows. Study both workflows; do not collapse them into one API.
 
-**Legacy exam SDK vocabulary (write from memory; creation may be unavailable):**
-```python
-from databricks.sdk import WorkspaceClient
-from databricks.sdk.service.catalog import (
-    OnlineTable,
-    OnlineTableSpec,
-    OnlineTableSpecContinuousSchedulingPolicy,
-)
+**API recall:** use [API companion §7](databricks-ml-professional-api-methods.html#7-online-features-and-streaming-publication) for both generations. Write the guide-era `WorkspaceClient().online_tables.create_and_wait` object chain and the current `create_online_store` → wait for `AVAILABLE` → `publish_table` chain from memory.
 
-w = WorkspaceClient()
-w.online_tables.create_and_wait(
-    table=OnlineTable(
-        name="main.features.customer_features_online",
-        spec=OnlineTableSpec(
-            source_table_full_name="main.features.customer_features",
-            primary_key_columns=["customer_id"],
-            timeseries_key="event_ts",
-            run_continuously=OnlineTableSpecContinuousSchedulingPolicy(),
-        ),
-    )
-)
-```
 ```text
 Legacy OnlineTableSpec: choose run_continuously OR run_triggered.
 source_table_full_name = offline UC table; PK controls upserts;
 timeseries_key selects the latest row when an entity has multiple records.
 Legacy reference: https://docs.databricks.com/api/workspace/onlinetables/create
-```
-
-**Current Online Feature Store pattern:**
-```python
-%pip install databricks-feature-engineering>=0.13.0
-dbutils.library.restartPython()
-```
-```python
-from databricks.feature_engineering import FeatureEngineeringClient
-
-fe = FeatureEngineeringClient()
-fe.create_online_store(name="realtime-features", capacity="CU_2")
-store = fe.get_online_store(name="realtime-features")
-# Poll/check until store.state is AVAILABLE before publishing.
-
-fe.publish_table(
-    online_store=store,
-    source_table_name="main.features.customer_features",
-    online_table_name="main.features.customer_features_online",
-    publish_mode="CONTINUOUS",
-)
-```
-```text
 A UC primary-key constraint and non-nullable primary-key columns are required.
 Change Data Feed is required for TRIGGERED and CONTINUOUS publication.
 SNAPSHOT = one full sync · TRIGGERED = incremental on demand/schedule
 CONTINUOUS = stream changes for the freshest online values.
 ```
 
-**Streaming feature pipeline:**
-```python
-transactions = spark.readStream.table("prod.events.customer_transactions")
-stream_features = compute_customer_features(transactions)
+**Streaming feature pipeline:** reconstruct `readStream` → feature computation → `fe.write_table(mode="merge", checkpoint_location=..., trigger=...)` from [API companion §7](databricks-ml-professional-api-methods.html#7-online-features-and-streaming-publication).
 
-query = fe.write_table(
-    name="main.features.customer_features",
-    df=stream_features,
-    mode="merge",
-    checkpoint_location=checkpoint_path,
-    trigger={"processingTime": "30 seconds"},
-)
-```
 ```text
 Streaming source → Structured Streaming computation → offline UC feature table
 → CONTINUOUS online publication → automatic lookup by Model Serving
 ```
 
-**On-demand FeatureFunction chain:**
-```python
-from databricks.feature_engineering import FeatureFunction, FeatureLookup
-
-features = [
-    FeatureLookup(
-        table_name="main.features.customer_features",
-        feature_names=["historical_total"],
-        lookup_key="customer_id",
-    ),
-    FeatureFunction(
-        udf_name="main.features.compute_ratio",  # governed UC Python UDF
-        input_bindings={
-            "current_value": "request_value",
-            "historical_total": "historical_total",
-        },
-        output_name="current_ratio",
-    ),
-]
-
-training_set = fe.create_training_set(
-    df=labels_and_request_inputs,
-    feature_lookups=features,
-    label="label",
-    exclude_columns=["customer_id"],
-)
-# fe.log_model(..., training_set=training_set) stores the feature metadata.
-# fe.score_batch(...) and Model Serving repeat the same lookup + UDF computation.
-```
+**On-demand recall:** `FeatureFunction(udf_name, input_bindings, output_name)` belongs in the same feature list as `FeatureLookup`; `fe.log_model(..., training_set=...)` preserves both so batch scoring and Model Serving repeat the lookup and UDF computation.
 
 **Do (35 min):** complete the legacy/current comparison table, then either run the current publish + FeatureFunction workflow or annotate each API field and draw the streaming architecture. The fallback is pseudocode, not omission.
 
@@ -540,6 +427,10 @@ Custom pre/post-processing           → custom PyFunc
 Custom file needed at inference      → model artifact
 Reliable serving schema              → model signature
 ```
+
+**[WRITE] Core UC registry workflow:** use [API companion §5](databricks-ml-professional-api-methods.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
+
+**[RECOGNIZE] Registry creation/deletion/admin methods:** study the exact call shapes and side effects in [API companion §5](databricks-ml-professional-api-methods.html#5-unity-catalog-model-registry). Key distinction: deleting an alias removes only a pointer; `delete_model_version` removes one version; `delete_registered_model` removes everything. Python uses underscores, never `delete_model-version`. Do not run deletion methods in the study lab.
 
 **Do:** register a model in UC, set `@champion`, load it by alias.
 
@@ -609,6 +500,8 @@ Terraform            → broader infra; DAB is the Databricks-native exam answer
 MLflow Projects      → packages reproducible code, doesn't deploy resources
 ```
 
+**API/config recall:** use [API companion §9](databricks-ml-professional-api-methods.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job resource, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence.
+
 **Environment architecture:** isolate dev/staging/prod with bundle targets and environment-specific configuration; use source control, service identities, least privilege, and validation gates rather than manual workspace changes.
 
 **Automated retraining pattern:** detect drift/degradation → SQL alert sends webhook/notification → receiver/orchestrator triggers retraining Job → refresh features → train candidate → log → compare with production alias on the same evaluation set → validate → register → promote winner to `@champion` → update endpoint/version and traffic when serving in real time → monitor → roll back if needed.
@@ -620,7 +513,7 @@ MLflow Projects      → packages reproducible code, doesn't deploy resources
 4. **Runnable DAB slice (30–40 min):** `bundle init`; define one training job and dev/prod targets; identify where the experiment, registered model, and endpoint resources belong; run `bundle validate`.
 5. Spend 10 minutes explaining point-in-time correctness, training-serving consistency, online/serving/on-demand distinctions, and deploy-code transitions. Deploying the bundle and live online publication are stretch work.
 
-**Week 2 mastery check (no notes, 80% required):** FeatureLookup / create_training_set / load_df / score_batch · feature-table TIMESERIES key vs `timestamp_lookup_key` · legacy OnlineTableSpec vs current Online Feature Store · feature serving vs automatic lookup vs on-demand · alias vs latest version · custom PyFunc + artifacts · deploy-code vs deploy-model · test scope by change type · DAB targets/resources · why retraining ≠ promotion.
+**Week 2 mastery check (no notes, 80% required):** FeatureLookup / create_training_set / load_df / score_batch · feature-table TIMESERIES key vs `timestamp_lookup_key` · legacy OnlineTableSpec vs current Online Feature Store · feature serving vs automatic lookup vs on-demand · alias vs latest version · `register_model` vs create/delete model/version/alias APIs · custom PyFunc + artifacts · deploy-code vs deploy-model · test scope by change type · DAB targets/resources · why retraining ≠ promotion.
 
 ---
 
@@ -662,7 +555,25 @@ PSI < 0.2: moderate change
 PSI ≥ 0.2: significant change
 ```
 
-**Do:** classify six drift scenarios, then interpret one KS result, one chi-square result, and one distance/PSI result in a sentence each.
+**Do not collapse distribution drift and model-performance degradation:**
+```text
+Feature/prediction distribution drift → {table}_drift_metrics
+  numeric     → KS, Wasserstein, PSI
+  categorical → chi-square, TV, L-infinity, JS
+
+Model-performance trend → {table}_profile_metrics, Inference profile only
+  requires prediction_col + label_col; grouped by time window/slice/model_id
+  classification → accuracy_score, log_loss, roc_auc_score, confusion_matrix,
+                   precision, recall, f1_score
+                   (log_loss and roc_auc_score also require prediction_proba_col)
+  regression     → mean_squared_error, root_mean_squared_error,
+                   mean_average_error, mean_absolute_percentage_error, r2_score
+
+No labels → measure input/prediction drift, but not actual predictive quality.
+Concept drift → relationship between inputs and target changes; feature drift alone does not prove it.
+```
+
+**Do:** classify six drift scenarios, then interpret one KS result, one chi-square result, one distance/PSI result, and one label-based model-performance trend in a sentence each. For every scenario, name the output table and field you would query.
 
 ### Tue Jul 28 — Monitoring profiles & output tables
 
@@ -713,28 +624,10 @@ AI Gateway inference table (raw JSON request/response)
 → processed Delta inference table → data profile/monitoring
 ```
 
-**Slice/granularity configuration pattern:**
-```python
-granularities = ["1 day", "1 week"]
-slicing_exprs = ["region", "device_type = 'mobile'"]
-```
-Query `slice_key`, `slice_value`, `granularity`, and `window` in the metric tables. Compare a whole-table row (`slice_key IS NULL`) with one segment and explain why aggregate health can hide a segment regression.
+**Slices/granularity:** configure daily/weekly granularities and at least one column or predicate slice. Query `slice_key`, `slice_value`, `granularity`, and `window`; compare a whole-table row (`slice_key IS NULL`) with one segment and explain why aggregate health can hide a segment regression.
 
-**Custom metric pattern (guide vocabulary; current SDK may call these Data Profiling classes):**
-```python
-from databricks.sdk.service.catalog import MonitorMetric, MonitorMetricType
-from pyspark.sql import types as T
+**API recall:** use [API companion §8](databricks-ml-professional-api-methods.html#8-data-profiling-lakehouse-monitoring) to distinguish the current `data_quality` API from guide-era `quality_monitors`, then reconstruct one aggregate `MonitorMetric` with `type`, `name`, `input_columns`, `definition`, and `output_data_type`.
 
-weighted_error = MonitorMetric(
-    type=MonitorMetricType.CUSTOM_METRIC_TYPE_AGGREGATE,
-    name="weighted_error",
-    input_columns=[":table"],
-    definition="""avg(CASE
-      WHEN {{prediction_col}} = {{label_col}} THEN 0
-      WHEN critical = TRUE THEN 2 ELSE 1 END)""",
-    output_data_type=T.StructField("output", T.DoubleType()).json(),
-)
-```
 ```text
 Aggregate metric reads primary-table columns.
 Derived metric reads existing aggregate/derived metrics.
@@ -793,14 +686,8 @@ Deploy via UI, REST API, or MLflow Deployments SDK
 Query: REST /serving-endpoints/{name}/invocations
 Input formats: dataframe_split, dataframe_records, instances, inputs
 ```
-```python
-import mlflow.deployments
-client = mlflow.deployments.get_deploy_client("databricks")
-response = client.predict(
-    endpoint="my-serving-endpoint",
-    inputs={"dataframe_records": [{"feature_1": 10, "feature_2": 3.5}]},
-)
-```
+
+**API recall:** use [API companion §10](databricks-ml-professional-api-methods.html#10-model-serving-rest-and-mlflow-deployments). Write `get_deploy_client("databricks")` → `client.predict(endpoint=..., inputs=...)` and one REST invocations payload from memory; explain why `endpoint` and `inputs` are the correct parameter names.
 
 **Lab 3 (2–3 hours, must finish by Fri Jul 31) — Minimum viable production lifecycle:**
 1. Spend 25 minutes on 15 interleaved scenarios: 6 Model Development, 7 MLOps, 2 Deployment.
@@ -953,11 +840,16 @@ Horizontal = more nodes · Vertical = bigger node · Model parallelism = model t
 
 **MLflow / UC models**
 ```text
+Tracking: set_experiment → start_run → log_param(s)/log_metric(s)/set_tag(s)/log_artifact(s)
+Nested HPO: parent start_run → child start_run(nested=True) → search_runs by tags.mlflow.parentRunId
+Tracking API logs experiment evidence · PyFunc packages/runs model code · Deployments client queries endpoints
 New UC model versions require a signature; input example can infer it automatically
 PyFunc: load_context (once, gets context.artifacts) · predict (per request/batch)
 artifacts = files · code_paths = modules · pip_requirements = deps
 UC aliases replace legacy stages: models:/cat.sch.name@champion · version: models:/cat.sch.name/3
 Logged ≠ registered · Latest ≠ production
+register_model = artifact → new version · create_registered_model = empty container
+delete alias = remove pointer · delete_model_version = one version · delete_registered_model = everything
 ```
 
 **Feature Store**
@@ -978,6 +870,10 @@ Drift vs BASELINE and vs PREVIOUS WINDOW
 Numeric: KS, Wasserstein, PSI · Categorical: Chi-squared, TV distance, L-infinity, JS distance
 KS/chi-square p < alpha → significant evidence of drift; distances have no p-value
 PSI <0.1 none · <0.2 moderate · ≥0.2 significant population change
+Distribution drift lives in drift_metrics; label-based model quality lives in profile_metrics
+Classification quality: accuracy_score/log_loss/roc_auc_score/confusion_matrix/precision/recall/f1_score
+Regression quality: mean_squared_error/root_mean_squared_error/mean_average_error/MAPE/r2_score
+log_loss/AUC need prediction probabilities · no labels = no measured quality
 Custom metrics: aggregate / derived / drift · slicing exprs for segments
 Alerts = SQL alerts on drift table → notification/webhook → separate automation triggers retraining
 Endpoint health ≠ data drift: latency, RPS, errors, CPU, memory
@@ -1077,6 +973,10 @@ At the start of each session, complete any due retests before new reading. An it
 
 # 8. Full resource index
 
+**Local companions**
+- Daily schedule and decisions: this document
+- Exact API calls and parameters: [Markdown](databricks-ml-professional-api-methods.md) · [searchable HTML](databricks-ml-professional-api-methods.html)
+
 **Official**
 - Exam page: https://www.databricks.com/learn/certification/machine-learning-professional
 - Exam guide (Sept 2025): https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf
@@ -1163,3 +1063,82 @@ At the start of each session, complete any due retests before new reading. An it
 8. **Kolmogorov–Smirnov test.** Databricks calculates it for numerical distribution drift and returns a statistic/p-value.
 9. **Scale-out/provisioned concurrency + route optimization.** One adds serving capacity; the other improves the request network path.
 10. **Second served entity + canary traffic split.** Send a small percentage to the candidate, observe it, then ramp or roll back.
+
+---
+
+# 10. Original Practice Bank Protocol
+
+The small quizzes in the calendar are **session sizes**, not the limit of the available question bank. Use the installed Codex skill **`$databricks-ml-mock-builder`** to generate each fresh, source-verified bank while preserving unseen questions for later remediation. The skill enforces the quality rubric, official-source research, answer balance, objective coverage, and duplicate ledger defined below.
+
+## Bank Size
+
+| Bank | Original questions | Delivery |
+|---|---:|---|
+| Week 1 — SparkML, scaling, MLflow | 100 | Five sets of 20 |
+| Week 2 — Feature Store, registry, testing, MLOps/DABs | 100 | Five sets of 20 |
+| Week 3 — Monitoring and deployment | 100 | Five sets of 20 |
+| Full Mock A | 59 | 26 Model Development / 26 MLOps / 7 Deployment |
+| Full Mock B | 59 | 26 / 26 / 7 |
+| Full Mock C | 59 | 26 / 26 / 7 |
+
+Total available original practice: **477 questions**, separate from purchased mock banks. Full mocks do not reuse section-bank questions.
+
+## Quality Standard
+
+Every generated question must:
+
+- Map to one or more objectives in the currently live official guide.
+- Use current official Databricks, Apache Spark, or MLflow documentation for technical claims.
+- Be newly written rather than copied from official samples, paid material, or exam dumps.
+- Present four plausible options with one defensible best answer.
+- Use scenario, code, SQL, YAML, REST, SDK, or architecture context appropriate to the objective.
+- Include distractors that fail for a specific reason: wrong API, wrong lifecycle stage, wrong scaling model, incomplete test scope, unsafe rollout, or non-Databricks-native choice.
+- Avoid trivial vocabulary-only questions unless testing a prerequisite distinction.
+- Include a rationale for the correct option and every distractor, plus official source links.
+- Pass a duplication check against earlier questions in the same bank.
+
+Target difficulty mix per 100-question bank:
+
+```text
+20 questions  Foundation check — necessary concepts, still scenario-based
+60 questions  Exam-level — one best production answer among plausible choices
+20 questions  Hard/compound — multiple objectives, code/config details, subtle distractors
+```
+
+## Delivery Rules
+
+1. Generate questions just in time, not all in a visible file, so unused sets stay unseen.
+2. Present 20 questions per exam-mode set, either one at a time or all at once.
+3. Hide answers and rationales until the complete set is submitted.
+4. Record each response as `answer + High/Medium/Low confidence`.
+5. Score by objective and official domain, not only overall percentage.
+6. Save only completed-set results, rationales, sources, and error-log entries.
+7. Remediation uses new variants testing the same objective; it never shuffles or lightly rewrites the failed question.
+8. Purchased-question wording must never be copied into the bank. Calibrate using only topic scores, timing, confidence, and the learner's description of difficulty.
+
+## Recommended Use
+
+The 100 questions are a **bank**, not one sitting and not mandatory extra workload during July.
+
+```text
+After finishing a week:   Set 1 (20 questions) — diagnostic
+Next catch-up/review:     Set 2 (20) — spaced cumulative check
+August weak-area repair:  Sets 3–4 (40) — targeted but still mixed
+Final reserve:            Set 5 (20) — keep unseen unless needed
+```
+
+Use these commands in chat:
+
+```text
+Use $databricks-ml-mock-builder to start Week 1 Bank, Set 1:
+20 questions, one at a time, exam mode,
+answers hidden until the end.
+
+Use $databricks-ml-mock-builder to start a 10-question hard drill
+on [objective], all new questions,
+with confidence tracking.
+
+Use $databricks-ml-mock-builder to start Original Full Mock A:
+59 questions, 120 minutes,
+answers hidden, no reused section-bank questions.
+```
