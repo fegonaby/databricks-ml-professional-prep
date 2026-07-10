@@ -195,7 +195,8 @@ def _inline(text):
     while re.search(r"\x00\d+\x00", text):
         text = re.sub(r"\x00(\d+)\x00", lambda m: tokens[int(m.group(1))], text)
     # priority chips
-    for tag, cls in (("MUST", "must"), ("SKIM", "skim"), ("REFERENCE", "ref")):
+    for tag, cls in (("MUST", "must"), ("SKIM", "skim"), ("REFERENCE", "ref"),
+                     ("WRITE", "write"), ("RECOGNIZE", "recognize"), ("SKIP", "skip")):
         text = text.replace("<strong>[%s]</strong>" % tag,
                             '<span class="prio %s">%s</span>' % (cls, tag))
     return text
@@ -507,9 +508,10 @@ CSS = """
   .detail-body th { background: var(--surface2); }
 
   .prio { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 4px; margin-right: 2px; }
-  .prio.must { background: var(--accent-soft); color: var(--accent-strong); }
-  .prio.skim { background: var(--teal-soft); color: var(--teal); }
+  .prio.must, .prio.write { background: var(--accent-soft); color: var(--accent-strong); }
+  .prio.skim, .prio.recognize { background: var(--teal-soft); color: var(--teal); }
   .prio.ref  { background: var(--surface2); color: var(--ink3); }
+  .prio.skip { background: transparent; color: var(--ink3); border: 1px dashed var(--line); }
 
   /* Reference appendix panels */
   .appendix { margin-top: 14px; padding: 0; }

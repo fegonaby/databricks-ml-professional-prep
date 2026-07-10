@@ -174,9 +174,10 @@
   .detail-body th { background: var(--surface2); }
 
   .prio { font-size: 10px; font-weight: 800; letter-spacing: 0.06em; padding: 1px 6px; border-radius: 4px; margin-right: 2px; }
-  .prio.must { background: var(--accent-soft); color: var(--accent-strong); }
-  .prio.skim { background: var(--teal-soft); color: var(--teal); }
+  .prio.must, .prio.write { background: var(--accent-soft); color: var(--accent-strong); }
+  .prio.skim, .prio.recognize { background: var(--teal-soft); color: var(--teal); }
   .prio.ref  { background: var(--surface2); color: var(--ink3); }
+  .prio.skip { background: transparent; color: var(--ink3); border: 1px dashed var(--line); }
 
   /* Reference appendix panels */
   .appendix { margin-top: 14px; padding: 0; }
@@ -518,7 +519,7 @@ Exam-guide &quot;online tables&quot; = legacy SDK objective
 [RECOGNIZE] Given four snippets, select the valid method and explain its side effect/trap.
 
 For every exam-named API learn five things:
-owner → exact method → key parameters → return/side effect → nearest distractor</code></pre><p>All core code patterns in MUST sections are <strong>[WRITE]</strong> unless marked recognition/reference-only. CRUD/admin methods adjacent to an objective are <strong>[RECOGNIZE]</strong>. Mock errors can promote a method from RECOGNIZE to WRITE, but third-party trivia does not automatically become core syllabus.</p><p><strong>API companion:</strong> use the <a href="api-reference.md">Markdown reference</a> for notes and the <a href="api-reference.html">searchable HTML reference</a> for recall. This plan tells you <strong>when</strong> to study something; the companion shows the exact calls and parameters.</p><p><strong>How the files work together:</strong> start here each day for the reading, lab, and checkpoint. Open the API companion when you need an exact call shape. When a task says "reconstruct," look once, close the reference, write it from memory, and then check your work.</p><p><strong>Standard-session timebox (maximum 90 min):</strong></p><pre><code>10 min  Closed-book retrieval: yesterday + the topic from 7 days ago
+owner → exact method → key parameters → return/side effect → nearest distractor</code></pre><p>All core code patterns in MUST sections are <span class="prio write">WRITE</span> unless marked recognition/reference-only. CRUD/admin methods adjacent to an objective are <span class="prio recognize">RECOGNIZE</span>. Mock errors can promote a method from RECOGNIZE to WRITE, but third-party trivia does not automatically become core syllabus.</p><p><strong>API companion:</strong> use the <a href="api-reference.md">Markdown reference</a> for notes and the <a href="api-reference.html">searchable HTML reference</a> for recall. This plan tells you <strong>when</strong> to study something; the companion shows the exact calls and parameters.</p><p><strong>How the files work together:</strong> start here each day for the reading, lab, and checkpoint. Open the API companion when you need an exact call shape. When a task says "reconstruct," look once, close the reference, write it from memory, and then check your work.</p><p><strong>Standard-session timebox (maximum 90 min):</strong></p><pre><code>10 min  Closed-book retrieval: yesterday + the topic from 7 days ago
 30 min  MUST reading only
 35 min  Hands-on task or scenario questions
 10 min  Write memory rules / update error log
