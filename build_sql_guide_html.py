@@ -8,7 +8,7 @@ two references look and behave the same. Re-run after editing the markdown.
 import html
 from pathlib import Path
 
-from build_api_reference_html import CSS, render_markdown
+from build_api_reference_html import CSS, SCROLLSPY_JS, render_markdown
 
 ROOT = Path(__file__).parent
 MD_PATH = ROOT / "databricks-ml-professional-ansi-sql-guide.md"
@@ -44,7 +44,7 @@ def main():
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
 <div class="meta">Generated from <a href="databricks-ml-professional-ansi-sql-guide.md">the Markdown source</a>. Verified July 10, 2026.</div>
 <div class="stats"><div class="stat"><b>10&prime;</b><span>closed-book baseline</span></div><div class="stat"><b>5</b><span>monitoring queries</span></div><div class="stat"><b>10</b><span>targeted drills</span></div></div>
-{content}<p id="empty" class="empty">No matching sections.</p></main></div><script>{JS}</script></body></html>"""
+{content}<p id="empty" class="empty">No matching sections.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")
     print(f"wrote {OUT_PATH} ({len(page)} bytes)")
 
