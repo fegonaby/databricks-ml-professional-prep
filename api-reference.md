@@ -1,28 +1,28 @@
-# Databricks Certified ML Professional - API Methods and Parameters
+# Databricks ML Professional - API Calls You Need to Know
 
-**Purpose:** syntax-recognition and code-completion companion to `databricks-ml-professional-plan.md`  
-**Verified:** July 10, 2026  
-**Blueprint:** live September 30, 2025 exam guide; current 2026 APIs are called out where product names or clients changed
+**What this is for:** a practical companion to `study-plan.md` for learning the method names, owners, and parameters that can show up in code-based questions.  
+**Last checked:** July 10, 2026  
+**Scope:** the live September 30, 2025 exam guide, with current 2026 APIs called out when product names or clients have changed
 
-This is not a list of every Databricks or MLflow method. It is the API surface tied to the live objectives, official samples, and the closest plausible distractors. Re-check the live guide and current docs on August 14.
+You do not need every Databricks or MLflow method ever made. This guide sticks to the calls tied to the live objectives, the official samples, and the wrong answers that are easy to confuse with them. We will check the live guide and docs again on August 14.
 
-## How to study this file
+## How to use this guide
 
 | Priority | Required recall |
 |---|---|
-| **WRITE** | Reproduce the owner/import, exact method, and key named parameters from a blank page. |
-| **RECOGNIZE** | Select the valid call among similar snippets and explain its return value, side effect, or trap. |
-| **REFERENCE** | Know what the method does and where to verify it; do not memorize all optional parameters. |
+| **WRITE** | From a blank page, write the owner/import, exact method, and key named parameters. |
+| **RECOGNIZE** | Pick the valid call from similar snippets and explain what it returns or changes. |
+| **REFERENCE** | Know what the method is for and where to check it. Skip optional-parameter trivia. |
 
-For each **WRITE** row, learn this five-part card:
+For each **WRITE** row, learn this five-part story:
 
 ```text
 owner -> exact method -> key parameters -> return/side effect -> nearest distractor
 ```
 
-The exam is multiple choice. You need strong code recognition and the ability to reconstruct core calls, not perfect recall of every optional argument.
+Because the exam is multiple choice, the useful skill is recognizing a correct call and rebuilding its core shape. Perfect recall of every optional argument is wasted effort.
 
-## High-risk API boundaries
+## APIs that are easy to mix up
 
 | Need | Correct API owner | Common wrong choice |
 |---|---|---|
@@ -40,7 +40,7 @@ The exam is multiple choice. You need strong code recognition and the ability to
 
 ### Core methods
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `StringIndexer(...)` | `inputCol`, `outputCol`, `handleInvalid` | Estimator; `fit` returns `StringIndexerModel` | It is not already a fitted Transformer. |
 | WRITE | `OneHotEncoder(...)` | `inputCols`, `outputCols`, `handleInvalid`, `dropLast` | Estimator; `fit` returns `OneHotEncoderModel` | `VectorAssembler` does not encode categories. |
@@ -57,7 +57,7 @@ The exam is multiple choice. You need strong code recognition and the ability to
 | RECOGNIZE | `PipelineModel.write().overwrite().save(path)` | `path` | Persists fitted pipeline | Saving an unfitted `Pipeline` does not save learned parameters. |
 | RECOGNIZE | `PipelineModel.load(path)` | `path` | Reloads fitted pipeline | Use the matching model class. |
 
-### Canonical tuning shape
+### One complete tuning example
 
 ```python
 from pyspark.ml import Pipeline
@@ -90,7 +90,7 @@ predictions = cv_model.transform(test_df)
 score = evaluator.evaluate(predictions)
 ```
 
-### Streaming scoring shape
+### Streaming scoring example
 
 ```python
 stream_df = spark.readStream.table("catalog.schema.events")
@@ -106,7 +106,7 @@ query = (predictions.writeStream
 
 ## 2. pandas Function APIs, Optuna, and Ray
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `df.groupBy(keys).applyInPandas(func, schema)` | Grouping keys, `pdf -> pdf` function, output `schema` | One pandas call per group | Best for one model per store/entity, not generic row scoring. |
 | WRITE | `df.mapInPandas(func, schema)` | `iterator[pdf] -> iterator[pdf]`, output `schema` | Processes iterator batches across partitions | It is not grouped by a business key. |
@@ -126,7 +126,7 @@ query = (predictions.writeStream
 
 ## 3. MLflow Tracking API
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `mlflow.set_experiment(experiment_name)` | Workspace path/name | Selects or creates experiment | Tracking URI chooses server; experiment chooses run collection. |
 | RECOGNIZE | `mlflow.set_tracking_uri(uri)` | Tracking server URI | Changes tracking server | Not required for the default Databricks-hosted server. |
@@ -144,7 +144,7 @@ query = (predictions.writeStream
 | WRITE | `mlflow.search_runs(...)` | `experiment_ids`/`experiment_names`, `filter_string`, `order_by` | pandas DataFrame of runs | It queries tracking data; it does not query serving predictions. |
 | RECOGNIZE | `MlflowClient().get_run(run_id)` | Run ID | Run entity | Lower-level client call, not active-run fluent logging. |
 
-### Nested-run shape
+### Parent and child run example
 
 ```python
 import mlflow
@@ -169,7 +169,7 @@ children = mlflow.search_runs(
 
 ## 4. MLflow Models and custom PyFunc
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `class Model(mlflow.pyfunc.PythonModel)` | Override lifecycle methods | Custom generic MLflow model | Tracking functions do not define prediction behavior. |
 | WRITE | `load_context(self, context)` | `context.artifacts` | Loads reusable artifacts once when model loads | Do not reload a large artifact in every `predict` call. |
@@ -180,7 +180,7 @@ children = mlflow.search_runs(
 | RECOGNIZE | `mlflow.pyfunc.spark_udf(spark, model_uri, result_type, env_manager)` | Spark session, URI, output/environment | Distributed Spark UDF | Direct `load_model().predict()` is local unless used inside distributed logic. |
 | RECOGNIZE | `mlflow.models.predict(model_uri, input_data, env_manager=...)` | Model URI and validation input | Pre-deployment validation output | This validates a model; it is not endpoint traffic. |
 
-### Custom PyFunc shape
+### Custom PyFunc example
 
 ```python
 import mlflow
@@ -213,7 +213,7 @@ with mlflow.start_run():
 
 ## 5. Unity Catalog Model Registry
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `mlflow.set_registry_uri("databricks-uc")` | Registry URI | Targets Models in Unity Catalog | Tracking and registry URIs are separate settings. |
 | WRITE | `mlflow.register_model(model_uri=..., name=...)` | Logged model URI, three-level UC name | Creates model if missing and creates version; returns `ModelVersion` | It is not `MlflowClient.register_model`. |
@@ -232,7 +232,7 @@ with mlflow.start_run():
 | REFERENCE | `update_registered_model` / `update_model_version` | `name`, optional `version`, `description` | Updates descriptions | Does not change endpoint traffic. |
 | REFERENCE | registered-model/version tag setters/deleters | `name`, optional `version`, `key`, `value` | Metadata tags | Tags are not aliases. |
 
-### Core registry shape
+### The registry flow to remember
 
 ```python
 import mlflow
@@ -254,7 +254,7 @@ model = mlflow.pyfunc.load_model(f"models:/{name}@Champion")
 
 ## 6. Feature Engineering and point-in-time lookups
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `FeatureEngineeringClient()` | Optional registry URI | UC Feature Engineering client | Use `FeatureStoreClient` for workspace/hive-metastore feature tables. |
 | RECOGNIZE | `fe.create_table(...)` | `name`, `primary_keys`, `df` or `schema`, `timeseries_column` | Feature table | Time-series column must be part of primary keys. |
@@ -266,7 +266,7 @@ model = mlflow.pyfunc.load_model(f"models:/{name}@Champion")
 | WRITE | `fe.score_batch(...)` | `model_uri`, `df`, optional `result_type`, `env_manager`, `params` | DataFrame with looked-up features and `prediction` | Input DataFrame supplies lookup/request keys, not every stored feature. |
 | WRITE | `FeatureFunction(...)` | `udf_name`, `input_bindings`, `output_name` | On-demand governed feature specification | This is inference-time computation, not an offline feature table. |
 
-### Point-in-time shape
+### Point-in-time lookup example
 
 ```python
 from databricks.feature_engineering import FeatureEngineeringClient, FeatureLookup
@@ -295,7 +295,7 @@ train_df = training_set.load_df()
 
 ### Guide-era Online Tables SDK
 
-| Priority | Owner and method/class | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method/class | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `WorkspaceClient().online_tables.create_and_wait(table=...)` | `OnlineTable` object | Creates legacy online table and waits | This is the explicit September 2025 guide objective. |
 | WRITE | `OnlineTable(name=..., spec=...)` | Online table name and `OnlineTableSpec` | Resource definition | It wraps the spec; it is not the offline source table. |
@@ -304,7 +304,7 @@ train_df = training_set.load_df()
 
 ### Current Online Feature Store
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `fe.create_online_store(name=..., capacity=...)` | Store name and capacity | Provisions Lakebase-backed online store | Wait until state is `AVAILABLE` before publishing. |
 | WRITE | `fe.get_online_store(name=...)` | Store name | Store object | Store is not the published online table. |
@@ -327,7 +327,7 @@ The live guide uses **Lakehouse Monitoring** vocabulary. Current 2026 documentat
 
 ### Current 2026 profile API
 
-| Priority | Owner and method/class | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method/class | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `WorkspaceClient()` | Auth from environment/profile | Databricks workspace client | Not an MLflow client. |
 | WRITE | `w.schemas.get(full_name=...)` | `catalog.schema` | Schema metadata including ID | Current profile config uses schema ID. |
@@ -341,7 +341,7 @@ The live guide uses **Lakehouse Monitoring** vocabulary. Current 2026 documentat
 | RECOGNIZE | `get_monitor`, `list_refresh`, `get_refresh` | Object IDs; refresh ID where needed | Settings/history/status | These inspect; they do not create a new profile. |
 | RECOGNIZE | `delete_monitor(object_type=..., object_id=...)` | Table object identity | Deletes profile configuration | Does not automatically delete metric tables/dashboard. |
 
-### Inference profile shape
+### Inference profile example
 
 ```python
 from databricks.sdk import WorkspaceClient
@@ -379,9 +379,9 @@ info = w.data_quality.create_monitor(
 )
 ```
 
-### Guide-era API to recognize in mocks (deprecated in current docs)
+### Older API you may still see in mocks
 
-| Priority | Owner and method/class | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method/class | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | RECOGNIZE | `w.quality_monitors.create(...)` | `table_name`, `assets_dir`, `output_schema_name`, one of `inference_log` / `time_series` / `snapshot`, optional baseline/slices | Creates the older Lakehouse Monitor | Current replacement is `w.data_quality.create_monitor`. |
 | RECOGNIZE | `MonitorInferenceLog(...)` | `problem_type`, `prediction_col`, `timestamp_col`, `model_id_col`, `granularities`, optional `label_col` | Older inference profile object | Old names end in `_col`; current names end in `_column`. |
@@ -415,7 +415,7 @@ w.quality_monitors.create(
 
 ### Custom metric object
 
-| Priority | Owner and method/class | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method/class | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `MonitorMetric(...)` | `type`, `name`, `input_columns`, `definition`, `output_data_type` | Custom metric definition | Aggregate reads table columns; derived reads metrics; drift compares current/base. |
 | WRITE | `MonitorMetricType` | Aggregate, derived, or drift enum | Selects evaluation stage | `:table` means the expression uses multiple columns. |
@@ -435,7 +435,7 @@ w.quality_monitors.create(
 
 ## 9. Declarative Automation Bundles and testing commands
 
-| Priority | Command/key | Key parameters or children | Effect | Exam trap |
+| Priority | Command/key | Key parameters or children | Effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `databricks bundle validate -t <target>` | Target such as dev/staging/prod | Validates configuration and substitutions | Does not deploy resources. |
 | WRITE | `databricks bundle deploy -t <target>` | Target | Creates/updates bundle resources | Deployment is declarative; CLI scripts alone are not a bundle. |
@@ -479,7 +479,7 @@ targets:
 
 ## 10. Model Serving, REST, and MLflow Deployments
 
-| Priority | Owner and method | Key parameters | Return or effect | Exam trap |
+| Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `mlflow.deployments.get_deploy_client("databricks")` | Target `databricks` | Authenticated deployments client | Tracking `MlflowClient` does not query endpoints. |
 | WRITE | `client.predict(endpoint=..., inputs=...)` | Endpoint name and request dictionary | Prediction response | Official sample explicitly tests `predict`, `endpoint`, and model inputs. |
@@ -513,7 +513,7 @@ response = client.predict(
 
 ---
 
-## 11. Final syntax traps
+## 11. Last-minute syntax traps
 
 | If the question says... | Think... | Reject... |
 |---|---|---|
@@ -530,16 +530,16 @@ response = client.predict(
 | Actual model-quality trend | Inference profile with labels, profile metrics table | Feature drift alone |
 | Reproducible multi-environment ML resources | Bundle resources plus targets | Ad hoc CLI scripts |
 
-## Research basis and freshness rules
+## How this guide stays trustworthy
 
 - [Official live exam guide](https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf): authoritative objectives and official sample-question style.
 - [Current Databricks documentation](https://docs.databricks.com/): authoritative product behavior and syntax.
 - [Current MLflow documentation](https://mlflow.org/docs/latest/): authoritative MLflow signatures.
 - [September 2025 objective-by-objective guide](https://www.alexcole.net/databricks-ml-professional-certification-guide-2025/): secondary confirmation that code examples, API syntax, and configuration are important.
-- Older candidate reports consistently describe code/client syntax as prominent. Treat them only as style calibration because they predate the September 2025 blueprint.
-- Do not use dumps or recalled protected questions. Verify every disputed mock answer against the live guide and primary docs.
+- Older candidate reports consistently describe code/client syntax as prominent. They help us judge the style, but they predate the September 2025 blueprint and do not decide the facts.
+- Skip dumps and recalled protected questions. When a mock answer looks wrong, settle it with the live guide and primary docs.
 
-## Completion check
+## Ready check
 
 - [ ] I can write every **WRITE** method's owner, name, and key parameters without looking.
 - [ ] I can explain the side effect and nearest distractor for every **RECOGNIZE** row.

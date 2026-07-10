@@ -1,16 +1,16 @@
-# ANSI SQL for the Databricks ML Professional Exam
+# SQL You Need for the Databricks ML Professional Exam
 
-**Purpose:** learn only the SQL needed to read, validate, and repair machine-learning and monitoring queries for the Databricks Certified Machine Learning Professional exam.
+**What this is for:** enough SQL to read, fix, and choose between ML and monitoring queries, plus the handful of Databricks table commands worth recognizing on sight.
 
-**Verified:** July 10, 2026 against the live September 2025 exam guide and current Databricks SQL and Data Profiling documentation.
+**Last checked:** July 10, 2026 against the live September 2025 exam guide and current Databricks SQL and Data Profiling documentation.
 
 ---
 
-## 1. What the exam actually requires
+## 1. How much SQL you really need
 
-The current official exam guide has **no standalone SQL domain or SQL-writing objective**, and none of its 10 sample questions is a SQL question. The exam is 59 multiple-choice questions covering Model Development, MLOps, and Model Deployment.
+First, the reassuring part: the current official guide has **no standalone SQL domain or SQL-writing objective**, and none of its 10 sample questions is about SQL. This is still an ML exam, not a hidden data-analyst exam.
 
-SQL is still useful because the guide explicitly requires you to work with:
+SQL still matters because several ML tasks in the guide end with you reading or filtering a table:
 
 - Lakehouse Monitoring / Data Profiling metric tables.
 - Drift statistics and significance thresholds.
@@ -20,11 +20,11 @@ SQL is still useful because the guide explicitly requires you to work with:
 - Alerts when monitoring metrics cross thresholds.
 - Custom metrics whose definitions can contain SQL expressions.
 
-Treat SQL as a **supporting recognition skill**, especially for monitoring scenarios. Do not prepare as though this were the Data Analyst exam.
+So the goal is simple: **read a short query quickly, know what it returns, and catch the broken line**. Monitoring is where this matters most.
 
-### Realistic question forms
+### What a SQL question may look like
 
-The official samples show the exam's general style: a production scenario followed by four plausible implementations. SQL-related questions, if present, are therefore most likely to ask you to:
+The official samples use production scenarios with four plausible answers. If SQL appears, expect the same style. You may need to:
 
 1. Select the query that filters the correct monitoring table or metric.
 2. Recognize `WHERE` versus `HAVING` placement.
@@ -35,9 +35,9 @@ The official samples show the exam's general style: a production scenario follow
 7. Recognize conditional aggregation with `CASE WHEN`, `COUNT`, `AVG`, or `SUM`.
 8. Spot a query that accidentally removes unmatched rows from a `LEFT JOIN`.
 
-There is no reliable public evidence that the current exam contains many general SQL questions. The high-value goal is to **read a short query quickly, identify its result, and spot one syntax or logic error**.
+There is no reliable public evidence that the current exam contains many general SQL questions. Learn the patterns below, then spend the rest of your time on the weighted ML objectives.
 
-### Priority
+### What to learn and what to skip
 
 | Priority | Know | Required level |
 |---|---|---|
@@ -52,13 +52,16 @@ There is no reliable public evidence that the current exam contains many general
 | RECOGNIZE | CTEs with `WITH` | Read and use for window-function filtering |
 | RECOGNIZE | `QUALIFY` | Databricks shortcut for filtering window results |
 | RECOGNIZE | `COUNT(DISTINCT ...)`, `COALESCE`, `NULLIF` | Understand common use |
-| SKIP | DDL/DML, transactions, permissions, query tuning, pivots, recursion | Outside this guide's exam purpose |
+| RECOGNIZE | `DESCRIBE TABLE`, `DESCRIBE DETAIL`, `DESCRIBE HISTORY` | Know which metadata each returns |
+| RECOGNIZE | `SHOW` and `USE` commands | Know how to list and select catalogs, schemas, and tables |
+| RECOGNIZE | Delta time travel and `RESTORE` | Distinguish read-only historical queries from table restoration |
+| SKIP | Broad DDL/DML, transactions, permissions, optimization, pivots, recursion | Outside this guide's exam purpose |
 
 ---
 
-## 2. Ten-minute closed-book baseline
+## 2. Start here: 10-minute baseline
 
-Do this before reading the guide. Set a 10-minute timer and do not use notes or autocomplete.
+Before reading further, set a 10-minute timer. No notes and no autocomplete. This gives us an honest starting point.
 
 ### Tables
 
@@ -79,7 +82,7 @@ study.ml.customers
   is_active        BOOLEAN
 ```
 
-### Prompt
+### Your task
 
 Write one query that:
 
@@ -91,9 +94,9 @@ Write one query that:
 6. Keeps only groups with at least 100 requests.
 7. Orders the busiest groups first.
 
-Your query must use `SELECT`, `WHERE`, `GROUP BY`, `HAVING`, `JOIN`, a timestamp filter, `COUNT`, `AVG`, `SUM`, and `CASE WHEN`.
+Use `SELECT`, `WHERE`, `GROUP BY`, `HAVING`, `JOIN`, a timestamp filter, `COUNT`, `AVG`, `SUM`, and `CASE WHEN`. One clean query is enough.
 
-### Ten-point scoring
+### Score it
 
 | Point | Requirement |
 |---:|---|
@@ -108,7 +111,7 @@ Your query must use `SELECT`, `WHERE`, `GROUP BY`, `HAVING`, `JOIN`, a timestamp
 | 9 | Both non-aggregated selected columns in `GROUP BY` |
 | 10 | Aggregate threshold in `HAVING`, then correct `ORDER BY` |
 
-Interpretation:
+Here is what the score means:
 
 ```text
 9-10  Ready: maintain with monitoring drills.
@@ -117,13 +120,13 @@ Interpretation:
 0-4   Work through this guide once before attempting monitoring SQL.
 ```
 
-Do not inspect the model answer in section 14 until the timer ends.
+The model answer is in section 14. Leave it closed until the timer ends.
 
 ---
 
-## 3. The query skeleton to know cold
+## 3. One query shape to memorize
 
-Write clauses in this order:
+When your mind goes blank, start with this order:
 
 ```sql
 SELECT
@@ -140,7 +143,7 @@ HAVING COUNT(*) >= 100
 ORDER BY row_count DESC;
 ```
 
-### Logical evaluation order
+### How SQL actually works through it
 
 SQL is written starting with `SELECT`, but conceptually evaluated in this order:
 
@@ -191,7 +194,7 @@ GROUP BY model_version
 ORDER BY avg_latency_ms DESC;
 ```
 
-Exam traps:
+Easy mistakes:
 
 - `AS` names an output expression; it does not rename the stored column.
 - String values use single quotes: `'Champion'`.
@@ -350,14 +353,14 @@ GROUP BY model_version
 HAVING COUNT(*) >= 100;
 ```
 
-Memory rule:
+Keep this in your head:
 
 ```text
 WHERE request_ts >= ...  -> filter raw requests
 HAVING COUNT(*) >= 100   -> filter model-version groups
 ```
 
-### A common multiple-choice distractor
+### An easy wrong answer to spot
 
 ```sql
 WHERE COUNT(*) >= 100
@@ -443,7 +446,7 @@ AVG(CASE WHEN prediction = label THEN 1.0 ELSE 0.0 END) AS accuracy
 
 Using decimal values makes the intended numeric result clear.
 
-Exam traps:
+Easy mistakes:
 
 - Missing `END`.
 - Reversed threshold order.
@@ -593,7 +596,7 @@ LEAD(accuracy, 1) OVER (
 ) AS next_accuracy
 ```
 
-Memory rule:
+Keep this in your head:
 
 ```text
 LAG  looks backward.
@@ -601,7 +604,7 @@ LEAD looks forward.
 Both require an OVER clause and an ordering for meaningful time comparison.
 ```
 
-Common traps:
+Easy mistakes:
 
 - Omitting `ORDER BY` for a time comparison.
 - Partitioning by the timestamp instead of the model or feature.
@@ -670,7 +673,7 @@ WHERE slice_key IS NULL
 ORDER BY window_start DESC, column_name;
 ```
 
-Why it is correct:
+Why this works:
 
 - Reads the drift table, not the profile table.
 - Uses nested struct access for hypothesis-test p-values.
@@ -752,7 +755,7 @@ WHERE window.start >= current_timestamp() - INTERVAL 7 DAYS
 
 In a real workflow, a SQL alert evaluates the query and sends a notification. Retraining still needs separate orchestration; the SQL query itself does not retrain or promote a model.
 
-### Monitoring query traps
+### Monitoring mistakes to catch
 
 | Trap | Correct rule |
 |---|---|
@@ -768,9 +771,9 @@ In a real workflow, a SQL alert evaluates the query and sends a notification. Re
 
 ---
 
-## 13. Exam-speed method
+## 13. How to read SQL answers quickly
 
-For any SQL answer option, scan in this order:
+For each SQL answer option, scan in this order:
 
 ```text
 1. Correct table?       profile_metrics vs drift_metrics
@@ -785,7 +788,7 @@ For any SQL answer option, scan in this order:
 
 You should be able to reject most distractors before mentally executing the entire query.
 
-### Ninety-second syntax sheet
+### Ninety-second refresher
 
 ```sql
 -- Rows before aggregation
@@ -817,7 +820,7 @@ chi_squared_test.pvalue
 
 ---
 
-## 14. Baseline model answer
+## 14. Check your baseline
 
 ```sql
 SELECT
@@ -841,7 +844,7 @@ HAVING COUNT(*) >= 100
 ORDER BY request_count DESC;
 ```
 
-### What each clause proves
+### What each clause is doing
 
 ```text
 SELECT     grouping dimensions plus aggregate outputs
@@ -855,7 +858,7 @@ ORDER BY   busiest groups first
 
 ---
 
-## 15. Targeted drills
+## 15. Short drills
 
 Do these without notes. Each should take 2-4 minutes.
 
@@ -931,7 +934,7 @@ Expected findings:
 
 ---
 
-## 16. Drill answer patterns
+## 16. Check your drills
 
 ### Drill 1
 
@@ -1051,9 +1054,9 @@ ORDER BY window.start, slice_key, slice_value;
 
 ---
 
-## 17. Weak-syntax log
+## 17. Keep a tiny weak-syntax log
 
-After the baseline or any mock question, record only syntax that actually failed.
+After the baseline or a mock, record only the syntax that genuinely tripped you up. There is no prize for building a giant list.
 
 ```markdown
 | Date | Pattern | My error | Correct rule | Retest dates | Passed? |
@@ -1069,7 +1072,7 @@ Promote a pattern to the review list when:
 
 Remove it only after correct closed-book use on D+1, D+3, and D+7.
 
-### Minimum readiness gate
+### You are ready when
 
 Before Jul 29, you should be able to do all of these without notes:
 
@@ -1086,7 +1089,193 @@ Before Jul 29, you should be able to do all of these without notes:
 
 ---
 
-## 18. Official references
+## 18. Databricks table commands worth recognizing
+
+These are Databricks SQL and Delta Lake commands, not basic ANSI query clauses. The current ML Professional guide does not name them, and the official samples do not use them. Still, they are common enough around feature tables, monitoring inputs, lineage, and troubleshooting that you should recognize what each one does.
+
+### What to know
+
+| Need | Command | What it returns or does | Priority |
+|---|---|---|---|
+| Inspect columns and types | `DESCRIBE TABLE table_name` | Column-level schema and table information | RECOGNIZE |
+| Inspect deeper table metadata | `DESCRIBE DETAIL table_name` | One row containing format, location, size, files, properties, protocol, and features | RECOGNIZE |
+| Inspect Delta commits | `DESCRIBE HISTORY table_name` | One row per write/operation with version, timestamp, operation, user, and metrics | RECOGNIZE |
+| Reproduce table definition | `SHOW CREATE TABLE table_name` | DDL that defines the table or view | RECOGNIZE |
+| Inspect properties | `SHOW TBLPROPERTIES table_name` | Table property key/value pairs | RECOGNIZE |
+| List objects | `SHOW CATALOGS`, `SHOW SCHEMAS`, `SHOW TABLES`, `SHOW COLUMNS` | Visible metadata objects | RECOGNIZE |
+| Select namespace | `USE CATALOG`, `USE SCHEMA` | Changes default name resolution for the session | RECOGNIZE |
+| Read an old Delta snapshot | `SELECT ... VERSION AS OF` / `TIMESTAMP AS OF` | Read-only time-travel query | RECOGNIZE |
+| Make an old snapshot current | `RESTORE TABLE ... TO VERSION AS OF` | Creates a new commit restoring old data/metadata | REFERENCE |
+
+### DESCRIBE TABLE
+
+```sql
+DESCRIBE TABLE study.monitoring.predictions;
+```
+
+Use this when the question asks for column names, types, comments, or basic table metadata.
+
+```sql
+DESCRIBE TABLE EXTENDED study.monitoring.predictions;
+```
+
+`EXTENDED` adds more table metadata. The essential exam distinction is that this describes the table's schema and metadata, **not its sequence of commits**.
+
+### DESCRIBE DETAIL
+
+```sql
+DESCRIBE DETAIL study.monitoring.predictions;
+```
+
+This returns a single metadata row. For a Delta table, useful fields can include:
+
+```text
+format
+id
+name
+location
+createdAt / lastModified
+partitionColumns / clusteringColumns
+numFiles / sizeInBytes
+properties
+minReaderVersion / minWriterVersion
+tableFeatures
+```
+
+Keep this in your head:
+
+```text
+DESCRIBE TABLE  -> columns and schema-oriented information
+DESCRIBE DETAIL -> one detailed table-level metadata row
+```
+
+### DESCRIBE HISTORY
+
+```sql
+DESCRIBE HISTORY study.monitoring.predictions;
+```
+
+This works on Delta tables and returns provenance for table writes. Important fields to recognize include:
+
+```text
+version
+timestamp
+userId / userName
+operation
+operationParameters
+job / notebook
+operationMetrics
+userMetadata
+```
+
+Why you would use it:
+
+- Find the version before a bad write.
+- Determine whether the latest operation was `WRITE`, `MERGE`, `UPDATE`, `DELETE`, `RESTORE`, or another table operation.
+- Identify when and by whom a change occurred.
+- Obtain a version for time travel or restoration.
+
+The current Databricks SQL reference states that table history is retained for 30 days by default. Do not assume every historical version is still readable indefinitely; retention and `VACUUM` affect old data files.
+
+Keep this in your head:
+
+```text
+DETAIL  -> what the table is now
+HISTORY -> how the Delta table changed over versions
+```
+
+### SHOW commands
+
+```sql
+SHOW CATALOGS;
+SHOW SCHEMAS IN main;
+SHOW TABLES IN main.monitoring;
+SHOW COLUMNS IN main.monitoring.predictions;
+SHOW CREATE TABLE main.monitoring.predictions;
+SHOW TBLPROPERTIES main.monitoring.predictions;
+```
+
+Use these to list visible objects or inspect a stored definition/property. They do not query the table's data rows.
+
+### USE commands
+
+```sql
+USE CATALOG main;
+USE SCHEMA monitoring;
+
+SELECT *
+FROM predictions;
+```
+
+After setting the catalog and schema, an unqualified table name resolves inside that namespace. A fully qualified `catalog.schema.table` name is clearer in exam options and production code.
+
+### Time travel: read an old snapshot
+
+```sql
+SELECT *
+FROM study.monitoring.predictions VERSION AS OF 12;
+```
+
+```sql
+SELECT *
+FROM study.monitoring.predictions
+TIMESTAMP AS OF '2026-07-09 14:00:00';
+```
+
+This reads a historical Delta snapshot without changing the current table.
+
+### RESTORE: make an old snapshot current
+
+```sql
+RESTORE TABLE study.monitoring.predictions
+TO VERSION AS OF 12;
+```
+
+```sql
+RESTORE TABLE study.monitoring.predictions
+TO TIMESTAMP AS OF '2026-07-09 14:00:00';
+```
+
+`RESTORE` is not a read-only time-travel query. It writes a new Delta commit whose state matches the selected earlier version.
+
+### The distinction that matters
+
+```text
+DESCRIBE TABLE   -> What are the columns/types?
+DESCRIBE DETAIL  -> What are the table-level Delta details now?
+DESCRIBE HISTORY -> What operations and versions occurred?
+VERSION AS OF    -> Read an old snapshot without changing current state.
+RESTORE          -> Create a new commit that returns the table to old state.
+```
+
+### Commands you can keep at low priority
+
+Know the purpose, not the full syntax:
+
+| Command | Purpose | ML Professional priority |
+|---|---|---|
+| `CREATE TABLE` / CTAS | Create a table, optionally from a query | Lab familiarity only |
+| `MERGE INTO` | Upsert matched and unmatched rows | Useful Delta background; Feature Engineering client is more exam-aligned |
+| `ALTER TABLE` | Change schema/properties/constraints | Reference only |
+| `OPTIMIZE` | Compact/reorganize Delta files | Not a current ML objective |
+| `VACUUM` | Remove old unreferenced data files | Not a current ML objective; affects time-travel availability |
+| `COPY INTO` | Incrementally load files | Data Engineering topic, not current ML blueprint |
+| `ANALYZE TABLE` | Collect optimizer statistics | SQL performance topic, not current ML blueprint |
+| `SHOW GRANTS` / `GRANT` | Inspect or modify privileges | UC background; exact SQL is not required here |
+
+Do not spend July memorizing `OPTIMIZE`, `VACUUM`, `COPY INTO`, or the full `MERGE INTO` grammar. Promote one only if a verified mock miss connects it to an official objective.
+
+### Five quick checks
+
+1. **Need the schema?** `DESCRIBE TABLE`.
+2. **Need size, location, format, or table features?** `DESCRIBE DETAIL`.
+3. **Need the previous commit version or operation?** `DESCRIBE HISTORY`.
+4. **Need to inspect version 12 without changing anything?** `SELECT ... VERSION AS OF 12`.
+5. **Need version 12 to become the table's current state?** `RESTORE TABLE ... TO VERSION AS OF 12`.
+
+---
+
+## 19. Sources
 
 - [Current ML Professional exam guide](https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf)
 - [Databricks SQL language reference](https://docs.databricks.com/aws/en/sql/language-manual)
@@ -1102,5 +1291,11 @@ Before Jul 29, you should be able to do all of these without notes:
 - [`current_timestamp`](https://docs.databricks.com/aws/en/sql/language-manual/functions/current_timestamp)
 - [TIMESTAMP type and literals](https://docs.databricks.com/aws/en/sql/language-manual/data-types/timestamp-type)
 - [Data Profiling metric-table schemas](https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-quality-monitoring/data-profiling/monitor-output)
+- [`DESCRIBE TABLE` and `DESCRIBE DETAIL`](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-describe-table)
+- [`DESCRIBE HISTORY`](https://docs.databricks.com/aws/en/sql/language-manual/delta-describe-history)
+- [Delta table history and time travel](https://docs.databricks.com/aws/en/tables/history)
+- [`RESTORE TABLE`](https://docs.databricks.com/aws/en/sql/language-manual/delta-restore)
+- [`SHOW CREATE TABLE`](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-show-create-table)
+- [`SHOW TBLPROPERTIES`](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-show-tblproperties)
 
-Use official documentation to resolve disputed mock answers. Do not use exam dumps to determine SQL syntax or current monitoring fields.
+If a mock answer is disputed, use these official pages to settle it. Exam dumps are not a trustworthy source for syntax or current monitoring fields.

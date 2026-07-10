@@ -1,11 +1,11 @@
-# Databricks Certified ML Professional — Master Study Plan
+# Databricks ML Professional - Your Study Plan
 
 **Candidate:** Moustafa
 **Exam:** Friday, August 28, 2026 · 2:00–4:00 PM EDT · Online proctored (Kryterion Webassessor) — booked ✅
 **Plan window:** Fri Jul 10 → Thu Aug 27 · **weekdays only** (weekends = catch-up / rest)
 **Study rhythm:** standard session = **60–90 min** · Friday reading/retrieval/lab combined = **2–3 hours total** · timed mock = **120 min** · mock review = **up to 120 min the next day**
-**July objective:** finish all first-pass reading + core hands-on labs by **Fri Jul 31**.
-**August objective:** establish a baseline early, then use selective re-reads, scenario drills, **3 timed mock exams**, an error log, and targeted lab repair to close weak areas.
+**July goal:** finish the first pass and the core hands-on labs by **Fri Jul 31**.
+**August goal:** find the weak spots early, then use focused rereading, scenario drills, **3 timed mocks**, and targeted lab repair to close them.
 
 ---
 
@@ -35,9 +35,9 @@
 - Databricks Academy: https://www.databricks.com/learn/training/login → **"Machine Learning at Scale"** and **"Advanced Machine Learning Operations"** are optional reference courses, not additional required work in this schedule
 - Practice workspace: use your existing eligible Databricks workspace when possible; **Databricks Free Edition** is the fallback: https://www.databricks.com/learn/free-edition
 
-> ⚠️ **Old prep material warning:** the exam was restructured in Sept 2025 from four sections to three. The current guide emphasizes UC model aliases instead of legacy model stages and adds **Optuna/Ray, DABs, ML testing, and blue-green/canary deployments**. Ignore pre-Sept-2025 study material.
+> ⚠️ **Watch the date on prep material:** the exam changed from four sections to three in September 2025. The current version uses UC model aliases instead of legacy stages and adds **Optuna/Ray, DABs, ML testing, and blue-green/canary deployments**. Older material is useful only when it still matches the live guide.
 
-> 📅 **Mandatory:** re-download the exam guide on **Fri Aug 14** (Week 5) and diff it against the version you read Day 1 — date, exam facts, objectives, and terminology. Do not assume it is unchanged.
+> 📅 **Calendar reminder:** download the exam guide again on **Fri Aug 14** and compare it with the Day 1 version. Check the date, exam facts, objectives, and terminology before trusting the rest of the plan.
 
 **Terminology notes (exam guide vs current docs):**
 
@@ -53,20 +53,20 @@ Exam-guide "online tables" = legacy SDK objective
   Learn both mappings, but do not treat them as the same API workflow.
 ```
 
-**Tailored to you:** you already run Unity Catalog, MLflow, Terraform, and Python daily. DABs will feel like Terraform (quick win); UC models will feel familiar. Your likely gaps: **classic SparkML/MLlib APIs, Optuna/Ray distributed tuning, and Lakehouse Monitoring statistics** — the plan front-loads and repeats those.
+**Why the plan leans this way:** you already use Unity Catalog, MLflow, Terraform, and Python every day. DABs should click quickly, and UC models will feel familiar. The areas most likely to need deliberate practice are **classic SparkML/MLlib APIs, Optuna/Ray distributed tuning, and Lakehouse Monitoring statistics**, so they appear early and more than once.
 
-**Docs note:** links use the AWS flavor — swap `/aws/` for `/azure/` or `/gcp/` as needed.
+**About the links:** they use the AWS docs. Swap `/aws/` for `/azure/` or `/gcp/` when needed.
 
-**Workspace feasibility:** Free Edition is serverless-only and does not support legacy online tables. Ray on Spark cannot start on serverless compute. If a Ray, online-feature, or serving lab is unavailable in your workspace, complete the reading plus pseudocode/configuration and mark the lab **conceptually complete**; do not let platform access derail the calendar. Free Edition limitations: https://docs.databricks.com/aws/en/getting-started/free-edition-limitations
+**When the workspace says no:** Free Edition is serverless-only, does not support legacy online tables, and cannot run Ray on Spark. If a Ray, online-feature, or serving lab is unavailable, do the reading, write the exact pseudocode/configuration, and mark it **conceptually complete**. That is enough to keep moving. Free Edition limitations: https://docs.databricks.com/aws/en/getting-started/free-edition-limitations
 
 **Reading priority:**
 ```text
-[MUST]      Read the named sections and take notes; exam objective depends on it.
-[SKIM]      Read headings/examples until you can explain the listed decision rule.
-[REFERENCE] Open only when a lab, mock error, or unclear term requires it.
+[MUST]      Give this proper attention; it maps directly to an exam objective.
+[SKIM]      Read enough to explain the decision rule in your own words.
+[REFERENCE] Open it only when a lab or a mock miss sends you there.
 ```
 
-**API-syntax standard:** the exam is multiple choice, so the goal is reliable code recognition plus the ability to reconstruct each core call—not memorizing every optional argument in the documentation.
+**How much syntax to learn:** this is a multiple-choice exam. You need to recognize correct code and rebuild the core calls, not recite every optional argument in the docs.
 ```text
 [WRITE]     Reproduce the owning class/module, exact method, and key named parameters.
 [RECOGNIZE] Given four snippets, select the valid method and explain its side effect/trap.
@@ -76,9 +76,9 @@ owner → exact method → key parameters → return/side effect → nearest dis
 ```
 All core code patterns in MUST sections are **[WRITE]** unless marked recognition/reference-only. CRUD/admin methods adjacent to an objective are **[RECOGNIZE]**. Mock errors can promote a method from RECOGNIZE to WRITE, but third-party trivia does not automatically become core syllabus.
 
-**API companion:** use [the Markdown method/parameter reference](databricks-ml-professional-api-methods.md) for notes and [the searchable HTML reference](databricks-ml-professional-api-methods.html) for daily recall. The plan controls **when** to study; the companion controls **which exact calls and parameters** to write or recognize.
+**API companion:** use the [Markdown reference](api-reference.md) for notes and the [searchable HTML reference](api-reference.html) for recall. This plan tells you **when** to study something; the companion shows the exact calls and parameters.
 
-**Document boundary:** keep calendar actions, decision rules, labs, mastery gates, and practice scheduling here. Keep canonical code shapes, parameter tables, CRUD variants, version-specific APIs, and syntax traps in the API companion. When a recall task says "reconstruct," study the companion example once, close it, write the call from memory, then verify.
+**How the files work together:** start here each day for the reading, lab, and checkpoint. Open the API companion when you need an exact call shape. When a task says "reconstruct," look once, close the reference, write it from memory, and then check your work.
 
 **Standard-session timebox (maximum 90 min):**
 ```text
@@ -91,9 +91,9 @@ All core code patterns in MUST sections are **[WRITE]** unless marked recognitio
 
 **Friday 2–3 hour template:** 20 min cumulative scenarios · 20–25 min MUST snippets · 90–130 min minimum lab · 10–15 min verbal explanation/error log. SKIM and REFERENCE items never displace the minimum lab.
 
-**Retest/repair rule:** the first 10-minute retrieval block is used for due D+1/D+3/D+7 error retests; when none are due, use normal yesterday/7-days-ago recall. Here D+1 means the next scheduled study session, not necessarily the next calendar day. A failed weekly quiz replaces the first 20 minutes of Monday's hands-on block; it is never added on top.
+**When something does not stick:** use the first 10 minutes for due D+1/D+3/D+7 retests. If none are due, recall yesterday's topic and the topic from a week ago. D+1 means the next study session, not necessarily tomorrow. A failed weekly quiz uses Monday's first 20 minutes; it does not create extra work.
 
-**Missed-day rule:** do not move every later date. Complete the missed day's MUST items in the next catch-up block, leave SKIM/REFERENCE links for August, and continue with the calendar. Optional catch-up blocks are Sat Jul 18 and Sat Jul 25. Lab 3 and first-pass coverage must finish on Fri Jul 31; Aug 1–2 remain rest days.
+**If you miss a day:** do not push the whole calendar forward. Put the missed MUST items into the next catch-up block, leave SKIM/REFERENCE links for August, and return to the schedule. Sat Jul 18 and Sat Jul 25 are available for catch-up. Keep Aug 1-2 as rest days.
 
 ---
 
@@ -118,7 +118,7 @@ Every standard day follows the timebox above. Read only the named sections, not 
 
 **Skim only:** deep learning, GenAI, agents, vector search, foundation models — not on the exam.
 
-**Required ANSI SQL baseline (10 min):** use the tables, timed prompt, scoring rubric, and answer key in the [exam-focused SQL guide](databricks-ml-professional-ansi-sql-guide.md). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
+**Required ANSI SQL baseline (10 min):** use the tables, timed prompt, scoring rubric, and answer key in the [searchable SQL guide](sql-guide.html) ([Markdown source](sql-guide.md)). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
 
 **Note to create:**
 ```text
@@ -126,7 +126,7 @@ Scope → Explore data → Prepare features → Train and track → Evaluate
 → Register and test → Deploy → Monitor → Retrain
 ```
 
-**Do:**
+**Your task:**
 - Use your existing workspace or sign up for Free Edition; create the study catalog/schema.
 - Preflight: confirm UC `CREATE TABLE`/`CREATE MODEL` access, Feature Engineering client/runtime support, Databricks CLI authentication, `bundle validate`, Model Serving permission, SQL warehouse access, and Data Profiling permission. Record **hands-on** or **pseudocode fallback** beside each unavailable capability.
 - Create a practice-source checklist now. By **Fri Jul 17**, lock four distinct, unseen, Sept-2025-aligned attempts: Mock 1 baseline, Mocks 2–3 readiness, and one unopened contingency set. Current researched candidates: [Practice Exam 2026](https://www.udemy.com/course/databricks-machine-learning-professional-practice-test/) and [six-mock alternative](https://www.udemy.com/course/databricks-certified-machine-learning-professional-exams/). Preview before purchase; reject banks centered on legacy stages, Hyperopt, or pre-Sept-2025 objectives. Third-party explanations must be verified against official docs.
@@ -154,7 +154,7 @@ Use scikit-learn (single-node) when: data fits in memory, needed algorithm
 isn't distributed, Python-native tooling is more practical.
 ```
 
-**Must memorize:**
+**Know cold:**
 ```text
 Estimator     → learns from data, has .fit(), produces a Transformer
 Transformer   → transforms a DataFrame, has .transform()
@@ -169,7 +169,7 @@ LogisticRegression = Estimator → LogisticRegressionModel = Transformer
 
 Also know that a fitted `PipelineModel` can be saved, loaded, and reused for batch or streaming inference; keeping preprocessing in the same pipeline preserves training/inference consistency.
 
-**Do:** flashcards for Estimator / Transformer / Pipeline / PipelineModel / Param.
+**Your task:** flashcards for Estimator / Transformer / Pipeline / PipelineModel / Param.
 
 ### Tue Jul 14 — SparkML II: algorithms, evaluators, tuning, inference modes
 
@@ -211,9 +211,9 @@ Streaming  → continuously arriving records, Structured Streaming pipeline
 Real-time  → request/response, low latency, Model Serving endpoint
 ```
 
-**API recall:** use [API companion §1](databricks-ml-professional-api-methods.html#1-spark-ml-pipelines-tuning-evaluation-and-scoring). Reconstruct the pipeline fit/transform chain, the tiny tuning-grid/evaluator chain, and the `readStream` → model `transform` → checkpointed `writeStream` shape.
+**API recall:** use [API companion §1](api-reference.html#1-spark-ml-pipelines-tuning-evaluation-and-scoring). Reconstruct the pipeline fit/transform chain, the tiny tuning-grid/evaluator chain, and the `readStream` → model `transform` → checkpointed `writeStream` shape.
 
-**Do (35 min):** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today.
+**Hands-on (35 min):** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today.
 
 ### Wed Jul 15 — Scaling I: pandas Function APIs & UDFs
 
@@ -221,14 +221,14 @@ Real-time  → request/response, low latency, Model Serving endpoint
 1. **[MUST]** pandas function APIs: https://docs.databricks.com/aws/en/pandas/pandas-function-apis
 2. **[MUST]** pandas UDFs: https://docs.databricks.com/aws/en/udf/pandas
 
-**Must memorize:**
+**Know cold:**
 ```text
 applyInPandas → grouped map: train one model PER GROUP (per store/customer)
 mapInPandas   → iterator over batches, batch transform
 pandas UDF    → vectorized Series→Series, parallel row scoring
 ```
 
-**Do (35 min):** run the `applyInPandas` per-group training slice. Write and annotate the pandas UDF or `mapInPandas` inference slice; run it only if time remains. Explain why the APIs differ.
+**Hands-on (35 min):** run the `applyInPandas` per-group training slice. Write and annotate the pandas UDF or `mapInPandas` inference slice; run it only if time remains. Explain why the APIs differ.
 
 ### Thu Jul 16 — Scaling II: Optuna, Ray, parallelism strategies
 
@@ -240,7 +240,7 @@ pandas UDF    → vectorized Series→Series, parallel row scoring
 5. **[SKIM]** Distributed-training strategies: https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/
 6. **[REFERENCE]** Cluster sizing: https://docs.databricks.com/aws/en/compute/configure
 
-**Must memorize:**
+**Know cold:**
 ```text
 Vertical scaling   → bigger machine
 Horizontal scaling → more machines
@@ -255,7 +255,7 @@ Distributed Optuna on Databricks: MlflowStorage + MlflowSparkStudy
 Ray cluster setup: setup_ray_cluster; Ray Tune for HPO
 ```
 
-**Workspace note:** in Free Edition, treat Ray cluster execution as conceptual because Ray on Spark does not support serverless runtimes. Do the decision-rule drill and write the setup pseudocode instead.
+**If you use Free Edition:** in Free Edition, treat Ray cluster execution as conceptual because Ray on Spark does not support serverless runtimes. Do the decision-rule drill and write the setup pseudocode instead.
 
 **Decision rules:**
 ```text
@@ -272,9 +272,9 @@ Model parallelism → model itself cannot fit one accelerator/node;
                     splits the model, with the highest communication and engineering complexity.
 ```
 
-**API recall:** use [API companion §2](databricks-ml-professional-api-methods.html#2-pandas-function-apis-optuna-and-ray). Write the Optuna storage → Spark study → `optimize` chain and the Ray cluster setup → `Tuner.fit()` → two-layer shutdown chain without looking.
+**API recall:** use [API companion §2](api-reference.html#2-pandas-function-apis-optuna-and-ray). Write the Optuna storage → Spark study → `optimize` chain and the Ray cluster setup → `Tuner.fit()` → two-layer shutdown chain without looking.
 
-**Do:** run the distributed Optuna pattern when supported; otherwise annotate exactly what `MlflowStorage`, `MlflowSparkStudy`, `n_trials`, and `n_jobs` control. For Ray, reconstruct and annotate the lifecycle from the companion. Answer at least three explicit scaling cases: (1) model fits but one node lacks RAM, (2) dataset is huge but a model replica fits each worker, and (3) the model cannot fit one accelerator. Justify vertical, data-parallel/horizontal, or model-parallel selection and name the coordination/cost trade-off.
+**Your task:** run the distributed Optuna pattern when supported; otherwise annotate exactly what `MlflowStorage`, `MlflowSparkStudy`, `n_trials`, and `n_jobs` control. For Ray, reconstruct and annotate the lifecycle from the companion. Answer at least three explicit scaling cases: (1) model fits but one node lacks RAM, (2) dataset is huge but a model replica fits each worker, and (3) the model cannot fit one accelerator. Justify vertical, data-parallel/horizontal, or model-parallel selection and name the coordination/cost trade-off.
 
 ### Fri Jul 17 — Advanced MLflow + **Lab 1**
 
@@ -284,7 +284,7 @@ Model parallelism → model itself cannot fit one accelerator/node;
 3. **[MUST]** Nested/child runs: https://mlflow.org/docs/latest/ml/traditional-ml/tutorials/hyperparameter-tuning/part1-child-runs/
 4. **[MUST]** MLflow models & PyFunc: https://docs.databricks.com/aws/en/mlflow/models
 
-**Must memorize:**
+**Know cold:**
 ```text
 Experiment = collection of runs · Run = one execution
 Param = configuration · Metric = numeric result · Artifact = file/model · Tag = metadata
@@ -296,9 +296,9 @@ Existing unsigned version → downstream limitations (no input enforcement, fewe
 Input example → recommended; MLflow can infer the required signature from it automatically
 ```
 
-**API recall:** use [API companion §3](databricks-ml-professional-api-methods.html#3-mlflow-tracking-api). From memory, write one experiment with a parent run, two `nested=True` child runs, param/metric/tag/artifact logging, and `search_runs` ordered by the validation metric. Explain `step`, the parent-run filter tag, and singular versus plural logging methods.
+**API recall:** use [API companion §3](api-reference.html#3-mlflow-tracking-api). From memory, write one experiment with a parent run, two `nested=True` child runs, param/metric/tag/artifact logging, and `search_runs` ordered by the validation metric. Explain `step`, the parent-run filter tag, and singular versus plural logging methods.
 
-**Do not confuse the MLflow APIs:**
+**Keep these API jobs separate:**
 ```text
 mlflow fluent Tracking API                → experiments, runs, params, metrics, tags, artifacts
 MlflowClient                              → lower-level tracking/registry metadata operations
@@ -307,7 +307,7 @@ FeatureEngineeringClient.log_model        → log model together with feature-lo
 mlflow.deployments client.predict         → query a deployed serving endpoint
 ```
 
-**Custom PyFunc recall:** use [API companion §4](databricks-ml-professional-api-methods.html#4-mlflow-models-and-custom-pyfunc) to reconstruct `PythonModel`, `load_context`, `predict`, signature inference, and `log_model` once. Then close it and write the owning module, required methods, and packaging arguments from memory.
+**Custom PyFunc recall:** use [API companion §4](api-reference.html#4-mlflow-models-and-custom-pyfunc) to reconstruct `PythonModel`, `load_context`, `predict`, signature inference, and `log_model` once. Then close it and write the owning module, required methods, and packaging arguments from memory.
 
 ```text
 artifacts        → files packaged with the model
@@ -338,9 +338,9 @@ Custom PyFunc use case: real-time feature engineering inside predict()
 5. **[MUST]** Point-in-time joins: https://docs.databricks.com/aws/en/machine-learning/feature-store/time-series
 6. **[REFERENCE]** Python API catalog: https://docs.databricks.com/aws/en/machine-learning/feature-store/python-api
 
-**Focus:** feature governance, reuse, and lineage; `FeatureEngineeringClient.create_table` / `write_table`; primary and timestamp keys; training sets; point-in-time joins.
+**What matters:** feature governance, reuse, and lineage; `FeatureEngineeringClient.create_table` / `write_table`; primary and timestamp keys; training sets; point-in-time joins.
 
-**API recall:** use [API companion §6](databricks-ml-professional-api-methods.html#6-feature-engineering-and-point-in-time-lookups). Reconstruct `FeatureLookup` → `create_training_set` → `load_df`, including the point-in-time parameter and the later `log_model`/`score_batch` pair.
+**API recall:** use [API companion §6](api-reference.html#6-feature-engineering-and-point-in-time-lookups). Reconstruct `FeatureLookup` → `create_training_set` → `load_df`, including the point-in-time parameter and the later `log_model`/`score_batch` pair.
 
 ```text
 Typical UC feature table = Delta table + PK constraint; a constrained simple SELECT view can be used for offline training/evaluation only
@@ -350,7 +350,7 @@ Point-in-time join → only feature values available at label time → prevents 
 fe.log_model → packages lookups so score_batch auto-joins features
 ```
 
-**Do (35 min):** create the tiny feature table plus `FeatureLookup`, build the training set, and call `load_df`. Annotate the later `fe.log_model`/`score_batch` steps; the full runnable scoring path is completed in Lab 2.
+**Hands-on (35 min):** create the tiny feature table plus `FeatureLookup`, build the training set, and call `load_df`. Annotate the later `fe.log_model`/`score_batch` steps; the full runnable scoring path is completed in Lab 2.
 
 ### Tue Jul 21 — Feature Store II: online workflows, streaming, on-demand
 
@@ -362,7 +362,7 @@ fe.log_model → packages lookups so score_batch auto-joins features
 5. **[REFERENCE]** Real-time feature-computation blog: https://www.databricks.com/blog/best-practices-realtime-feature-computation-databricks
 6. **[REFERENCE]** Demo: https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/feature-store-and-online-inference
 
-**Exam rules:**
+**Decision rules:**
 ```text
 Prevent historical leakage        → point-in-time feature join
 Low-latency real-time features    → Databricks Online Feature Store
@@ -375,7 +375,7 @@ Streaming feature freshness       → Structured Streaming writes to feature tab
 
 **Terminology:** the live Sept 2025 exam guide explicitly tests configuring **online tables with the Databricks SDK**. Current 2026 docs use **Databricks Online Feature Store**, backed by Lakebase, and no longer support creating legacy online tables for new workflows. Study both workflows; do not collapse them into one API.
 
-**API recall:** use [API companion §7](databricks-ml-professional-api-methods.html#7-online-features-and-streaming-publication) for both generations. Write the guide-era `WorkspaceClient().online_tables.create_and_wait` object chain and the current `create_online_store` → wait for `AVAILABLE` → `publish_table` chain from memory.
+**API recall:** use [API companion §7](api-reference.html#7-online-features-and-streaming-publication) for both generations. Write the guide-era `WorkspaceClient().online_tables.create_and_wait` object chain and the current `create_online_store` → wait for `AVAILABLE` → `publish_table` chain from memory.
 
 ```text
 Legacy OnlineTableSpec: choose run_continuously OR run_triggered.
@@ -388,7 +388,7 @@ SNAPSHOT = one full sync · TRIGGERED = incremental on demand/schedule
 CONTINUOUS = stream changes for the freshest online values.
 ```
 
-**Streaming feature pipeline:** reconstruct `readStream` → feature computation → `fe.write_table(mode="merge", checkpoint_location=..., trigger=...)` from [API companion §7](databricks-ml-professional-api-methods.html#7-online-features-and-streaming-publication).
+**Streaming feature pipeline:** reconstruct `readStream` → feature computation → `fe.write_table(mode="merge", checkpoint_location=..., trigger=...)` from [API companion §7](api-reference.html#7-online-features-and-streaming-publication).
 
 ```text
 Streaming source → Structured Streaming computation → offline UC feature table
@@ -397,7 +397,7 @@ Streaming source → Structured Streaming computation → offline UC feature tab
 
 **On-demand recall:** `FeatureFunction(udf_name, input_bindings, output_name)` belongs in the same feature list as `FeatureLookup`; `fe.log_model(..., training_set=...)` preserves both so batch scoring and Model Serving repeat the lookup and UDF computation.
 
-**Do (35 min):** complete the legacy/current comparison table, then either run the current publish + FeatureFunction workflow or annotate each API field and draw the streaming architecture. The fallback is pseudocode, not omission.
+**Hands-on (35 min):** complete the legacy/current comparison table, then either run the current publish + FeatureFunction workflow or annotate each API field and draw the streaming architecture. The fallback is pseudocode, not omission.
 
 ### Wed Jul 22 — Model lifecycle: MLflow models, UC registry, aliases, PyFunc packaging
 
@@ -407,7 +407,7 @@ Streaming source → Structured Streaming computation → offline UC feature tab
 3. **[MUST]** Custom artifacts for serving: https://docs.databricks.com/aws/en/machine-learning/model-serving/model-serving-custom-artifacts
 4. **[REFERENCE]** Big Book of MLOps workflow chapters: https://www.databricks.com/resources/ebook/the-big-book-of-mlops
 
-**Must memorize:**
+**Know cold:**
 ```text
 Models in UC: 3-level names (catalog.schema.model), versions, ALIASES, tags, lineage, permissions
 UC model aliases are the current deployment-status mechanism; legacy stages are not used
@@ -420,7 +420,7 @@ URI by version: models:/catalog.schema.model/3
 Logged model ≠ registered model
 ```
 
-**Exam rules:**
+**Decision rules:**
 ```text
 Stable production reference          → model alias
 Custom pre/post-processing           → custom PyFunc
@@ -428,11 +428,11 @@ Custom file needed at inference      → model artifact
 Reliable serving schema              → model signature
 ```
 
-**[WRITE] Core UC registry workflow:** use [API companion §5](databricks-ml-professional-api-methods.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
+**[WRITE] Core UC registry workflow:** use [API companion §5](api-reference.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
 
-**[RECOGNIZE] Registry creation/deletion/admin methods:** study the exact call shapes and side effects in [API companion §5](databricks-ml-professional-api-methods.html#5-unity-catalog-model-registry). Key distinction: deleting an alias removes only a pointer; `delete_model_version` removes one version; `delete_registered_model` removes everything. Python uses underscores, never `delete_model-version`. Do not run deletion methods in the study lab.
+**[RECOGNIZE] Registry creation/deletion/admin methods:** study the exact call shapes and side effects in [API companion §5](api-reference.html#5-unity-catalog-model-registry). Key distinction: deleting an alias removes only a pointer; `delete_model_version` removes one version; `delete_registered_model` removes everything. Python uses underscores, never `delete_model-version`. Do not run deletion methods in the study lab.
 
-**Do:** register a model in UC, set `@champion`, load it by alias.
+**Your task:** register a model in UC, set `@champion`, load it by alias.
 
 ### Thu Jul 23 — Validation testing for ML
 
@@ -467,7 +467,7 @@ Monitoring threshold     → monitoring + alert tests
 
 **Code-organization trade-off:** notebook `%run` is quick but tightly coupled; importable modules/wheels are easier to isolate, unit test, version, and deploy. Run unit tests in dev/CI, integration tests in staging, and a small smoke/inference check after production deployment.
 
-**Do:** write 2–3 pytest unit tests for feature-engineering functions. Then make an integration-test matrix with rows for feature engineering → training → evaluation → deployment → inference and columns for a hyperparameter change, feature-logic change, data-schema change, and serving-config change. Mark the minimum complete rerun scope for each.
+**Your task:** write 2–3 pytest unit tests for feature-engineering functions. Then make an integration-test matrix with rows for feature engineering → training → evaluation → deployment → inference and columns for a hyperparameter change, feature-logic change, data-schema change, and serving-config change. Mark the minimum complete rerun scope for each.
 
 ### Fri Jul 24 — MLOps architecture, CI/CD, DABs + **Lab 2**
 
@@ -479,7 +479,7 @@ Monitoring threshold     → monitoring + alert tests
 5. **[REFERENCE]** MLOps Stacks: https://docs.databricks.com/aws/en/machine-learning/mlops/mlops-stacks + repo: https://github.com/databricks/mlops-stacks
 6. **[REFERENCE]** Demo tour: https://www.databricks.com/resources/demos/tours/data-engineering/databricks-asset-bundles
 
-**Must memorize:**
+**Know cold:**
 ```text
 Deploy-CODE (recommended default) → code promoted dev→staging→prod, model retrained per env
 Deploy-MODEL                      → one model artifact promoted across envs
@@ -500,7 +500,7 @@ Terraform            → broader infra; DAB is the Databricks-native exam answer
 MLflow Projects      → packages reproducible code, doesn't deploy resources
 ```
 
-**API/config recall:** use [API companion §9](databricks-ml-professional-api-methods.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job resource, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence.
+**API/config recall:** use [API companion §9](api-reference.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job resource, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence.
 
 **Environment architecture:** isolate dev/staging/prod with bundle targets and environment-specific configuration; use source control, service identities, least privilege, and validation gates rather than manual workspace changes.
 
@@ -526,7 +526,7 @@ MLflow Projects      → packages reproducible code, doesn't deploy resources
 2. **[SKIM]** Data profiling overview: https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-quality-monitoring/data-profiling/
 3. **[REFERENCE]** Drift introduction blog: https://www.databricks.com/blog/2019/09/18/productionizing-machine-learning-from-deployment-to-drift-detection.html
 
-**Must memorize:**
+**Know cold:**
 ```text
 Four drift types → classify scenarios:
   feature drift, label drift, prediction drift, concept drift
@@ -555,7 +555,7 @@ PSI < 0.2: moderate change
 PSI ≥ 0.2: significant change
 ```
 
-**Do not collapse distribution drift and model-performance degradation:**
+**Keep distribution drift and model performance separate:**
 ```text
 Feature/prediction distribution drift → {table}_drift_metrics
   numeric     → KS, Wasserstein, PSI
@@ -573,7 +573,7 @@ No labels → measure input/prediction drift, but not actual predictive quality.
 Concept drift → relationship between inputs and target changes; feature drift alone does not prove it.
 ```
 
-**Do:** classify six drift scenarios, then interpret one KS result, one chi-square result, one distance/PSI result, and one label-based model-performance trend in a sentence each. For every scenario, name the output table and field you would query.
+**Your task:** classify six drift scenarios, then interpret one KS result, one chi-square result, one distance/PSI result, and one label-based model-performance trend in a sentence each. For every scenario, name the output table and field you would query.
 
 ### Tue Jul 28 — Monitoring profiles & output tables
 
@@ -582,7 +582,7 @@ Concept drift → relationship between inputs and target changes; feature drift 
 2. **[MUST]** Profile and drift output tables: https://docs.databricks.com/aws/en/data-governance/unity-catalog/data-quality-monitoring/data-profiling/monitor-output
 3. **[REFERENCE]** Hands-on tutorial: https://www.databricks.com/resources/demos/tutorials/data-warehouse-and-bi/monitor-your-data-quality-with-lakehouse-monitoring
 
-**Must memorize:**
+**Know cold:**
 ```text
 Snapshot profile    → static/slowly changing table, whole table each refresh
 Time-series profile → needs timestamp column, windowed metrics
@@ -596,7 +596,7 @@ Baseline table = optional user-supplied reference input
 Other outputs/config = auto-generated dashboard + optional refresh schedule
 ```
 
-**Do (35 min):** start or refresh the inference profile and inspect both metric tables. If refresh latency consumes the block, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3.
+**Hands-on (35 min):** start or refresh the inference profile and inspect both metric tables. If refresh latency consumes the block, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3.
 
 ### Wed Jul 29 — Custom metrics, slices, alerts, endpoint health, retraining
 
@@ -607,7 +607,7 @@ Other outputs/config = auto-generated dashboard + optional refresh schedule
 4. **[REFERENCE]** Endpoint metrics export: https://docs.databricks.com/aws/en/machine-learning/model-serving/metrics-export-serving-endpoint
 5. **[MUST]** AI Gateway inference-table schema/workflow: https://docs.databricks.com/aws/en/ai-gateway/inference-tables-serving-endpoints
 
-**Must memorize:**
+**Know cold:**
 ```text
 Custom metric types: aggregate / derived / drift
 Slice → metrics for a subset (region, device, customer type) via slicing expressions
@@ -626,7 +626,7 @@ AI Gateway inference table (raw JSON request/response)
 
 **Slices/granularity:** configure daily/weekly granularities and at least one column or predicate slice. Query `slice_key`, `slice_value`, `granularity`, and `window`; compare a whole-table row (`slice_key IS NULL`) with one segment and explain why aggregate health can hide a segment regression.
 
-**API recall:** use [API companion §8](databricks-ml-professional-api-methods.html#8-data-profiling-lakehouse-monitoring) to distinguish the current `data_quality` API from guide-era `quality_monitors`, then reconstruct one aggregate `MonitorMetric` with `type`, `name`, `input_columns`, `definition`, and `output_data_type`.
+**API recall:** use [API companion §8](api-reference.html#8-data-profiling-lakehouse-monitoring) to distinguish the current `data_quality` API from guide-era `quality_monitors`, then reconstruct one aggregate `MonitorMetric` with `type`, `name`, `input_columns`, `definition`, and `output_data_type`.
 
 ```text
 Aggregate metric reads primary-table columns.
@@ -649,7 +649,7 @@ WHERE ks_test.pvalue < 0.05
 ORDER BY window.start DESC;
 ```
 
-**Do (35 min):** define one aggregate custom metric and run/validate the SQL drift query. Use pseudocode to sketch the drift metric, slice/granularity comparison, alert destination, orchestration step, and model-quality trend query. Lab 3 integrates the full monitoring chain.
+**Hands-on (35 min):** define one aggregate custom metric and run/validate the SQL drift query. Use pseudocode to sketch the drift metric, slice/granularity comparison, alert destination, orchestration step, and model-quality trend query. Lab 3 integrates the full monitoring chain.
 
 ### Thu Jul 30 — Deployment strategies & serving rollout
 
@@ -660,7 +660,7 @@ ORDER BY window.start DESC;
 4. **[SKIM]** Route optimization for high traffic: https://docs.databricks.com/aws/en/machine-learning/model-serving/route-optimization
 5. **[REFERENCE]** Query/auth for route-optimized endpoints: https://docs.databricks.com/aws/en/machine-learning/model-serving/query-route-optimization
 
-**Must memorize:**
+**Know cold:**
 ```text
 Canary     → small % of traffic to new version, ramp gradually
 Blue-green → two full environments, instant switch, easy rollback
@@ -680,14 +680,14 @@ High traffic → scale-out + route optimization
 2. **[MUST]** MLflow Deployments create/update/predict methods: https://mlflow.org/docs/latest/api_reference/python_api/mlflow.deployments.html
 3. **[REFERENCE]** Serving limits/regions: https://docs.databricks.com/aws/en/machine-learning/model-serving/model-serving-limits
 
-**Must memorize:**
+**Know cold:**
 ```text
 Deploy via UI, REST API, or MLflow Deployments SDK
 Query: REST /serving-endpoints/{name}/invocations
 Input formats: dataframe_split, dataframe_records, instances, inputs
 ```
 
-**API recall:** use [API companion §10](databricks-ml-professional-api-methods.html#10-model-serving-rest-and-mlflow-deployments). Write `get_deploy_client("databricks")` → `client.predict(endpoint=..., inputs=...)` and one REST invocations payload from memory; explain why `endpoint` and `inputs` are the correct parameter names.
+**API recall:** use [API companion §10](api-reference.html#10-model-serving-rest-and-mlflow-deployments). Write `get_deploy_client("databricks")` → `client.predict(endpoint=..., inputs=...)` and one REST invocations payload from memory; explain why `endpoint` and `inputs` are the correct parameter names.
 
 **Lab 3 (2–3 hours, must finish by Fri Jul 31) — Minimum viable production lifecycle:**
 1. Spend 25 minutes on 15 interleaved scenarios: 6 Model Development, 7 MLOps, 2 Deployment.
@@ -702,11 +702,11 @@ Input formats: dataframe_split, dataframe_records, instances, inputs
 
 ---
 
-# 3. August — Baseline, Weak-Area Repair, Drills, Mocks, Taper
+# 3. August - Practice, Repair, Then Taper
 
 ---
 
-## Week 4 (Aug 3–7) · Baseline Mock + First Repairs
+## Week 4 (Aug 3-7) · First Mock and First Repairs
 
 **Mon Aug 3 — MOCK EXAM 1 (120 min).** Use the reserved baseline mock, unseen and first attempt. If the provider uses a slightly different question count, keep an average pace of about two minutes per question and preserve at least 10 minutes for review. No notes; record confidence on every answer; do not reveal answers during the attempt. This score is diagnostic, not a readiness pass/fail.
 
@@ -727,7 +727,7 @@ Choose one repair:
 
 ---
 
-## Week 5 (Aug 10–14) · Official Questions, Scenario Drills, Guide Refresh
+## Week 5 (Aug 10-14) · Official Questions and Scenario Practice
 
 **Mon Aug 10 — Official sample questions 1–5 (60–90 min).** These were seen on Day 1, so use them as rationale drills, not score evidence. Answer without notes; for every option, record why it is right or wrong and which phrase identifies the tested objective.
 
@@ -765,7 +765,7 @@ Choose one repair:
 
 ---
 
-## Week 6 (Aug 17–21) · Mocks 2–3 + targeted remediation
+## Week 6 (Aug 17-21) · Mocks 2 and 3, Then Focused Repair
 
 **Mon Aug 17 — MOCK EXAM 2 (120 min).** Use the reserved unseen readiness mock under the same conditions. Target 80%+, controlled confidence, and at least 10 minutes left for review.
 
@@ -792,7 +792,7 @@ Manual deployment chosen instead of DAB
 
 ---
 
-## Final week (Aug 24–28) · Taper
+## Final Week (Aug 24-28) · Get Ready, Then Ease Off
 
 **Mon Aug 24 — Conditional readiness day.** If Mocks 2 and 3 are both ≥80%, use up to 30 minutes for Mock 3 overflow, then mark every objective Green/Yellow/Red and review only yellow/red. If **exactly one** of Mocks 2–3 missed 80%, take the reserved unseen contingency mock today as the possible second qualifying score. If both missed 80%, the readiness criterion is unmet; do not burn the final days chasing a mock score. Use today for a weighted objective/error audit and targeted remediation instead.
 
@@ -811,7 +811,7 @@ Manual deployment chosen instead of DAB
 
 ---
 
-# 4. High-yield cheat sheet / memory rules (know cold)
+# 4. Last-Minute Memory Sheet
 
 **SparkML**
 ```text
@@ -901,7 +901,7 @@ AI Gateway inference JSON → scheduled flattening → processed Delta table →
 
 ---
 
-# 5. Error log template
+# 5. Mistake Log
 
 ```markdown
 ## Question ID
@@ -931,7 +931,7 @@ At the start of each session, complete any due retests before new reading. An it
 
 ---
 
-# 6. Weekly progress tracker
+# 6. Weekly Progress
 
 | Week | Target | Done? | Confidence |
 |---|---|---:|---:|
@@ -947,7 +947,7 @@ At the start of each session, complete any due retests before new reading. An it
 
 ---
 
-# 7. Readiness criteria
+# 7. How You Will Know You Are Ready
 
 - [ ] Official sample questions: can explain every option; memorized score is not counted
 - [ ] Three first-attempt unseen mocks completed; Mock 1 treated as diagnostic
@@ -971,12 +971,12 @@ At the start of each session, complete any due retests before new reading. An it
 
 ---
 
-# 8. Full resource index
+# 8. Useful Links
 
 **Local companions**
 - Daily schedule and decisions: this document
-- Exact API calls and parameters: [Markdown](databricks-ml-professional-api-methods.md) · [searchable HTML](databricks-ml-professional-api-methods.html)
-- Exam-focused SQL baseline and monitoring queries: [ANSI SQL guide](databricks-ml-professional-ansi-sql-guide.md)
+- Exact API calls and parameters: [Markdown](api-reference.md) · [searchable HTML](api-reference.html)
+- Exam-focused SQL, Databricks metadata commands, and monitoring queries: [Markdown](sql-guide.md) · [searchable HTML](sql-guide.html)
 
 **Official**
 - Exam page: https://www.databricks.com/learn/certification/machine-learning-professional
@@ -1037,7 +1037,7 @@ At the start of each session, complete any due retests before new reading. An it
 
 ---
 
-# 9. Drill Answer Key — Open Only After Attempting §3
+# 9. Check Your Drill Answers
 
 ## Aug 12 — Features & MLflow
 
@@ -1067,11 +1067,11 @@ At the start of each session, complete any due retests before new reading. An it
 
 ---
 
-# 10. Original Practice Bank Protocol
+# 10. How Your Original Practice Bank Works
 
-The small quizzes in the calendar are **session sizes**, not the limit of the available question bank. Use the installed Codex skill **`$databricks-ml-mock-builder`** to generate each fresh, source-verified bank while preserving unseen questions for later remediation. The skill enforces the quality rubric, official-source research, answer balance, objective coverage, and duplicate ledger defined below.
+The small quizzes in the calendar are just the amount to do in one sitting. They are not the whole bank. Use **`$databricks-ml-mock-builder`** to create each fresh, source-checked set while keeping plenty of unseen questions for later. The skill also checks objective coverage, answer balance, question quality, and duplicates.
 
-## Bank Size
+## What Is Available
 
 | Bank | Original questions | Delivery |
 |---|---:|---|
@@ -1084,9 +1084,9 @@ The small quizzes in the calendar are **session sizes**, not the limit of the av
 
 Total available original practice: **477 questions**, separate from purchased mock banks. Full mocks do not reuse section-bank questions.
 
-## Quality Standard
+## What Makes a Question Good Enough
 
-Every generated question must:
+Every generated question has to earn its place. It must:
 
 - Map to one or more objectives in the currently live official guide.
 - Use current official Databricks, Apache Spark, or MLflow documentation for technical claims.
@@ -1106,7 +1106,7 @@ Target difficulty mix per 100-question bank:
 20 questions  Hard/compound — multiple objectives, code/config details, subtle distractors
 ```
 
-## Delivery Rules
+## How We Will Run Each Set
 
 1. Generate questions just in time, not all in a visible file, so unused sets stay unseen.
 2. Present 20 questions per exam-mode set, either one at a time or all at once.
@@ -1117,9 +1117,9 @@ Target difficulty mix per 100-question bank:
 7. Remediation uses new variants testing the same objective; it never shuffles or lightly rewrites the failed question.
 8. Purchased-question wording must never be copied into the bank. Calibrate using only topic scores, timing, confidence, and the learner's description of difficulty.
 
-## Recommended Use
+## A Sane Way to Use 100 Questions
 
-The 100 questions are a **bank**, not one sitting and not mandatory extra workload during July.
+The 100 questions are a **bank, not a quota**. You are not supposed to finish them in one sitting or pile them on top of July's study schedule.
 
 ```text
 After finishing a week:   Set 1 (20 questions) — diagnostic

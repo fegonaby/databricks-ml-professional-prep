@@ -6,8 +6,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).parent
-MD_PATH = ROOT / "databricks-ml-professional-api-methods.md"
-OUT_PATH = ROOT / "databricks-ml-professional-api-methods.html"
+MD_PATH = ROOT / "api-reference.md"
+OUT_PATH = ROOT / "api-reference.html"
 
 
 def slugify(value):
@@ -43,6 +43,71 @@ def inline(value):
     )
     value = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", value)
     return re.sub(r"\x00(\d+)\x00", lambda match: tokens[int(match.group(1))], value)
+
+
+# VS Code Dark+-style colors for fenced code, applied at build time.
+TOKEN_CSS = (
+    "pre .tk-cm{color:#6a9955}pre .tk-st{color:#ce9178}pre .tk-kw{color:#c586c0}"
+    "pre .tk-bi{color:#569cd6}pre .tk-ty{color:#4ec9b0}pre .tk-fn{color:#dcdcaa}"
+    "pre .tk-nm{color:#b5cea8}pre .tk-pm{color:#9cdcfe}"
+)
+
+_HL_RULES = {
+    "python": (re.S, [
+        ("cm", r"#[^\n]*"),
+        ("st", r"[rbfuRBFU]{0,2}(?:'''.*?'''|\"\"\".*?\"\"\"|'[^'\n]*'|\"[^\"\n]*\")"),
+        ("kw", r"\b(?:import|from|return|if|elif|else|for|while|with|try|except|"
+               r"finally|raise|pass|break|continue|lambda|yield|global|nonlocal|"
+               r"assert|del|as|not|and|or|in|is)\b"),
+        ("bi", r"\b(?:def|class|None|True|False|self|cls)\b"),
+        ("nm", r"\b\d+(?:\.\d+)?\b"),
+        ("ty", r"\b[A-Z][A-Za-z0-9_]*\b"),
+        ("fn", r"\b[a-z_]\w*(?=\s*\()"),
+        ("pm", r"\b[a-z_]\w*(?=\s*=(?!=))"),
+    ]),
+    "sql": (re.I, [
+        ("cm", r"--[^\n]*"),
+        ("st", r"'[^'\n]*'"),
+        ("bi", r"\b(?:select|from|where|group|by|having|order|join|inner|left|right|"
+               r"full|outer|on|as|and|or|not|null|is|in|case|when|then|else|end|over|"
+               r"partition|with|qualify|limit|distinct|desc|asc|between|like|union|"
+               r"all|except|true|false|interval|timestamp|day|days)\b"),
+        ("fn", r"\b[a-z_]\w*(?=\s*\()"),
+        ("nm", r"\b\d+(?:\.\d+)?\b"),
+    ]),
+    "yaml": (0, [
+        ("cm", r"#[^\n]*"),
+        ("st", r"'[^'\n]*'|\"[^\"\n]*\""),
+        ("ty", r"\$\{[^}]*\}"),
+        ("pm", r"(?m:^\s*[\w.-]+(?=\s*:))"),
+        ("bi", r"\b(?:true|false|null)\b"),
+        ("nm", r"\b\d+(?:\.\d+)?\b"),
+    ]),
+}
+_HL_RULES["py"] = _HL_RULES["python"]
+_HL_RULES["yml"] = _HL_RULES["yaml"]
+
+
+def highlight_code(code, language):
+    """Escape code and wrap tokens in colored spans; plain escape for
+    languages without rules (text, markdown, ...)."""
+    spec = _HL_RULES.get((language or "").lower())
+    if not spec:
+        return html.escape(code)
+    flags, rules = spec
+    classes = [name for name, _ in rules]
+    master = re.compile(
+        "|".join("(?P<g%d>%s)" % (i, pattern) for i, (_, pattern) in enumerate(rules)),
+        flags,
+    )
+    out, pos = [], 0
+    for match in master.finditer(code):
+        out.append(html.escape(code[pos:match.start()]))
+        cls = classes[int(match.lastgroup[1:])]
+        out.append('<span class="tk-%s">%s</span>' % (cls, html.escape(match.group())))
+        pos = match.end()
+    out.append(html.escape(code[pos:]))
+    return "".join(out)
 
 
 def render_table(lines):
@@ -82,7 +147,7 @@ def render_markdown(markdown):
             index += 1
             output.append(
                 '<pre data-language="%s"><code>%s</code></pre>'
-                % (html.escape(language), html.escape("\n".join(body)))
+                % (html.escape(language), highlight_code("\n".join(body), language))
             )
             continue
 
@@ -166,6 +231,7 @@ CSS = r"""
 @media(prefers-color-scheme:dark){:root{--bg:#12161c;--surface:#191f27;--ink:#edf1f7;--muted:#aab4c2;--line:#333c49;--soft:#242c36;--red:#ff857a;--teal:#64d5cc;--green:#79c99b;--amber:#e5b95f}}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:0}.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.top-inner{max-width:1440px;margin:auto;padding:10px 24px;display:flex;align-items:center;gap:14px}.brand{font-weight:750;white-space:nowrap}.search{width:min(620px,100%);margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:9px 11px;font:inherit}.search:focus{outline:2px solid var(--teal);outline-offset:1px}.layout{max-width:1440px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:34px;padding:28px 24px 80px}.toc{position:sticky;top:72px;align-self:start;max-height:calc(100vh - 92px);overflow:auto}.toc h2{font-size:12px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}.toc a{display:block;padding:6px 8px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none}.toc a:hover{color:var(--ink);border-color:var(--teal)}.toc a.active{color:var(--ink);border-color:var(--teal);font-weight:650;background:color-mix(in srgb,var(--teal) 10%,transparent)}main{min-width:0;max-width:1080px}h1{font-size:34px;line-height:1.15;margin:0 0 18px}h2{font-size:24px;line-height:1.25;margin:0 0 14px;padding-top:10px}h3{font-size:17px;margin:24px 0 10px}p{margin:8px 0 14px}.doc-section{padding:26px 0;border-top:1px solid var(--line)}a{color:var(--teal);text-underline-offset:2px}code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);border-radius:4px;padding:1px 4px;font-size:.92em}pre{position:relative;background:#111820;color:#e8edf3;border:1px solid #2d3845;border-radius:6px;padding:16px;overflow:auto;line-height:1.5}pre code{background:none;padding:0;color:inherit}.table-wrap{overflow:auto;margin:12px 0 20px;border:1px solid var(--line);border-radius:6px}table{width:100%;border-collapse:collapse;min-width:780px;background:var(--surface)}th,td{padding:9px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{position:sticky;top:0;background:var(--soft);font-size:12px;text-transform:uppercase;color:var(--muted)}tr:last-child td{border-bottom:0}tbody tr:hover{background:color-mix(in srgb,var(--teal) 7%,var(--surface))}td:first-child{font-weight:750;white-space:nowrap}td:first-child strong{color:var(--red)}blockquote{margin:14px 0;padding:10px 14px;border-left:3px solid var(--amber);background:var(--soft)}ul,ol{padding-left:22px}li{margin:5px 0}input[type=checkbox]{accent-color:var(--green)}.meta{color:var(--muted);font-size:13px}.stats{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0 28px}.stat{border-left:3px solid var(--teal);padding-left:10px}.stat b{display:block;font-size:20px}.empty{display:none;color:var(--muted);padding:24px 0}.source-link{font-size:13px;color:var(--muted)}@media(max-width:900px){.layout{grid-template-columns:1fr;padding:20px 16px 60px}.toc{position:static;max-height:none;columns:2}.top-inner{padding:9px 14px}.brand{display:none}h1{font-size:28px}}@media(max-width:560px){.toc{columns:1}.top-inner{display:block}.search{width:100%}th,td{padding:8px}table{min-width:720px}}@media print{.top,.toc{display:none}.layout{display:block;padding:0}.doc-section{break-before:auto}a{color:inherit}pre{white-space:pre-wrap}.table-wrap{overflow:visible}table{min-width:0;font-size:10px}}
 """
+CSS += TOKEN_CSS
 
 
 # Highlights the TOC entry for the section currently in view; shared by both guides.
@@ -234,7 +300,7 @@ def main():
 <title>{html.escape(title)}</title><style>{CSS}</style></head><body>
 <header class="top"><div class="top-inner"><span class="brand">Databricks ML API Reference</span><input id="search" class="search" type="search" placeholder="Filter methods, parameters, clients, or traps" aria-label="Filter API reference"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
-<div class="meta">Generated from <a href="databricks-ml-professional-api-methods.md">the Markdown source</a>. Verified July 10, 2026.</div>
+<div class="meta">Generated from <a href="api-reference.md">the Markdown source</a>. Verified July 10, 2026.</div>
 <div class="stats"><div class="stat"><b id="method-count">0</b><span>priority API rows</span></div><div class="stat"><b id="write-count">0</b><span>WRITE rows</span></div><div class="stat"><b>59 / 120</b><span>questions / minutes</span></div></div>
 {content}<p id="empty" class="empty">No matching API entries.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")

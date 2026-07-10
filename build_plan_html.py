@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generate plan.html (interactive study plan + tracker) from
-databricks-ml-professional-plan.md.
+study-plan.md.
 
 Usage:
     python3 build_plan_html.py [artifact_fragment_output_path]
@@ -15,8 +15,10 @@ import re
 import sys
 from pathlib import Path
 
+from build_api_reference_html import TOKEN_CSS, highlight_code
+
 ROOT = Path(__file__).parent
-MD_PATH = ROOT / "databricks-ml-professional-plan.md"
+MD_PATH = ROOT / "study-plan.md"
 OUT_PATH = ROOT / "plan.html"
 
 MONTHS = {"Jul": "07", "Aug": "08"}
@@ -144,25 +146,26 @@ WEEKS = [
     ("july", "Week 3 · Monitoring (heaviest) + deployment", "Jul 27–31",
      ["d0727", "d0728", "d0729", "d0730", "d0731"],
      "<strong>July exit gate:</strong>&nbsp;every objective has an artifact · 3 labs done · mocks locked · unclear topics queued for August."),
-    ("august", "Week 4 · Baseline mock + first repairs", "Aug 3–7",
+    ("august", "Week 4 · First mock and first repairs", "Aug 3–7",
      ["d0803", "d0804", "d0805", "d0806", "d0807"], None),
-    ("august", "Week 5 · Official questions, drills, guide refresh", "Aug 10–14",
+    ("august", "Week 5 · Official questions and scenario practice", "Aug 10–14",
      ["d0810", "d0811", "d0812", "d0813", "d0814"], None),
-    ("august", "Week 6 · Qualifying mocks + remediation", "Aug 17–21",
+    ("august", "Week 6 · Mocks 2 and 3, then focused repair", "Aug 17–21",
      ["d0817", "d0818", "d0819", "d0820", "d0821"], None),
-    ("august", "Final week · Taper", "Aug 24–28",
+    ("august", "Final week · Get ready, then ease off", "Aug 24–28",
      ["d0824", "d0825", "d0826", "d0827", "d0828"], None),
 ]
 
 # Appendix sections pulled from the markdown: (match prefix, panel title)
 APPENDICES = [
-    ("## 1. Exam at a glance", "Exam facts, plan rules & terminology (§1)"),
-    ("# 4. High-yield cheat sheet", "High-yield cheat sheet / memory rules (§4)"),
-    ("# 5. Error log template", "Error log template (§5)"),
-    ("# 6. Weekly progress tracker", "Weekly progress tracker — static copy (§6)"),
-    ("# 7. Readiness criteria", "Readiness criteria (§7)"),
-    ("# 8. Full resource index", "Full resource index — every link (§8)"),
-    ("# 9. Drill Answer Key", "Drill answer key — open only after attempting (§9)"),
+    ("## 1. Exam at a glance", "Start here: exam facts and plan rules (§1)"),
+    ("# 4. Last-Minute Memory Sheet", "Last-minute memory sheet (§4)"),
+    ("# 5. Mistake Log", "Mistake log template (§5)"),
+    ("# 6. Weekly Progress", "Weekly progress (§6)"),
+    ("# 7. How You Will Know You Are Ready", "How you will know you are ready (§7)"),
+    ("# 8. Useful Links", "Useful links (§8)"),
+    ("# 9. Check Your Drill Answers", "Check your drill answers (§9)"),
+    ("# 10. How Your Original Practice Bank Works", "How your original practice bank works (§10)"),
 ]
 
 
@@ -214,8 +217,9 @@ def md_to_html(md):
     parts = re.split(r"(^```[a-zA-Z]*\n.*?\n```$)", md, flags=re.S | re.M)
     for part in parts:
         if part.startswith("```"):
-            body = re.sub(r"^```[a-zA-Z]*\n|\n```$", "", part)
-            out.append("<pre><code>%s</code></pre>" % html.escape(body))
+            m = re.match(r"^```([a-zA-Z]*)\n(.*?)\n?```$", part, re.S)
+            out.append("<pre><code>%s</code></pre>"
+                       % highlight_code(m.group(2), m.group(1)))
             continue
         lines = part.split("\n")
         i = 0
@@ -490,7 +494,7 @@ CSS = """
   .detail-body p { margin: 8px 0; }
   .detail-body ul, .detail-body ol { margin: 8px 0; padding-left: 22px; }
   .detail-body li { margin: 4px 0; }
-  .detail-body pre { background: var(--surface2); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; }
+  .detail-body pre { background: #111820; color: #e8edf3; border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; }
   .detail-body pre, .detail-body code { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; }
   .detail-body code { font-size: 0.9em; background: var(--surface2); padding: 1px 4px; border-radius: 4px; }
   .detail-body pre code { background: none; padding: 0; font-size: inherit; }
@@ -716,8 +720,8 @@ def build(md):
 </section>
 
 <section class="phase" aria-labelledby="aug-h">
-  <h2 id="aug-h">August — baseline, repair, drills, mocks, taper</h2>
-  <p class="phase-sub">Diagnose early with Mock 1, repair what the data says, qualify with two unseen mocks at 80%%+.</p>
+  <h2 id="aug-h">August — practice, repair, then taper</h2>
+  <p class="phase-sub">Use Mock 1 to find the gaps, fix what the results reveal, then prove readiness with two unseen scores at 80%%+.</p>
   %s
   <div class="legend" aria-label="Badge legend">
     <span class="item"><span class="badge read">Read</span> reading day</span>
@@ -730,20 +734,20 @@ def build(md):
 </section>
 
 <section class="phase" aria-labelledby="ref-h">
-  <h2 id="ref-h">Reference</h2>
-  <p class="phase-sub">Cheat sheet, templates, answer key and every link — straight from the markdown plan.</p>
+  <h2 id="ref-h">Keep nearby</h2>
+  <p class="phase-sub">Memory sheet, mistake log, readiness checks, answer key, practice-bank rules, and useful links.</p>
   %s
 </section>
 
 <footer>
-  <p><strong>Missed a day?</strong> Do its MUST items in the next catch-up block (Sat Jul 18 / Sat Jul 25) and keep the calendar — never shift every later date.</p>
-  <p>Generated from <a href="databricks-ml-professional-plan.md">databricks-ml-professional-plan.md</a> by <code>build_plan_html.py</code> — re-run it after editing the markdown. Tracked at <a href="https://github.com/fegonaby/databricks-ml-professional-prep">fegonaby/databricks-ml-professional-prep</a>.</p>
+  <p><strong>Missed a day?</strong> Move its MUST items to the next catch-up block (Sat Jul 18 / Sat Jul 25), then return to the calendar.</p>
+  <p>Generated from <a href="study-plan.md">study-plan.md</a> by <code>build_plan_html.py</code> — re-run it after editing the markdown. Tracked at <a href="https://github.com/fegonaby/databricks-ml-professional-prep">fegonaby/databricks-ml-professional-prep</a>.</p>
 </footer>
 
 </div>
 
 <script>%s</script>
-""" % (CSS, weeks_html("july"), weeks_html("august"), appendix_html, JS)
+""" % (CSS + TOKEN_CSS, weeks_html("july"), weeks_html("august"), appendix_html, JS)
 
     page = ("<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
