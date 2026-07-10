@@ -191,8 +191,9 @@ def _inline(text):
                   lambda m: stash('<a href="%s">%s</a>' % (m.group(1), m.group(1))), text)
     # bold
     text = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", text)
-    # restore
-    text = re.sub(r"\x00(\d+)\x00", lambda m: tokens[int(m.group(1))], text)
+    # restore repeatedly: a stashed link can contain a stashed code span
+    while re.search(r"\x00\d+\x00", text):
+        text = re.sub(r"\x00(\d+)\x00", lambda m: tokens[int(m.group(1))], text)
     # priority chips
     for tag, cls in (("MUST", "must"), ("SKIM", "skim"), ("REFERENCE", "ref")):
         text = text.replace("<strong>[%s]</strong>" % tag,

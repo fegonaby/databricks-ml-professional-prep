@@ -42,7 +42,10 @@ def inline(value):
         value,
     )
     value = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", value)
-    return re.sub(r"\x00(\d+)\x00", lambda match: tokens[int(match.group(1))], value)
+    # restore repeatedly: a stashed link can contain a stashed code span
+    while re.search(r"\x00\d+\x00", value):
+        value = re.sub(r"\x00(\d+)\x00", lambda match: tokens[int(match.group(1))], value)
+    return value
 
 
 # VS Code Dark+-style colors for fenced code, applied at build time.
