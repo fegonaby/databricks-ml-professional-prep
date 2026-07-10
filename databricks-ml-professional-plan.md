@@ -19,7 +19,7 @@
 | Passing score | Not published; use consistent 80%+ mock scores as the readiness target |
 | Validity | 2 years |
 | Assessment language | English |
-| Technical languages | ANSI SQL is assessed; working knowledge of Python is recommended |
+| Code readiness | Working knowledge of Python is recommended; focused SQL recognition supports monitoring-table and alert scenarios |
 
 **Domains & weights:**
 
@@ -109,7 +109,7 @@ Every standard day follows the timebox above. Read only the named sections, not 
 1. **[MUST]** Read the official exam guide end to end. Answer its 10 samples before looking at the key, but treat them as orientation rather than readiness evidence.
 2. **[MUST]** ML lifecycle: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-lifecycle
 3. **[SKIM]** Machine learning on Databricks: https://docs.databricks.com/aws/en/machine-learning/
-4. **[MUST]** Run the 10-minute ANSI SQL baseline below; SQL is explicitly assessed.
+4. **[MUST]** Run the 10-minute SQL baseline below. SQL is not a standalone objective in the current guide, but it supports monitoring-table, custom-metric, and alert scenarios.
 
 **Weekend/reference, only if useful:**
 - **[REFERENCE]** ML capabilities: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-capabilities
@@ -118,7 +118,7 @@ Every standard day follows the timebox above. Read only the named sections, not 
 
 **Skim only:** deep learning, GenAI, agents, vector search, foundation models — not on the exam.
 
-**Required ANSI SQL baseline (10 min):** without notes, write a query using `SELECT`, `WHERE`, `GROUP BY`, `HAVING`, `JOIN`, and a timestamp filter. Record any weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
+**Required ANSI SQL baseline (10 min):** use the tables, timed prompt, scoring rubric, and answer key in the [exam-focused SQL guide](databricks-ml-professional-ansi-sql-guide.md). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
 
 **Note to create:**
 ```text
@@ -635,7 +635,7 @@ Drift metric compares {{current_df}} with {{base_df}}.
 :table means the expression uses more than one input column.
 ```
 
-**Required ANSI SQL drill:**
+**Required monitoring SQL drill:**
 ```sql
 SELECT
   window.start,
@@ -976,6 +976,7 @@ At the start of each session, complete any due retests before new reading. An it
 **Local companions**
 - Daily schedule and decisions: this document
 - Exact API calls and parameters: [Markdown](databricks-ml-professional-api-methods.md) · [searchable HTML](databricks-ml-professional-api-methods.html)
+- Exam-focused SQL baseline and monitoring queries: [ANSI SQL guide](databricks-ml-professional-ansi-sql-guide.md)
 
 **Official**
 - Exam page: https://www.databricks.com/learn/certification/machine-learning-professional

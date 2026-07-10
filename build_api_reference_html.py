@@ -23,6 +23,11 @@ def inline(value):
         return "\x00%d\x00" % (len(tokens) - 1)
 
     value = re.sub(
+        r"``\s?(.+?)\s?``",
+        lambda match: stash("<code>%s</code>" % html.escape(match.group(1))),
+        value,
+    )
+    value = re.sub(
         r"`([^`]+)`",
         lambda match: stash("<code>%s</code>" % html.escape(match.group(1))),
         value,
