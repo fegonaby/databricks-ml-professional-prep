@@ -169,16 +169,53 @@ children = mlflow.search_runs(
 
 ## 4. MLflow Models and custom PyFunc
 
+### Which MLflow namespace owns the call?
+
+`<flavor>` is a placeholder, not literal syntax. Replace it with the model framework, such as `sklearn`, `xgboost`, `spark`, `pytorch`, or `tensorflow`.
+
+| Namespace | Owns | Typical calls | Memory rule |
+|---|---|---|---|
+| `mlflow.<flavor>` | Framework-specific model serialization | `mlflow.sklearn.log_model`, `.load_model`, `.autolog` | Framework model goes in or native framework model comes out. |
+| `mlflow.pyfunc` | Generic/custom Python prediction interface | `PythonModel`, `log_model`, `load_model`, `spark_udf` | Use one common `.predict()` contract or package custom code. |
+| `mlflow.models` | Utilities that work across model flavors | `infer_signature`, `predict`, `evaluate` | Inspect, validate, or evaluate a model rather than track a run. |
+| Top-level `mlflow` | Experiments, runs, tracking, search, and registry entry points | `start_run`, `log_metric`, `log_param`, `search_runs`, `register_model` | The action concerns the experiment/run/registry, not model serialization. |
+| `MlflowClient` | Lower-level tracking and registry CRUD by ID/name | `get_run`, `get_model_version`, alias/delete methods | Use explicit IDs and administrative metadata operations. |
+
+```text
+Framework name before the method -> model-specific flavor.
+pyfunc before the method         -> generic/custom prediction model.
+models before the method         -> model utility.
+mlflow directly                  -> run, tracking, search, or registry workflow.
+```
+
+Most built-in flavor models also contain the `python_function` flavor, so the same URI can usually be loaded in two ways:
+
+```python
+model_info = mlflow.sklearn.log_model(sk_model=model, name="fraud_model")
+
+native_model = mlflow.sklearn.load_model(model_info.model_uri)
+generic_model = mlflow.pyfunc.load_model(model_info.model_uri)
+
+# Native object exposes sklearn-specific behavior; PyFunc exposes generic predict().
+```
+
 | Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `class Model(mlflow.pyfunc.PythonModel)` | Override lifecycle methods | Custom generic MLflow model | Tracking functions do not define prediction behavior. |
 | WRITE | `load_context(self, context)` | `context.artifacts` | Loads reusable artifacts once when model loads | Do not reload a large artifact in every `predict` call. |
 | WRITE | `predict(self, context, model_input, params=None)` | Model input and optional inference params | Batch/request predictions | Current signature can include `params=None`. |
 | WRITE | `infer_signature(model_input, model_output)` | Representative input/output | `ModelSignature` | New UC model versions require a signature. |
-| WRITE | `mlflow.pyfunc.log_model(...)` | `name`, `python_model`, `artifacts`, `code_paths`, `signature`, `input_example`, `pip_requirements`, optional `registered_model_name` | Logged model; can also register | Current MLflow uses `name`; `artifact_path` is deprecated for this method. |
-| WRITE | `mlflow.pyfunc.load_model(model_uri)` | `runs:/...`, `models:/name/version`, or `models:/name@alias` | `PyFuncModel` with `.predict()` | Loading by latest is not a production contract. |
+| WRITE | `mlflow.pyfunc.log_model(...)` | `name`, `python_model`, `artifacts`, `code_paths`, `signature`, `input_example`, `pip_requirements`, optional `registered_model_name` | Returns `ModelInfo` containing `model_id` and `model_uri`; can also register | Current MLflow uses `name`; `artifact_path` is deprecated for this method. |
+| WRITE | `mlflow.pyfunc.load_model(model_uri)` | MLflow 3 `models:/<model_id>`, registered `models:/name/version` or `models:/name@alias`, older `runs:/...` | `PyFuncModel` with `.predict()` | Loading by latest is not a production contract. |
 | RECOGNIZE | `mlflow.pyfunc.spark_udf(spark, model_uri, result_type, env_manager)` | Spark session, URI, output/environment | Distributed Spark UDF | Direct `load_model().predict()` is local unless used inside distributed logic. |
 | RECOGNIZE | `mlflow.models.predict(model_uri, input_data, env_manager=...)` | Model URI and validation input | Pre-deployment validation output | This validates a model; it is not endpoint traffic. |
+
+```text
+mlflow.<flavor>.log_model()  -> ModelInfo
+mlflow.register_model()      -> ModelVersion
+mlflow.pyfunc.load_model()   -> PyFuncModel
+mlflow.<flavor>.load_model() -> native flavor model
+```
 
 ### Custom PyFunc example
 
@@ -213,10 +250,62 @@ with mlflow.start_run():
 
 ## 5. Unity Catalog Model Registry
 
+### Model URI forms in MLflow 3
+
+The `models:/` prefix can identify either a first-class **Logged Model** or a **registered model version**. Read the remainder of the URI to determine which object it addresses.
+
+| Priority | URI form | Resolves to | Stability and best use |
+|---|---|---|---|
+| WRITE | `models:/<model_id>` | One MLflow 3 Logged Model | Immutable model identity returned as `model_info.model_uri`; use it to load, validate, or register that exact logged model. |
+| WRITE | `models:/<catalog>.<schema>.<model>/<version>` | One UC registered model version | Fixed registry reference; use for reproducibility, audit, deployment configuration, or rollback. |
+| WRITE | `models:/<catalog>.<schema>.<model>@<alias>` | The registered version currently targeted by an alias | Movable stable name such as `@Champion`; use when the workload should follow controlled promotion. |
+| RECOGNIZE | `runs:/<run_id>/<model-path>` | Model stored under a run artifact path | MLflow 2.x/run-artifact form; recognize it in older material, but prefer `models:/<model_id>` for newly logged MLflow 3 models. |
+
+```text
+run_id   = the training/evaluation execution
+model_id = the exact Logged Model and its model artifacts
+
+A Logged Model created inside an active run records that run as source_run_id.
+Registration selects the model through model_uri/model_id; it does not select it by run_id.
+You cannot register a run. You register a specific model produced by that run.
+Each log_model() call creates one new model_id/model_uri; a run can create zero, one, or many.
+Registering selected model URIs under the same registered name creates successive versions.
+```
+
+```python
+import mlflow
+
+with mlflow.start_run() as run:
+    model_info = mlflow.sklearn.log_model(
+        sk_model=model,
+        name="fraud_model",
+    )
+
+run_id = run.info.run_id                 # provenance: which execution produced it
+logged_uri = model_info.model_uri        # models:/<model_id>
+
+model_version = mlflow.register_model(
+    model_uri=logged_uri,                 # selects this exact Logged Model
+    name="catalog.schema.fraud_model",
+)
+
+fixed_uri = f"models:/catalog.schema.fraud_model/{model_version.version}"
+alias_uri = "models:/catalog.schema.fraud_model@Champion"
+```
+
+To verify the source-run relationship later:
+
+```python
+from mlflow import MlflowClient
+
+logged_model = MlflowClient().get_logged_model(model_info.model_id)
+assert logged_model.source_run_id == run_id
+```
+
 | Priority | Owner and method | Key parameters | Return or effect | Easy mistake |
 |---|---|---|---|---|
 | WRITE | `mlflow.set_registry_uri("databricks-uc")` | Registry URI | Targets Models in Unity Catalog | Tracking and registry URIs are separate settings. |
-| WRITE | `mlflow.register_model(model_uri=..., name=...)` | Logged model URI, three-level UC name | Creates model if missing and creates version; returns `ModelVersion` | It is not `MlflowClient.register_model`. |
+| WRITE | `mlflow.register_model(model_uri=..., name=...)` | MLflow 3 `models:/<model_id>` (usually `model_info.model_uri`) or MLflow 2.x `runs:/...`; three-level UC name | Creates model if missing and creates version; returns `ModelVersion` | It is not `MlflowClient.register_model`; do not mix MLflow 3 logging with an invented run-artifact path. |
 | RECOGNIZE | `client.create_registered_model(name)` | Three-level model name | Empty registered-model container | Does not create a version. |
 | RECOGNIZE | `client.create_model_version(name=..., source=..., run_id=...)` | Container, artifact source, run ID | New version in existing registered model | `source` can be `runs:/...`; it is not a model alias. |
 | WRITE | `client.set_registered_model_alias(name, alias, version)` | Model, alias, version | Assigns/reassigns stable pointer | Aliases replace stages for UC models. |
@@ -242,10 +331,19 @@ mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient()
 name = "catalog.schema.fraud_model"
 
-mv = mlflow.register_model(model_uri="runs:/<run_id>/model", name=name)
+# MLflow 3: use the URI returned by log_model, normally models:/<model_id>.
+mv = mlflow.register_model(model_uri=model_info.model_uri, name=name)
 client.set_registered_model_alias(name, "Champion", mv.version)
 champion = client.get_model_version_by_alias(name, "Champion")
 model = mlflow.pyfunc.load_model(f"models:/{name}@Champion")
+```
+
+```python
+# MLflow 2.x form that can still appear in older material:
+mv = mlflow.register_model(
+    model_uri="runs:/<run_id>/<model-path>",
+    name="catalog.schema.fraud_model",
+)
 ```
 
 **Source:** [Manage model lifecycle in Unity Catalog](https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/)
@@ -334,14 +432,57 @@ The live guide uses **Lakehouse Monitoring** vocabulary. Current 2026 documentat
 | WRITE | `w.tables.get(full_name=...)` | `catalog.schema.table` | Table metadata including ID | `create_monitor` targets the table object ID. |
 | WRITE | `DataProfilingConfig(...)` | `output_schema_id`, one profile config, optional `assets_dir`, `slicing_exprs`, schedule/notifications | Profile configuration | Choose exactly one of snapshot/time-series/inference config. |
 | WRITE | `InferenceLogConfig(...)` | `problem_type`, `prediction_column`, `model_id_column`, `timestamp_column`, `granularities`, optional `label_column` | Inference profile definition | Labels are optional, but model-quality metrics require them. |
-| RECOGNIZE | `TimeSeriesConfig(...)` | `timestamp_column`, `granularities` | Time-windowed data profile | No prediction/model ID required. |
-| RECOGNIZE | `SnapshotConfig()` | None | Whole-table profile | Reprocesses the complete snapshot; current max is 4 TB. |
+| WRITE | `TimeSeriesConfig(...)` | `timestamp_column`, `granularities` | Time-windowed data profile | No prediction/model ID required. |
+| WRITE | `SnapshotConfig()` | None | Whole-table profile | Reprocesses the complete snapshot; current max is 4 TB. |
 | WRITE | `w.data_quality.create_monitor(monitor=Monitor(...))` | `object_type="table"`, `object_id`, `data_profiling_config` | Creates profile/monitor | Older mocks may use deprecated `w.quality_monitors.create`. |
 | RECOGNIZE | `w.data_quality.create_refresh(...)` | `object_type`, `object_id`, `Refresh` | Starts metric refresh | Refresh is asynchronous serverless work. |
 | RECOGNIZE | `get_monitor`, `list_refresh`, `get_refresh` | Object IDs; refresh ID where needed | Settings/history/status | These inspect; they do not create a new profile. |
 | RECOGNIZE | `delete_monitor(object_type=..., object_id=...)` | Table object identity | Deletes profile configuration | Does not automatically delete metric tables/dashboard. |
 
-### Inference profile example
+### The three profile configurations
+
+Choose exactly one of these fields inside `DataProfilingConfig`:
+
+```python
+from databricks.sdk.service.dataquality import (
+    AggregationGranularity,
+    DataProfilingConfig,
+    InferenceLogConfig,
+    InferenceProblemType,
+    SnapshotConfig,
+    TimeSeriesConfig,
+)
+
+# Snapshot: profile the whole current table on each refresh.
+snapshot_config = DataProfilingConfig(
+    output_schema_id=schema.schema_id,
+    snapshot=SnapshotConfig(),
+)
+
+# Time series: compare a general data table across time windows.
+time_series_config = DataProfilingConfig(
+    output_schema_id=schema.schema_id,
+    time_series=TimeSeriesConfig(
+        timestamp_column="event_ts",
+        granularities=[AggregationGranularity.AGGREGATION_GRANULARITY_1_DAY],
+    ),
+)
+
+# Inference: add prediction/model fields and optional labels for model quality.
+inference_config = DataProfilingConfig(
+    output_schema_id=schema.schema_id,
+    inference_log=InferenceLogConfig(
+        problem_type=InferenceProblemType.INFERENCE_PROBLEM_TYPE_CLASSIFICATION,
+        prediction_column="prediction",
+        model_id_column="model_version",
+        label_column="label",
+        timestamp_column="request_ts",
+        granularities=[AggregationGranularity.AGGREGATION_GRANULARITY_1_DAY],
+    ),
+)
+```
+
+### Complete inference profile example
 
 ```python
 from databricks.sdk import WorkspaceClient
@@ -450,6 +591,10 @@ w.quality_monitors.create(
 bundle:
   name: ml-professional
 
+variables:
+  catalog:
+    default: study
+
 resources:
   jobs:
     train:
@@ -465,6 +610,17 @@ resources:
   model_serving_endpoints:
     fraud_endpoint:
       name: fraud-${bundle.target}
+      config:
+        served_entities:
+          - name: fraud-model-v1
+            entity_name: ${var.catalog}.ml.fraud_model
+            entity_version: "1"
+            workload_size: Small
+            scale_to_zero_enabled: true
+        traffic_config:
+          routes:
+            - served_model_name: fraud-model-v1
+              traffic_percentage: 100
 
 targets:
   dev:
@@ -485,15 +641,63 @@ targets:
 | WRITE | `client.predict(endpoint=..., inputs=...)` | Endpoint name and request dictionary | Prediction response | Official sample explicitly tests `predict`, `endpoint`, and model inputs. |
 | RECOGNIZE | `client.get_endpoint(endpoint=...)` | Endpoint name | Endpoint state/configuration | Inspection is not prediction. |
 | RECOGNIZE | `client.list_endpoints()` | None | Endpoint collection | Not model registry search. |
-| RECOGNIZE | `client.create_endpoint(config=...)` | Endpoint creation config | Creates endpoint | The configuration contains served entities; model logging alone does not deploy. |
-| RECOGNIZE | `client.update_endpoint_config(endpoint=..., config=...)` | Endpoint name and new config | Updates served entities/traffic | Reassigning a UC alias alone does not update endpoint config. |
+| WRITE | `client.create_endpoint(name=..., config=...)` | New endpoint name; configuration with `served_entities` | Creates endpoint | `name` is required; model logging alone does not deploy. |
+| WRITE | `client.update_endpoint_config(endpoint=..., config=...)` | Existing endpoint name and complete new config | Updates served entities/traffic | Reassigning a UC alias alone does not update endpoint config. |
 | RECOGNIZE | `client.delete_endpoint(endpoint=...)` | Endpoint name | Deletes endpoint | Does not delete the registered model. |
+| WRITE | REST `POST /api/2.0/serving-endpoints` | `name`, `config.served_entities` | Creates endpoint | Creation path differs from the invocations path. |
 | WRITE | REST `POST /serving-endpoints/{name}/invocations` | Auth header, JSON body | Prediction response | Send payload in body, not query-string parameters. |
 | WRITE | `dataframe_split` | `columns`, `data`, optional `index` | Pandas split-oriented input | Recommended for column-order preservation. |
 | WRITE | `dataframe_records` | List of row dictionaries | Pandas records input | Does not guarantee column order. |
 | RECOGNIZE | `instances` / `inputs` | Tensor rows or tensor arrays | Tensor model input | Do not use DataFrame keys for tensor signatures. |
 | WRITE | endpoint `served_entities` | Entity name/version, workload settings, scale-to-zero | Models/versions hosted by endpoint | Endpoint can contain multiple served entities. |
 | WRITE | `traffic_config` routes | Served entity name and percentage | Traffic split; totals 100 | Canary uses a small candidate percentage and gradual ramp. |
+
+### Create with the MLflow Deployments SDK
+
+```python
+from mlflow.deployments import get_deploy_client
+
+client = get_deploy_client("databricks")
+endpoint = client.create_endpoint(
+    name="fraud-endpoint",
+    config={
+        "served_entities": [
+            {
+                "name": "fraud-model-v1",
+                "entity_name": "catalog.schema.fraud_model",
+                "entity_version": "1",
+                "workload_size": "Small",
+                "scale_to_zero_enabled": True,
+            }
+        ]
+    },
+)
+```
+
+### Create with REST
+
+```http
+POST /api/2.0/serving-endpoints
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "fraud-endpoint",
+  "config": {
+    "served_entities": [
+      {
+        "name": "fraud-model-v1",
+        "entity_name": "catalog.schema.fraud_model",
+        "entity_version": "1",
+        "workload_size": "Small",
+        "scale_to_zero_enabled": true
+      }
+    ]
+  }
+}
+```
+
+### Query with the MLflow Deployments SDK
 
 ```python
 import mlflow.deployments

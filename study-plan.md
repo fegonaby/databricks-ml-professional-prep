@@ -18,7 +18,7 @@
 | Passing score | Not published; use consistent 80%+ mock scores as the readiness target |
 | Validity | 2 years |
 | Assessment language | English |
-| Code readiness | Working knowledge of Python is recommended; focused SQL recognition supports monitoring-table and alert scenarios |
+| Code readiness | Working knowledge of Python is recommended; the exam also assesses practical ANSI SQL used in monitoring-table and alert scenarios |
 
 **Domains & weights:**
 
@@ -98,7 +98,7 @@ Read only the named sections, not entire documentation trees. Each weekly master
 1. **[MUST]** Read the official exam guide end to end. Answer its 10 samples before looking at the key, but treat them as orientation rather than readiness evidence.
 2. **[MUST]** ML lifecycle: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-lifecycle
 3. **[SKIM]** Machine learning on Databricks: https://docs.databricks.com/aws/en/machine-learning/
-4. **[MUST]** Run the closed-book SQL baseline below. SQL is not a standalone objective in the current guide, but it supports monitoring-table, custom-metric, and alert scenarios.
+4. **[MUST]** Run the closed-book SQL baseline below. SQL is not listed as a standalone section in the current guide, but the official certification page says SQL ability is assessed. Expect it inside monitoring-table, custom-metric, and alert scenarios.
 
 **Weekend/reference, only if useful:**
 - **[REFERENCE]** ML capabilities: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-capabilities
@@ -417,7 +417,7 @@ Custom file needed at inference      → model artifact
 Reliable serving schema              → model signature
 ```
 
-**[WRITE] Core UC registry workflow:** use [API companion §5](api-reference.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
+**[WRITE] Core UC registry workflow:** use [API companion §5](api-reference.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. For MLflow 3, register the `model_info.model_uri` returned by `log_model` (`models:/<model_id>`); recognize `runs:/<run_id>/<model-path>` as the MLflow 2.x form. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
 
 **[RECOGNIZE] Registry creation/deletion/admin methods:** study the exact call shapes and side effects in [API companion §5](api-reference.html#5-unity-catalog-model-registry). Key distinction: deleting an alias removes only a pointer; `delete_model_version` removes one version; `delete_registered_model` removes everything. Python uses underscores, never `delete_model-version`. Do not run deletion methods in the study lab.
 
@@ -489,7 +489,7 @@ Terraform            → broader infra; DAB is the Databricks-native exam answer
 MLflow Projects      → packages reproducible code, doesn't deploy resources
 ```
 
-**API/config recall:** use [API companion §9](api-reference.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job resource, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence.
+**API/config recall:** use [API companion §9](api-reference.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job, one MLflow experiment, one UC registered model, one configured model-serving endpoint, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence. The endpoint must contain `config.served_entities`; naming the resource without configuring it is not enough.
 
 **Environment architecture:** isolate dev/staging/prod with bundle targets and environment-specific configuration; use source control, service identities, least privilege, and validation gates rather than manual workspace changes.
 
@@ -499,7 +499,7 @@ MLflow Projects      → packages reproducible code, doesn't deploy resources
 1. Answer 12 mixed scenarios: 6 from Week 2 and 6 from Week 1.
 2. **Runnable critical path:** continue Jul 20's tiny table; designate the time-series key; configure `timestamp_lookup_key`; load/train; `fe.log_model`; `score_batch`; verify lineage.
 3. **Configuration artifact:** add one on-demand `FeatureFunction` in code or exact pseudocode.
-4. **Runnable DAB slice:** `bundle init`; define one training job and dev/prod targets; identify where the experiment, registered model, and endpoint resources belong; run `bundle validate`.
+4. **Runnable DAB slice:** `bundle init`; define one training job, one experiment, one UC registered model, one endpoint with `config.served_entities`, and dev/prod targets; run `bundle validate`. Add `traffic_config` when practicing a canary split.
 5. Explain point-in-time correctness, training-serving consistency, online/serving/on-demand distinctions, and deploy-code transitions. Deploying the bundle and live online publication are stretch work.
 
 **Week 2 mastery check (no notes, 80% required):** FeatureLookup / create_training_set / load_df / score_batch · feature-table TIMESERIES key vs `timestamp_lookup_key` · legacy OnlineTableSpec vs current Online Feature Store · feature serving vs automatic lookup vs on-demand · alias vs latest version · `register_model` vs create/delete model/version/alias APIs · custom PyFunc + artifacts · deploy-code vs deploy-model · test scope by change type · DAB targets/resources · why retraining ≠ promotion.
@@ -585,7 +585,9 @@ Baseline table = optional user-supplied reference input
 Other outputs/config = auto-generated dashboard + optional refresh schedule
 ```
 
-**Hands-on:** start or refresh the inference profile and inspect both metric tables. If the refresh is slow, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3.
+**API recall:** use [API companion §8](api-reference.html#8-data-profiling-lakehouse-monitoring) to write the three mutually exclusive `DataProfilingConfig` shapes from memory: `snapshot=SnapshotConfig()`, `time_series=TimeSeriesConfig(...)`, and `inference_log=InferenceLogConfig(...)`. For each one, explain which table shape it fits and which fields are required.
+
+**Hands-on:** start or refresh the inference profile and inspect both metric tables. If the refresh is slow, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3. The runnable profile can be inference, but the snapshot and time-series configurations must still be written correctly from memory.
 
 ### Wed Jul 29 — Custom metrics, slices, alerts, endpoint health, retraining
 
@@ -676,7 +678,7 @@ Query: REST /serving-endpoints/{name}/invocations
 Input formats: dataframe_split, dataframe_records, instances, inputs
 ```
 
-**API recall:** use [API companion §10](api-reference.html#10-model-serving-rest-and-mlflow-deployments). Write `get_deploy_client("databricks")` → `client.predict(endpoint=..., inputs=...)` and one REST invocations payload from memory; explain why `endpoint` and `inputs` are the correct parameter names.
+**API recall:** use [API companion §10](api-reference.html#10-model-serving-rest-and-mlflow-deployments). From memory, write `get_deploy_client("databricks")`, `client.create_endpoint(name=..., config=...)`, `client.update_endpoint_config(endpoint=..., config=...)`, and `client.predict(endpoint=..., inputs=...)`. Also write one REST `POST /api/2.0/serving-endpoints` creation body and one REST invocations payload. Explain why creation uses `name`, updates/queries use `endpoint`, and prediction data belongs in `inputs`.
 
 **Lab 3 (must finish by Fri Jul 31) — Minimum viable production lifecycle:**
 1. Answer 15 interleaved scenarios: 6 Model Development, 7 MLOps, 2 Deployment.
