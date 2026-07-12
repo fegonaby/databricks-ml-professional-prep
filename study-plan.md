@@ -3,7 +3,6 @@
 **Candidate:** Moustafa
 **Exam:** Friday, August 28, 2026 · 2:00–4:00 PM EDT · Online proctored (Kryterion Webassessor) — booked ✅
 **Plan window:** Fri Jul 10 → Thu Aug 27 · **weekdays only** (weekends = catch-up / rest)
-**Study rhythm:** standard session = **60–90 min** · Friday reading/retrieval/lab combined = **2–3 hours total** · timed mock = **120 min** · mock review = **up to 120 min the next day**
 **July goal:** finish the first pass and the core hands-on labs by **Fri Jul 31**.
 **August goal:** find the weak spots early, then use focused rereading, scenario drills, **3 timed mocks**, and targeted lab repair to close them.
 
@@ -37,7 +36,6 @@
 
 > ⚠️ **Watch the date on prep material:** the exam changed from four sections to three in September 2025. The current version uses UC model aliases instead of legacy stages and adds **Optuna/Ray, DABs, ML testing, and blue-green/canary deployments**. Older material is useful only when it still matches the live guide.
 
-> 📅 **Calendar reminder:** download the exam guide again on **Fri Aug 14** and compare it with the Day 1 version. Check the date, exam facts, objectives, and terminology before trusting the rest of the plan.
 
 **Terminology notes (exam guide vs current docs):**
 
@@ -80,18 +78,9 @@ All core code patterns in MUST sections are **[WRITE]** unless marked recognitio
 
 **How the files work together:** start here each day for the reading, lab, and checkpoint. Open the API companion when you need an exact call shape. When a task says "reconstruct," look once, close the reference, write it from memory, and then check your work.
 
-**Standard-session timebox (maximum 90 min):**
-```text
-10 min  Closed-book retrieval: yesterday + the topic from 7 days ago
-30 min  MUST reading only
-35 min  Hands-on task or scenario questions
-10 min  Write memory rules / update error log
- 5 min  Buffer
-```
+**A simple session flow:** start with closed-book recall, complete the MUST reading, do the hands-on task or scenarios, and finish by updating the mistake log. SKIM and REFERENCE items never displace the core work.
 
-**Friday 2–3 hour template:** 20 min cumulative scenarios · 20–25 min MUST snippets · 90–130 min minimum lab · 10–15 min verbal explanation/error log. SKIM and REFERENCE items never displace the minimum lab.
-
-**When something does not stick:** use the first 10 minutes for due D+1/D+3/D+7 retests. If none are due, recall yesterday's topic and the topic from a week ago. D+1 means the next study session, not necessarily tomorrow. A failed weekly quiz uses Monday's first 20 minutes; it does not create extra work.
+**When something does not stick:** retest it over the next few study sessions. When no retest is due, recall the previous topic and one older topic. A failed weekly quiz becomes Monday's first repair task; it does not create extra work.
 
 **If you miss a day:** do not push the whole calendar forward. Put the missed MUST items into the next catch-up block, leave SKIM/REFERENCE links for August, and return to the schedule. Sat Jul 18 and Sat Jul 25 are available for catch-up. Keep Aug 1-2 as rest days.
 
@@ -99,17 +88,17 @@ All core code patterns in MUST sections are **[WRITE]** unless marked recognitio
 
 # 2. July — First-Pass Reading and Core Labs
 
-Every standard day follows the timebox above. Read only the named sections, not entire documentation trees. Fridays use the separate lab budget. Each weekly mastery set is scored as a percentage: **80% advances; below 80% makes that topic the first 20-minute repair on Monday.**
+Read only the named sections, not entire documentation trees. Each weekly mastery set is scored as a percentage: **80% advances; below 80% makes that topic Monday's first repair task.**
 
 ---
 
 ## Day 1 — Fri Jul 10 · Orientation, lifecycle, setup
 
-**Day 1 setup session (2–3 hour exception):** budget about 60 minutes for the guide/samples, 25 minutes for lifecycle/platform, 10 minutes for SQL, 45 minutes for workspace/CLI permission preflight, and 20 minutes to shortlist the mock source.
+**Day 1 setup:** complete the guide and sample questions, review the lifecycle, run the SQL baseline, check workspace/CLI access, and shortlist the mock source.
 1. **[MUST]** Read the official exam guide end to end. Answer its 10 samples before looking at the key, but treat them as orientation rather than readiness evidence.
 2. **[MUST]** ML lifecycle: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-lifecycle
 3. **[SKIM]** Machine learning on Databricks: https://docs.databricks.com/aws/en/machine-learning/
-4. **[MUST]** Run the 10-minute SQL baseline below. SQL is not a standalone objective in the current guide, but it supports monitoring-table, custom-metric, and alert scenarios.
+4. **[MUST]** Run the closed-book SQL baseline below. SQL is not a standalone objective in the current guide, but it supports monitoring-table, custom-metric, and alert scenarios.
 
 **Weekend/reference, only if useful:**
 - **[REFERENCE]** ML capabilities: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-capabilities
@@ -118,7 +107,7 @@ Every standard day follows the timebox above. Read only the named sections, not 
 
 **Skim only:** deep learning, GenAI, agents, vector search, foundation models — not on the exam.
 
-**Required ANSI SQL baseline (10 min):** use the tables, timed prompt, scoring rubric, and answer key in the [searchable SQL guide](sql-guide.html) ([Markdown source](sql-guide.md)). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
+**Required ANSI SQL baseline:** use the tables, closed-book prompt, scoring rubric, and answer key in the [searchable SQL guide](sql-guide.html) ([Markdown source](sql-guide.md)). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
 
 **Note to create:**
 ```text
@@ -213,7 +202,7 @@ Real-time  → request/response, low latency, Model Serving endpoint
 
 **API recall:** use [API companion §1](api-reference.html#1-spark-ml-pipelines-tuning-evaluation-and-scoring). Reconstruct the pipeline fit/transform chain, the tiny tuning-grid/evaluator chain, and the `readStream` → model `transform` → checkpointed `writeStream` shape.
 
-**Hands-on (35 min):** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today.
+**Hands-on:** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today.
 
 ### Wed Jul 15 — Scaling I: pandas Function APIs & UDFs
 
@@ -228,7 +217,7 @@ mapInPandas   → iterator over batches, batch transform
 pandas UDF    → vectorized Series→Series, parallel row scoring
 ```
 
-**Hands-on (35 min):** run the `applyInPandas` per-group training slice. Write and annotate the pandas UDF or `mapInPandas` inference slice; run it only if time remains. Explain why the APIs differ.
+**Hands-on:** run the `applyInPandas` per-group training slice. Write and annotate the pandas UDF or `mapInPandas` inference slice. Explain why the APIs differ.
 
 ### Thu Jul 16 — Scaling II: Optuna, Ray, parallelism strategies
 
@@ -316,11 +305,11 @@ pip_requirements → runtime dependencies
 Custom PyFunc use case: real-time feature engineering inside predict()
 ```
 
-**Lab 1 (2–3 hours total) — SparkML + MLflow + PyFunc:**
-1. Spend 20 minutes on 10 closed-book Week 1 scenarios.
-2. **Runnable critical path (70–80 min):** continue the small pipeline from Jul 14; fit → batch transform → evaluate → one tiny grid → one parent plus at least two nested child runs → save/reload PipelineModel.
-3. **Runnable critical path (40–50 min):** build the **Week 1 PyFunc** used later in Lab 3; add one computed request-time feature in `predict`, load one artifact in `load_context`, declare dependencies, log the required signature/input example, register once in UC, and validate it locally.
-4. Spend 10–15 minutes explaining the estimator/evaluator/tuning/logging/PyFunc choices. Put larger grids, streaming execution, and extra run comparisons in the stretch backlog.
+**Lab 1 — SparkML + MLflow + PyFunc:**
+1. Answer 10 closed-book Week 1 scenarios.
+2. **Runnable critical path:** continue the small pipeline from Jul 14; fit → batch transform → evaluate → one tiny grid → one parent plus at least two nested child runs → save/reload PipelineModel.
+3. **Runnable critical path:** build the **Week 1 PyFunc** used later in Lab 3; add one computed request-time feature in `predict`, load one artifact in `load_context`, declare dependencies, log the required signature/input example, register once in UC, and validate it locally.
+4. Explain the estimator/evaluator/tuning/logging/PyFunc choices. Put larger grids, streaming execution, and extra run comparisons in the stretch backlog.
 
 **Week 1 mastery check (no notes, 80% required):** Estimator vs Transformer · Pipeline vs PipelineModel · metric selection · CV vs TVS · batch/streaming/real-time · applyInPandas vs mapInPandas vs pandas UDF · Spark vs Ray · MlflowStorage vs callback · parent vs child runs · Tracking/PyFunc/Deployments API selection · programmatic logging/search syntax · signature requirements.
 
@@ -350,7 +339,7 @@ Point-in-time join → only feature values available at label time → prevents 
 fe.log_model → packages lookups so score_batch auto-joins features
 ```
 
-**Hands-on (35 min):** create the tiny feature table plus `FeatureLookup`, build the training set, and call `load_df`. Annotate the later `fe.log_model`/`score_batch` steps; the full runnable scoring path is completed in Lab 2.
+**Hands-on:** create the tiny feature table plus `FeatureLookup`, build the training set, and call `load_df`. Annotate the later `fe.log_model`/`score_batch` steps; the full runnable scoring path is completed in Lab 2.
 
 ### Tue Jul 21 — Feature Store II: online workflows, streaming, on-demand
 
@@ -397,7 +386,7 @@ Streaming source → Structured Streaming computation → offline UC feature tab
 
 **On-demand recall:** `FeatureFunction(udf_name, input_bindings, output_name)` belongs in the same feature list as `FeatureLookup`; `fe.log_model(..., training_set=...)` preserves both so batch scoring and Model Serving repeat the lookup and UDF computation.
 
-**Hands-on (35 min):** complete the legacy/current comparison table, then either run the current publish + FeatureFunction workflow or annotate each API field and draw the streaming architecture. The fallback is pseudocode, not omission.
+**Hands-on:** complete the legacy/current comparison table, then either run the current publish + FeatureFunction workflow or annotate each API field and draw the streaming architecture. The fallback is pseudocode, not omission.
 
 ### Wed Jul 22 — Model lifecycle: MLflow models, UC registry, aliases, PyFunc packaging
 
@@ -506,12 +495,12 @@ MLflow Projects      → packages reproducible code, doesn't deploy resources
 
 **Automated retraining pattern:** detect drift/degradation → SQL alert sends webhook/notification → receiver/orchestrator triggers retraining Job → refresh features → train candidate → log → compare with production alias on the same evaluation set → validate → register → promote winner to `@champion` → update endpoint/version and traffic when serving in real time → monitor → roll back if needed.
 
-**Lab 2 (2–3 hours total) — Feature Engineering + DAB:**
-1. Spend 20 minutes on 12 mixed scenarios: 6 from Week 2 and 6 from Week 1.
-2. **Runnable critical path (70–80 min):** continue Jul 20's tiny table; designate the time-series key; configure `timestamp_lookup_key`; load/train; `fe.log_model`; `score_batch`; verify lineage.
-3. **Configuration artifact (15–20 min):** add one on-demand `FeatureFunction` in code or exact pseudocode.
-4. **Runnable DAB slice (30–40 min):** `bundle init`; define one training job and dev/prod targets; identify where the experiment, registered model, and endpoint resources belong; run `bundle validate`.
-5. Spend 10 minutes explaining point-in-time correctness, training-serving consistency, online/serving/on-demand distinctions, and deploy-code transitions. Deploying the bundle and live online publication are stretch work.
+**Lab 2 — Feature Engineering + DAB:**
+1. Answer 12 mixed scenarios: 6 from Week 2 and 6 from Week 1.
+2. **Runnable critical path:** continue Jul 20's tiny table; designate the time-series key; configure `timestamp_lookup_key`; load/train; `fe.log_model`; `score_batch`; verify lineage.
+3. **Configuration artifact:** add one on-demand `FeatureFunction` in code or exact pseudocode.
+4. **Runnable DAB slice:** `bundle init`; define one training job and dev/prod targets; identify where the experiment, registered model, and endpoint resources belong; run `bundle validate`.
+5. Explain point-in-time correctness, training-serving consistency, online/serving/on-demand distinctions, and deploy-code transitions. Deploying the bundle and live online publication are stretch work.
 
 **Week 2 mastery check (no notes, 80% required):** FeatureLookup / create_training_set / load_df / score_batch · feature-table TIMESERIES key vs `timestamp_lookup_key` · legacy OnlineTableSpec vs current Online Feature Store · feature serving vs automatic lookup vs on-demand · alias vs latest version · `register_model` vs create/delete model/version/alias APIs · custom PyFunc + artifacts · deploy-code vs deploy-model · test scope by change type · DAB targets/resources · why retraining ≠ promotion.
 
@@ -596,7 +585,7 @@ Baseline table = optional user-supplied reference input
 Other outputs/config = auto-generated dashboard + optional refresh schedule
 ```
 
-**Hands-on (35 min):** start or refresh the inference profile and inspect both metric tables. If refresh latency consumes the block, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3.
+**Hands-on:** start or refresh the inference profile and inspect both metric tables. If the refresh is slow, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3.
 
 ### Wed Jul 29 — Custom metrics, slices, alerts, endpoint health, retraining
 
@@ -649,7 +638,7 @@ WHERE ks_test.pvalue < 0.05
 ORDER BY window.start DESC;
 ```
 
-**Hands-on (35 min):** define one aggregate custom metric and run/validate the SQL drift query. Use pseudocode to sketch the drift metric, slice/granularity comparison, alert destination, orchestration step, and model-quality trend query. Lab 3 integrates the full monitoring chain.
+**Hands-on:** define one aggregate custom metric and run/validate the SQL drift query. Use pseudocode to sketch the drift metric, slice/granularity comparison, alert destination, orchestration step, and model-quality trend query. Lab 3 integrates the full monitoring chain.
 
 ### Thu Jul 30 — Deployment strategies & serving rollout
 
@@ -689,12 +678,12 @@ Input formats: dataframe_split, dataframe_records, instances, inputs
 
 **API recall:** use [API companion §10](api-reference.html#10-model-serving-rest-and-mlflow-deployments). Write `get_deploy_client("databricks")` → `client.predict(endpoint=..., inputs=...)` and one REST invocations payload from memory; explain why `endpoint` and `inputs` are the correct parameter names.
 
-**Lab 3 (2–3 hours, must finish by Fri Jul 31) — Minimum viable production lifecycle:**
-1. Spend 25 minutes on 15 interleaved scenarios: 6 Model Development, 7 MLOps, 2 Deployment.
-2. **Runnable serving path (45–55 min):** load the already registered Week 1 PyFunc version; deploy it by one available method; query it through REST or `client.predict`. Write the equivalent UI/REST/SDK configuration for the other methods.
-3. **Rollout artifact (25–30 min):** add or precisely configure a challenger served entity, canary split, and rollback. Show that moving `@champion` alone does not update the endpoint: resolve alias → version, update served entity, then change traffic.
-4. **Monitoring artifact (35–45 min):** diagram or implement AI Gateway logging → scheduled JSON flatten/label join → processed Delta inference profile → both metric tables → SQL alert → webhook/orchestrator → retraining Job.
-5. Spend 10–15 minutes completing one dev/staging/prod lifecycle diagram and explaining validation, candidate selection, rollout, monitoring, retraining, promotion, and rollback aloud.
+**Lab 3 (must finish by Fri Jul 31) — Minimum viable production lifecycle:**
+1. Answer 15 interleaved scenarios: 6 Model Development, 7 MLOps, 2 Deployment.
+2. **Runnable serving path:** load the already registered Week 1 PyFunc version; deploy it by one available method; query it through REST or `client.predict`. Write the equivalent UI/REST/SDK configuration for the other methods.
+3. **Rollout artifact:** add or precisely configure a challenger served entity, canary split, and rollback. Show that moving `@champion` alone does not update the endpoint: resolve alias → version, update served entity, then change traffic.
+4. **Monitoring artifact:** diagram or implement AI Gateway logging → scheduled JSON flatten/label join → processed Delta inference profile → both metric tables → SQL alert → webhook/orchestrator → retraining Job.
+5. Complete one dev/staging/prod lifecycle diagram and explain validation, candidate selection, rollout, monitoring, retraining, promotion, and rollback aloud.
 
 **Stretch only:** deploy every component live, create the dashboard/custom metric, automate retraining, or run a full blue-green environment switch.
 
@@ -708,15 +697,15 @@ Input formats: dataframe_split, dataframe_records, instances, inputs
 
 ## Week 4 (Aug 3-7) · First Mock and First Repairs
 
-**Mon Aug 3 — MOCK EXAM 1 (120 min).** Use the reserved baseline mock, unseen and first attempt. If the provider uses a slightly different question count, keep an average pace of about two minutes per question and preserve at least 10 minutes for review. No notes; record confidence on every answer; do not reveal answers during the attempt. This score is diagnostic, not a readiness pass/fail.
+**Mon Aug 3 — MOCK EXAM 1 (120 min).** Use the reserved baseline mock, unseen and first attempt. If the provider uses a slightly different question count, keep an exam-like pace. No notes; record confidence on every answer; do not reveal answers during the attempt. This score is diagnostic, not a readiness pass/fail.
 
-**Tue Aug 4 — Review Mock 1 (up to 120 min).** Spend 20 minutes scoring/tagging, up to 90 minutes verifying every incorrect or uncertain answer against official docs, and 10 minutes extracting memory rules. Group errors by domain (SparkML/metrics · MLflow/tuning · features · registry/MLOps · testing/bundles · monitoring · serving) and cause: knowledge gap / terminology confusion / misread / two plausible answers / missed Databricks-native pattern / time pressure. If verification remains, reserve the first 30 minutes of Aug 5.
+**Tue Aug 4 — Review Mock 1.** Score and tag the attempt, verify every incorrect or uncertain answer against official docs, and extract short memory rules. Group errors by domain (SparkML/metrics · MLflow/tuning · features · registry/MLOps · testing/bundles · monitoring · serving) and cause: knowledge gap / terminology confusion / misread / two plausible answers / missed Databricks-native pattern / time pressure. Continue any unfinished verification on Aug 5.
 
-**Wed Aug 5 — Weak area 1 (60–90 min).** Finish at most 30 minutes of Mock 1 verification. Then do blank-page recall before rereading the official page tied to the largest weighted error cluster. Patch the recall sheet and answer five unseen scenarios without notes.
+**Wed Aug 5 — Weak area 1.** Finish any remaining Mock 1 verification. Then do blank-page recall before rereading the official page tied to the largest weighted error cluster. Patch the recall sheet and answer five unseen scenarios without notes.
 
-**Thu Aug 6 — Weak area 2 (60–90 min).** Repeat blank-page recall → targeted official reread → five unseen scenarios for the second-largest weighted error cluster. End by explaining the topic aloud from memory in five minutes.
+**Thu Aug 6 — Weak area 2.** Repeat blank-page recall → targeted official reread → five unseen scenarios for the second-largest weighted error cluster. End by explaining the topic aloud from memory.
 
-**Fri Aug 7 — Targeted lab repair (60–90 min, optional weekend extension).** Repair only the workflow exposed by Mock 1. Use the end-to-end demo as a menu, not as a requirement to rebuild everything: https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/mlops-end-to-end-pipeline
+**Fri Aug 7 — Targeted lab repair.** Repair only the workflow exposed by Mock 1. Use the end-to-end demo as a menu, not as a requirement to rebuild everything: https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/mlops-end-to-end-pipeline
 
 Choose one repair:
 - SparkML pipeline + Optuna/nested MLflow
@@ -729,11 +718,11 @@ Choose one repair:
 
 ## Week 5 (Aug 10-14) · Official Questions and Scenario Practice
 
-**Mon Aug 10 — Official sample questions 1–5 (60–90 min).** These were seen on Day 1, so use them as rationale drills, not score evidence. Answer without notes; for every option, record why it is right or wrong and which phrase identifies the tested objective.
+**Mon Aug 10 — Official sample questions 1–5.** These were seen on Day 1, so use them as rationale drills, not score evidence. Answer without notes; for every option, record why it is right or wrong and which phrase identifies the tested objective.
 
-**Tue Aug 11 — Official sample questions 6–10 (60–90 min).** Use the same rationale method. Add every reasoning error or low-confidence answer to the error log; do not count memorized correctness toward readiness.
+**Tue Aug 11 — Official sample questions 6–10.** Use the same rationale method. Add every reasoning error or low-confidence answer to the error log; do not count memorized correctness toward readiness.
 
-**Wed Aug 12 — Drill set 1: features & MLflow (60–90 min).** Spend 45 minutes answering these prompts without notes and marking confidence, then 30 minutes checking §9 and 15 minutes updating the error log:
+**Wed Aug 12 — Drill set 1: features & MLflow.** Answer these prompts without notes and mark confidence. Then check §9 and update the mistake log:
 ```text
 1. Historical training data must not use future feature values. Which feature workflow solves this?
 2. A real-time fraud model needs low-latency feature retrieval. Which store/workflow fits?
@@ -747,7 +736,7 @@ Choose one repair:
 10. Production code must avoid hardcoding a model version. Which registry mechanism fits?
 ```
 
-**Thu Aug 13 — Drill set 2: MLOps, testing, monitoring, serving (60–90 min).** Use the same 45-minute attempt, 30-minute §9 review, and 15-minute error-log process:
+**Thu Aug 13 — Drill set 2: MLOps, testing, monitoring, serving.** Use the same closed-book attempt, §9 review, and mistake-log process:
 ```text
 1. Hyperparameters changed. Which minimum integration-test stages must rerun?
 2. Feature-computation logic changed. Which tests and downstream stages are affected?
@@ -761,21 +750,21 @@ Choose one repair:
 10. A business-critical model must be introduced gradually. Which serving configuration and rollout fit?
 ```
 
-**Fri Aug 14 — MANDATORY guide refresh + gap analysis + system check (60–90 min).** Download the currently linked exam guide; compare date, facts, objectives, terminology, and samples with Day 1. Build a gap table: objective / covered? / confidence / action. Run the first Webassessor system check on the exam laptop now; repeat it Aug 26.
+**Fri Aug 14 — MANDATORY guide refresh + gap analysis + system check.** Download the currently linked exam guide; compare date, facts, objectives, terminology, and samples with Day 1. Build a gap table: objective / covered? / confidence / action. Run the first Webassessor system check on the exam laptop now; repeat it Aug 26.
 
 ---
 
 ## Week 6 (Aug 17-21) · Mocks 2 and 3, Then Focused Repair
 
-**Mon Aug 17 — MOCK EXAM 2 (120 min).** Use the reserved unseen readiness mock under the same conditions. Target 80%+, controlled confidence, and at least 10 minutes left for review.
+**Mon Aug 17 — MOCK EXAM 2 (120 min).** Use the reserved unseen readiness mock under the same conditions. Target 80%+, controlled confidence, and enough time to review flagged answers.
 
-**Tue Aug 18 — Review Mock 2 (up to 120 min).** Use the same score/tag → official-doc verification → memory-rule process as Mock 1. Remediation must follow actual weighted errors; do not preselect monitoring unless the results identify it.
+**Tue Aug 18 — Review Mock 2.** Use the same score/tag → official-doc verification → memory-rule process as Mock 1. Remediation must follow actual weighted errors; do not preselect monitoring unless the results identify it.
 
-**Wed Aug 19 — Weak-domain repair (90 min).** First finish at most 30 minutes of unresolved Mock 2 verification. If no overflow remains, use blank-page recall, one exact official section, and five unseen scenarios **including review** for each of the two weakest domains. Due cold retests replace scenario count rather than extending the session. With review overflow, repair only the single weakest domain today.
+**Wed Aug 19 — Weak-domain repair.** Finish unresolved Mock 2 verification first. Then use blank-page recall, one exact official section, and five unseen scenarios **including review** for each weak domain. Due cold retests replace scenario count rather than adding more work. If review remains unfinished, repair only the single weakest domain today.
 
-**Thu Aug 20 — MOCK EXAM 3 (120 min).** Use the final reserved unseen mock. Target **80%+**, no major domain collapse, and at least 10 minutes left for review.
+**Thu Aug 20 — MOCK EXAM 3 (120 min).** Use the final reserved unseen mock. Target **80%+**, no major domain collapse, and enough time to review flagged answers.
 
-**Fri Aug 21 — Review Mock 3 + cross-mock synthesis (120 min).** Spend up to 90 minutes verifying incorrect/uncertain questions and 30 minutes comparing all first-attempt results. Normalize errors by domain question count and identify repeated/low-confidence clusters. If verification remains, it takes the first 30 minutes of Aug 24 unless a contingency mock is required.
+**Fri Aug 21 — Review Mock 3 + cross-mock synthesis.** Verify incorrect and uncertain questions, then compare all first-attempt results. Normalize errors by domain question count and identify repeated or low-confidence clusters. Continue unfinished verification on Aug 24 unless a contingency mock is required.
 ```text
 Technically possible but not Databricks-native
 Latest version confused with production version
@@ -794,16 +783,16 @@ Manual deployment chosen instead of DAB
 
 ## Final Week (Aug 24-28) · Get Ready, Then Ease Off
 
-**Mon Aug 24 — Conditional readiness day.** If Mocks 2 and 3 are both ≥80%, use up to 30 minutes for Mock 3 overflow, then mark every objective Green/Yellow/Red and review only yellow/red. If **exactly one** of Mocks 2–3 missed 80%, take the reserved unseen contingency mock today as the possible second qualifying score. If both missed 80%, the readiness criterion is unmet; do not burn the final days chasing a mock score. Use today for a weighted objective/error audit and targeted remediation instead.
+**Mon Aug 24 — Conditional readiness day.** If Mocks 2 and 3 are both ≥80%, finish any Mock 3 verification, then mark every objective Green/Yellow/Red and review only yellow/red. If **exactly one** of Mocks 2–3 missed 80%, take the reserved unseen contingency mock today as the possible second qualifying score. If both missed 80%, the readiness criterion is unmet; do not burn the final days chasing a mock score. Use today for a weighted objective/error audit and targeted remediation instead.
 
-**Tue Aug 25 — Review or final weak areas.** If the contingency mock was taken, spend up to 120 minutes reviewing it: first resolve at most 20 minutes of Mock 3 overflow, then verify every contingency miss/uncertain answer and update the objective/error audit. Do no extra scenarios. Otherwise, use 90 minutes: give each final weak area 20 minutes (blank recall → exact doc → two or three cold scenarios) and use 30 minutes for mixed retrieval/error retests.
+**Tue Aug 25 — Review or final weak areas.** If the contingency mock was taken, finish any Mock 3 verification, verify every contingency miss or uncertain answer, and update the objective/error audit. Do no extra scenarios. Otherwise, repair each final weak area with blank recall → exact doc → two or three cold scenarios, then complete any due mixed retests.
 
-**Wed Aug 26 — Light mixed practice + logistics (90 min).** Do 20–25 mixed questions in 40–50 minutes, review for 20 minutes, then repeat the Webassessor system check on the exact exam laptop.
+**Wed Aug 26 — Light mixed practice + logistics.** Do 20–25 mixed questions, review them, then repeat the Webassessor system check on the exact exam laptop.
 
 **Thu Aug 27 — Memory day, then rest.** Review only: one-page sheets, top 20 memory rules, error log, official sample questions, objectives. Prepare government ID + room. Sleep properly. Nothing new today.
 
 **Fri Aug 28 — EXAM DAY (2:00–4:00 PM EDT).**
-- 20–30 min light memory-rule review in the morning; no new docs, no practice exam
+- Light memory-rule review in the morning; no new docs, no practice exam
 - Quiet room, clean desk, ID ready, phone away; follow the check-in and break rules in the booking email
 - Question framework: ① identify the domain → ② identify the key requirement (scale, latency, point-in-time, prod reference, CI/CD, drift, safe rollout, SDK) → ③ pick the **Databricks-native** pattern → ④ eliminate options that solve a different problem, skip validation/safe rollout, use unstable references, or add complexity
 - Pace: ~2 min/question — flag and move on, second pass for flagged, final pass for blanks
@@ -954,7 +943,7 @@ At the start of each session, complete any due retests before new reading. An it
 - [ ] Two unseen readiness mocks (Mocks 2–3 or the contingency) each score at least 80% on first attempt
 - [ ] No official domain is below 70% across the two qualifying readiness mocks combined
 - [ ] If both Mocks 2 and 3 miss 80%, explicitly mark the readiness gate unmet and use remaining time for repeated-error remediation, not immediate retakes
-- [ ] Both readiness mocks finish within 120 minutes with at least 10 minutes to review
+- [ ] Both readiness mocks finish within the 120-minute limit with enough time to review flagged answers
 - [ ] All high-confidence errors pass their scheduled cold retests
 - [ ] Can explain why each wrong option is wrong
 - [ ] Can map every official objective to a doc page

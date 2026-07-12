@@ -84,7 +84,7 @@ DAYS = [
      "Blank-page recall → official page for largest error cluster → 5 unseen scenarios", ""),
     ("d0806", "2026-08-06", "Thu", "Aug 6", "Weak area 2 — recall, reread, scenarios",
      [("review", "Repair")],
-     "Same method for second-largest cluster · finish with 5-minute verbal explanation", ""),
+     "Same method for second-largest cluster · finish with a verbal explanation", ""),
     ("d0807", "2026-08-07", "Fri", "Aug 7", "Targeted lab repair",
      [("lab", "Lab")],
      "Rebuild only the workflow Mock 1 exposed — end-to-end demo as a menu, not a checklist", ""),
@@ -105,7 +105,7 @@ DAYS = [
      "Re-download the exam guide, diff vs Day 1 · gap table · first Webassessor check on the exam laptop", "milestone"),
     ("d0817", "2026-08-17", "Mon", "Aug 17", "Mock Exam 2 — readiness",
      [("mock", "Mock 2")],
-     "Unseen, 120 min · target 80%+ with ≥10 min left to review", "milestone mockday"),
+     "Unseen, 120 min · target 80%+ with time to review flagged answers", "milestone mockday"),
     ("d0818", "2026-08-18", "Tue", "Aug 18", "Review Mock 2",
      [("review", "Review")],
      "Score/tag → doc verification → memory rules · remediation follows weighted errors, not hunches", ""),
@@ -123,23 +123,23 @@ DAYS = [
      "Both mocks ≥80% → objective audit · exactly one missed → contingency mock today · both missed → remediation, not retakes", ""),
     ("d0825", "2026-08-25", "Tue", "Aug 25", "Contingency review or final weak areas",
      [("review", "Repair")],
-     "20 min per weak area: blank recall → exact doc → cold scenarios · 30 min mixed retests", ""),
+     "Blank recall → exact doc → cold scenarios for each weak area · complete due mixed retests", ""),
     ("d0826", "2026-08-26", "Wed", "Aug 26", "Light mixed practice + logistics",
      [("drill", "Drill")],
-     "20–25 questions at 2-min pace · second Webassessor system check on the exam laptop", ""),
+     "20–25 mixed questions · second Webassessor system check on the exam laptop", ""),
     ("d0827", "2026-08-27", "Thu", "Aug 27", "Memory day, then rest",
      [("rest", "Rest")],
      "Cheat sheets · top 20 memory rules · error log · ID and room ready · sleep — nothing new today", ""),
     ("d0828", "2026-08-28", "Fri", "Aug 28", "EXAM DAY — 2:00–4:00 PM EDT",
      [("exam", "Exam")],
-     "Light 20–30 min rule review only · domain → requirement → Databricks-native pattern → eliminate · flag and move on", "milestone examday"),
+     "Light rule review only · domain → requirement → Databricks-native pattern → eliminate · flag and move on", "milestone examday"),
 ]
 
 WEEKS = [
     ("july", "Day 1 · Orientation", "Fri Jul 10", ["d0710"], None),
     ("july", "Week 1 · Model Development I", "Jul 13–17",
      ["d0713", "d0714", "d0715", "d0716", "d0717"],
-     "<strong>Weekly gate:</strong>&nbsp;mastery set closed-book — 80% advances, below 80% becomes Monday's first 20-minute repair."),
+     "<strong>Weekly gate:</strong>&nbsp;mastery set closed-book — 80% advances, below 80% becomes Monday's first repair task."),
     ("july", "Week 2 · Feature Store, registry, testing, DABs", "Jul 20–24",
      ["d0720", "d0721", "d0722", "d0723", "d0724"],
      "<strong>Weekly gate:</strong>&nbsp;80% on the Week 2 mastery set — feature APIs, aliases, test scope, DAB anatomy."),
@@ -524,9 +524,6 @@ CSS = """
   .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 14px; }
   .legend .item { display: flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--ink2); }
 
-  .timebox { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--ink2); margin-top: 10px; }
-  .timebox span b { color: var(--ink); font-weight: 650; }
-
   footer { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2); }
   footer p { margin: 4px 0; }
 
@@ -667,7 +664,7 @@ def build(md):
 <header class="masthead">
   <div class="eyebrow">Databricks Certified ML Professional</div>
   <h1>Seven weeks to exam day</h1>
-  <p class="sub">Fri Jul 10 → Fri Aug 28, 2026 · weekdays only · 60–90 min standard session · Fridays 2–3 h with lab</p>
+  <p class="sub">Fri Jul 10 → Fri Aug 28, 2026 · weekdays only · July learning and labs · August practice and repair</p>
 
   <div class="stats">
     <div class="stat hot">
