@@ -2,7 +2,7 @@
 
 **What this is for:** enough SQL to read, fix, and choose between ML and monitoring queries, plus the handful of Databricks table commands worth recognizing on sight.
 
-**Last checked:** July 10, 2026 against the live September 2025 exam guide and current Databricks SQL and Data Profiling documentation.
+**Last checked:** July 14, 2026 against the live September 2025 exam guide and current Databricks SQL and Data Profiling documentation.
 
 ---
 
@@ -55,6 +55,7 @@ There is no reliable public evidence that the current exam contains many general
 | RECOGNIZE | `DESCRIBE TABLE`, `DESCRIBE DETAIL`, `DESCRIBE HISTORY` | Know which metadata each returns |
 | RECOGNIZE | `SHOW` and `USE` commands | Know how to list and select catalogs, schemas, and tables |
 | RECOGNIZE | Delta time travel and `RESTORE` | Distinguish read-only historical queries from table restoration |
+| RECOGNIZE | `TRUNCATE TABLE` | Know that it removes all rows but keeps the table definition |
 | SKIP | Broad DDL/DML, transactions, permissions, optimization, pivots, recursion | Outside this guide's exam purpose |
 
 ---
@@ -281,6 +282,8 @@ LEFT JOIN study.ml.customers AS c
   ON p.customer_id = c.customer_id;
 ```
 
+Here, `study.ml.predictions AS p` is the **left table** because it appears immediately before `LEFT JOIN`. Every prediction row is kept. When no customer matches, the prediction still appears and columns from `c`, such as `c.region`, are `NULL`.
+
 Use it when the goal is to find missing enrichment, labels, or feature matches.
 
 ### The LEFT JOIN filter trap
@@ -294,6 +297,8 @@ LEFT JOIN study.ml.customers AS c
 WHERE c.is_active = true
 ```
 
+The join first creates unmatched prediction rows with `c.is_active = NULL`. `WHERE` runs afterward, and `NULL = true` is not true, so those rows are removed. The query therefore behaves like an inner join for this condition.
+
 If the requirement is to preserve every prediction while matching only active customers, move the right-side condition into `ON`:
 
 ```sql
@@ -302,6 +307,8 @@ LEFT JOIN study.ml.customers AS c
   ON p.customer_id = c.customer_id
  AND c.is_active = true
 ```
+
+Now `c.is_active = true` controls which customer rows may match; it does not decide whether the left-side prediction survives. If the requirement is instead to return **only** predictions with an active customer, an `INNER JOIN` with this condition is clearer.
 
 ### JOIN checklist
 
@@ -406,7 +413,7 @@ SUM(CASE WHEN prediction = label THEN 1 ELSE 0 END)
 COALESCE(region, 'UNMATCHED')
 ```
 
-Returns the first non-NULL argument. This is useful after a `LEFT JOIN`, but do not use it to conceal a missing-data problem unless that is the stated requirement.
+`COALESCE(a, b, c)` scans left to right and returns the first value that is not `NULL`. For example, `COALESCE(c.region, 'UNMATCHED')` displays `'UNMATCHED'` when a `LEFT JOIN` found no customer region. It changes the query output, not the stored data. Use it only when a fallback value is part of the requirement; otherwise a visible `NULL` can be useful evidence of a missing match.
 
 ---
 
@@ -559,7 +566,9 @@ QUALIFY ROW_NUMBER() OVER (
 ) = 1;
 ```
 
-`QUALIFY` is a useful Databricks feature, but the CTE pattern is more portable ANSI-style SQL.
+`WHERE` filters ordinary input rows **before** window functions run. `QUALIFY` filters rows **after** window-function results have been calculated, which is why it can keep `ROW_NUMBER() = 1` directly.
+
+The CTE version performs the same two steps explicitly: calculate `rn` inside `ranked`, then filter it in the outer query. Use `QUALIFY` for the shortest Databricks answer; recognize the CTE form because it works in more SQL systems.
 
 ### LAG: compare with the previous window
 
@@ -575,17 +584,35 @@ SELECT
 FROM model_quality_by_window;
 ```
 
-Calculate the change:
+For each `model_version`, `PARTITION BY` creates a separate timeline and `ORDER BY metric_window` puts it in chronological order. `LAG(accuracy)` then copies the accuracy from the preceding row of that timeline onto the current row.
+
+Calculate current accuracy minus previous accuracy in the same query:
 
 ```sql
-accuracy
-  - LAG(accuracy) OVER (
-      PARTITION BY model_version
-      ORDER BY metric_window
-    ) AS accuracy_change
+SELECT
+  model_version,
+  metric_window,
+  accuracy,
+  LAG(accuracy) OVER (
+    PARTITION BY model_version
+    ORDER BY metric_window
+  ) AS previous_accuracy,
+  accuracy - LAG(accuracy) OVER (
+    PARTITION BY model_version
+    ORDER BY metric_window
+  ) AS accuracy_change
+FROM model_quality_by_window;
 ```
 
-The first row in each partition has no predecessor, so `LAG` returns `NULL` unless a default is supplied.
+Example result:
+
+| model_version | metric_window | accuracy | previous_accuracy | accuracy_change |
+|---|---|---:|---:|---:|
+| v1 | July 1 | 0.90 | `NULL` | `NULL` |
+| v1 | July 2 | 0.87 | 0.90 | -0.03 |
+| v1 | July 3 | 0.89 | 0.87 | +0.02 |
+
+The minus sign means **current minus previous**: a negative result is a decline and a positive result is an improvement. The first row in each model partition has no predecessor, so both `previous_accuracy` and `accuracy_change` are `NULL` unless a default is supplied.
 
 ### LEAD: compare with the next window
 
@@ -595,6 +622,8 @@ LEAD(accuracy, 1) OVER (
   ORDER BY metric_window
 ) AS next_accuracy
 ```
+
+`LEAD` uses the same partition and ordering but copies from a later row. With the three-row example above, `next_accuracy` is `0.87`, then `0.89`, then `NULL` because the last row has no following row. The second argument, `1`, means one row ahead.
 
 Keep this in your head:
 
@@ -630,28 +659,64 @@ This is the highest-value SQL section for this exam.
 
 ### Fields to recognize
 
+Start with this mental schema:
+
 ```text
-window.start / window.end         Current time-window boundaries
-window_cmp.start / window_cmp.end Comparison window for consecutive drift
-drift_type                        BASELINE or CONSECUTIVE
-granularity                       Configured window duration
-slice_key / slice_value           Segment; both NULL for whole-table rows
-column_name                       Feature name; :table for table-level/model metrics
-ks_test.pvalue                    Numeric drift significance
-chi_squared_test.pvalue           Categorical drift significance
-population_stability_index        Numeric population change
-accuracy_score / log_loss         Classification quality in profile table
-root_mean_squared_error / r2_score Regression quality in profile table
+profile_metrics = row identity + summary statistics + model-quality metrics
+drift_metrics   = row identity + comparison identity + deltas/tests/distances
 ```
 
-`window`, `ks_test`, and `chi_squared_test` are structs. Dot notation extracts their fields:
+Both tables contain many nullable metric columns. Each row identifies a window, slice, model, and source column; only metrics that apply to that row's data type and analysis type are populated.
+
+### Row identity: recognize in both tables
+
+| Field | Shape | What it tells you | Priority |
+|---|---|---|---|
+| `window` | `STRUCT<start, end>` | Current metric window; query it as `window.start` or `window.end` | MUST |
+| `granularity` | `STRING` | Configured window duration, such as one day or one week | RECOGNIZE |
+| `slice_key`, `slice_value` | `STRING` | Segment definition and value; both are `NULL` for the whole-table row | MUST |
+| `column_name` | `STRING` | Source feature; `:table` means a table-level/model-quality metric | MUST |
+| configured model-ID column | configured type | Separates metrics by model for inference analysis; examples commonly use `model_id` | MUST |
+| `data_type` | `STRING` | Spark type of `column_name`; helps determine which drift test applies | RECOGNIZE |
+| `monitor_version` | `BIGINT` | Profile configuration version used to calculate this row | RECOGNIZE |
+
+### Profile metrics: current-window values
+
+| Field | What it means | Applies to | Priority |
+|---|---|---|---|
+| `log_type` | Whether metrics came from `INPUT` or `BASELINE` data | All profile rows | MUST |
+| `count`, `num_nulls`, `distinct_count` | Non-null count, null count, approximate distinct count | Column summary | RECOGNIZE |
+| `avg`, `min`, `max`, `stddev`, `quantiles` | Numeric distribution summary | Numeric columns | RECOGNIZE |
+| `accuracy_score`, `log_loss` | Classification quality; `log_loss` requires prediction probabilities | Inference profile with labels and predictions | MUST |
+| `precision`, `recall`, `f1_score`, `roc_auc_score` | Struct-valued classification metrics | Inference classification | RECOGNIZE |
+| `root_mean_squared_error`, `r2_score` | Regression quality | Inference regression with labels and predictions | MUST |
+
+### Drift metrics: current versus comparison
+
+| Field | What it means | Applies to | Priority |
+|---|---|---|---|
+| `window_cmp` | Comparison window; query it as `window_cmp.start` or `.end` | Consecutive drift | MUST |
+| `drift_type` | `CONSECUTIVE` compares with the previous window; `BASELINE` compares with baseline data | Drift row identity | MUST |
+| `count_delta`, `avg_delta`, `percent_null_delta` | Current value minus comparison value | Applicable summary metric | RECOGNIZE |
+| `ks_test.statistic`, `ks_test.pvalue` | Kolmogorov-Smirnov distribution test | Numeric columns | MUST |
+| `chi_squared_test.statistic`, `chi_squared_test.pvalue` | Chi-square distribution test | Categorical columns | MUST |
+| `wasserstein_distance`, `population_stability_index` | Numeric distribution distances; larger means more change | Numeric columns | MUST |
+| `js_distance`, `tv_distance` | Categorical distribution distances; larger means more change | Categorical columns | RECOGNIZE |
+
+For every `*_delta` field, Databricks calculates **current window minus comparison window**. For example, `avg_delta = -4.0` means the current average is four units lower.
+
+`window`, `window_cmp`, `ks_test`, and `chi_squared_test` are structs. Dot notation selects one field inside the struct:
 
 ```sql
 window.start
+window_cmp.start
 ks_test.statistic
 ks_test.pvalue
+chi_squared_test.statistic
 chi_squared_test.pvalue
 ```
+
+Do not compare the whole `ks_test` struct with `0.05`; select its numeric `pvalue` field first.
 
 ### Query 1: statistically significant drift
 
@@ -925,13 +990,6 @@ WHERE COUNT(label) > 100
 GROUP BY model_version;
 ```
 
-Expected findings:
-
-1. `request_ts` is selected but not grouped or aggregated.
-2. `COUNT(label)` cannot be used in `WHERE`; use `HAVING`.
-3. `request_ts = NULL` must be `request_ts IS NULL`.
-4. Filtering for null request timestamps probably contradicts a time-based analysis requirement.
-
 ---
 
 ## 16. Check your drills
@@ -1052,17 +1110,36 @@ WHERE column_name = ':table'
 ORDER BY window.start, slice_key, slice_value;
 ```
 
+### Drill 10
+
+Problems in the original query:
+
+1. `request_ts` is selected but is neither grouped nor aggregated.
+2. `COUNT(label)` is an aggregate and cannot be used in `WHERE`; it belongs in `HAVING`.
+3. `request_ts = NULL` must use `IS NULL`.
+4. Selecting null request timestamps probably contradicts a time-based analysis requirement.
+
+If the intended requirement is "model versions with more than 100 labeled predictions," the corrected query is:
+
+```sql
+SELECT
+  model_version,
+  COUNT(label) AS labeled_count
+FROM study.ml.predictions
+WHERE label IS NOT NULL
+GROUP BY model_version
+HAVING COUNT(label) > 100;
+```
+
 ---
 
 ## 17. Keep a tiny weak-syntax log
 
 After the baseline or a mock, record only the syntax that genuinely tripped you up. There is no prize for building a giant list.
 
-```markdown
 | Date | Pattern | My error | Correct rule | Retest dates | Passed? |
 |---|---|---|---|---|---|
 | 2026-07-10 | WHERE vs HAVING | Put COUNT in WHERE | Aggregate filters use HAVING | D+1, D+3, D+7 | |
-```
 
 Promote a pattern to the review list when:
 
@@ -1106,6 +1183,7 @@ These are Databricks SQL and Delta Lake commands, not basic ANSI query clauses. 
 | Select namespace | `USE CATALOG`, `USE SCHEMA` | Changes default name resolution for the session | RECOGNIZE |
 | Read an old Delta snapshot | `SELECT ... VERSION AS OF` / `TIMESTAMP AS OF` | Read-only time-travel query | RECOGNIZE |
 | Make an old snapshot current | `RESTORE TABLE ... TO VERSION AS OF` | Creates a new commit restoring old data/metadata | REFERENCE |
+| Empty a table but keep it | `TRUNCATE TABLE table_name` | Removes all rows while preserving the table definition | REFERENCE |
 
 ### DESCRIBE TABLE
 
@@ -1120,6 +1198,18 @@ DESCRIBE TABLE EXTENDED study.monitoring.predictions;
 ```
 
 `EXTENDED` adds more table metadata. The essential exam distinction is that this describes the table's schema and metadata, **not its sequence of commits**.
+
+Compared with plain `DESCRIBE TABLE`, the extended report can append details such as:
+
+| Metadata group | Examples you may see |
+|---|---|
+| Identity and ownership | Catalog/schema qualifier, table name, owner, table type |
+| Storage and format | Provider, location, SerDe/storage information |
+| Definition | Partition columns, table properties, view text when applicable |
+| Activity and statistics | Created time, last access time, row/size statistics when available |
+| Column detail | Collected column statistics when available |
+
+Think of `EXTENDED` as **schema plus a longer human-readable metadata report**. The exact non-JSON output can gain fields over time, so do not memorize its row layout. `DESCRIBE TABLE EXTENDED ... AS JSON` is the programmatic form in newer runtimes; recognizing it is enough for this exam.
 
 ### DESCRIBE DETAIL
 
@@ -1238,6 +1328,14 @@ TO TIMESTAMP AS OF '2026-07-09 14:00:00';
 
 `RESTORE` is not a read-only time-travel query. It writes a new Delta commit whose state matches the selected earlier version.
 
+### TRUNCATE TABLE: remove every row
+
+```sql
+TRUNCATE TABLE study.monitoring.predictions;
+```
+
+`TRUNCATE TABLE` removes all rows but keeps the table itself, including its name and schema. Unlike `DELETE`, it has no `WHERE` clause, so it cannot remove a selected subset. Unlike `DROP TABLE`, it does not remove the table object. Databricks does not allow it for views, external tables, or temporary tables; Delta tables also do not support the optional partition form. This is recognition-level SQL, not a current ML exam objective.
+
 ### The distinction that matters
 
 ```text
@@ -1246,6 +1344,7 @@ DESCRIBE DETAIL  -> What are the table-level Delta details now?
 DESCRIBE HISTORY -> What operations and versions occurred?
 VERSION AS OF    -> Read an old snapshot without changing current state.
 RESTORE          -> Create a new commit that returns the table to old state.
+TRUNCATE TABLE   -> Remove every row but keep the table definition.
 ```
 
 ### Commands you can keep at low priority
@@ -1257,6 +1356,7 @@ Know the purpose, not the full syntax:
 | `CREATE TABLE` / CTAS | Create a table, optionally from a query | Lab familiarity only |
 | `MERGE INTO` | Upsert matched and unmatched rows | Useful Delta background; Feature Engineering client is more exam-aligned |
 | `ALTER TABLE` | Change schema/properties/constraints | Reference only |
+| `TRUNCATE TABLE` | Remove all rows while keeping the table | Reference only; no `WHERE` clause |
 | `OPTIMIZE` | Compact/reorganize Delta files | Not a current ML objective |
 | `VACUUM` | Remove old unreferenced data files | Not a current ML objective; affects time-travel availability |
 | `COPY INTO` | Incrementally load files | Data Engineering topic, not current ML blueprint |
@@ -1281,6 +1381,7 @@ Do not spend July memorizing `OPTIMIZE`, `VACUUM`, `COPY INTO`, or the full `MER
 - [Databricks SQL language reference](https://docs.databricks.com/aws/en/sql/language-manual)
 - [SELECT syntax and query clauses](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select)
 - [WHERE clause](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-where)
+- [`QUALIFY` clause](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-qualify)
 - [GROUP BY clause](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-groupby)
 - [HAVING clause](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-having)
 - [JOIN syntax](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-qry-select-join)
@@ -1297,5 +1398,6 @@ Do not spend July memorizing `OPTIMIZE`, `VACUUM`, `COPY INTO`, or the full `MER
 - [`RESTORE TABLE`](https://docs.databricks.com/aws/en/sql/language-manual/delta-restore)
 - [`SHOW CREATE TABLE`](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-show-create-table)
 - [`SHOW TBLPROPERTIES`](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-aux-show-tblproperties)
+- [`TRUNCATE TABLE`](https://docs.databricks.com/aws/en/sql/language-manual/sql-ref-syntax-ddl-truncate-table)
 
 If a mock answer is disputed, use these official pages to settle it. Exam dumps are not a trustworthy source for syntax or current monitoring fields.
