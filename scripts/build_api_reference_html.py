@@ -5,9 +5,10 @@ import html
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).parent
-MD_PATH = ROOT / "api-reference.md"
-OUT_PATH = ROOT / "api-reference.html"
+ROOT = Path(__file__).resolve().parent.parent
+GUIDES_DIR = ROOT / "guides"
+MD_PATH = GUIDES_DIR / "api-reference.md"
+OUT_PATH = GUIDES_DIR / "api-reference.html"
 
 
 def slugify(value):

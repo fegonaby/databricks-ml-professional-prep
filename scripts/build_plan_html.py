@@ -5,7 +5,7 @@ study-plan.md.
 Usage:
     python3 build_plan_html.py [artifact_fragment_output_path]
 
-Always writes plan.html next to the markdown. If a second path is given,
+Always writes plan.html at the project root. If a second path is given,
 also writes a body-only fragment (for publishing as a Claude artifact).
 Re-run after every edit to the markdown so the HTML stays in sync.
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 
 from build_api_reference_html import TOKEN_CSS, highlight_code
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).resolve().parent.parent
 MD_PATH = ROOT / "study-plan.md"
 OUT_PATH = ROOT / "plan.html"
 
@@ -740,7 +740,7 @@ def build(md):
 
 <footer>
   <p><strong>Missed a day?</strong> Move its MUST items to the next catch-up block (Sat Jul 18 / Sat Jul 25), then return to the calendar.</p>
-  <p>Generated from <a href="study-plan.md">study-plan.md</a> by <code>build_plan_html.py</code> — re-run it after editing the markdown. Tracked at <a href="https://github.com/fegonaby/databricks-ml-professional-prep">fegonaby/databricks-ml-professional-prep</a>.</p>
+  <p>Generated from <a href="study-plan.md">study-plan.md</a> by <code>scripts/build_plan_html.py</code> — re-run it after editing the markdown. Tracked at <a href="https://github.com/fegonaby/databricks-ml-professional-prep">fegonaby/databricks-ml-professional-prep</a>.</p>
 </footer>
 
 </div>

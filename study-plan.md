@@ -74,7 +74,7 @@ owner → exact method → key parameters → return/side effect → nearest dis
 ```
 All core code patterns in MUST sections are **[WRITE]** unless marked recognition/reference-only. CRUD/admin methods adjacent to an objective are **[RECOGNIZE]**. Mock errors can promote a method from RECOGNIZE to WRITE, but third-party trivia does not automatically become core syllabus.
 
-**API companion:** use the [Markdown reference](api-reference.md) for notes and the [searchable HTML reference](api-reference.html) for recall. This plan tells you **when** to study something; the companion shows the exact calls and parameters.
+**API companion:** use the [Markdown reference](guides/api-reference.md) for notes and the [searchable HTML reference](guides/api-reference.html) for recall. This plan tells you **when** to study something; the companion shows the exact calls and parameters.
 
 **How the files work together:** start here each day for the reading, lab, and checkpoint. Open the API companion when you need an exact call shape. When a task says "reconstruct," look once, close the reference, write it from memory, and then check your work.
 
@@ -107,7 +107,7 @@ Read only the named sections, not entire documentation trees. Each weekly master
 
 **Skim only:** deep learning, GenAI, agents, vector search, foundation models — not on the exam.
 
-**Required ANSI SQL baseline:** use the tables, closed-book prompt, scoring rubric, and answer key in the [searchable SQL guide](sql-guide.html) ([Markdown source](sql-guide.md)). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
+**Required ANSI SQL baseline:** use the tables, closed-book prompt, scoring rubric, and answer key in the [searchable SQL guide](guides/sql-guide.html) ([Markdown source](guides/sql-guide.md)). Record weak syntax for the Jul 29 monitoring-table query. Keep `CASE WHEN`, `COUNT`, `AVG`, `SUM`, `ROW_NUMBER`, `LAG`, and `LEAD` on the review list.
 
 **Note to create:**
 ```text
@@ -130,7 +130,7 @@ Scope → Explore data → Prepare features → Train and track → Evaluate
 ### Mon Jul 13 — SparkML I: when to use it + the object model
 
 **Read:**
-1. **[MUST]** MLlib on Databricks — selection guidance: https://docs.databricks.com/aws/en/machine-learning/train-model/mllib/
+1. **[MUST]** MLlib on Databricks — overview and supported compute: https://docs.databricks.com/aws/en/machine-learning/train-model/mllib/
 2. **[MUST]** Spark ML Pipelines — object model and stages: https://spark.apache.org/docs/latest/ml-pipeline.html
 3. **[REFERENCE]** Spark ML features catalog: https://spark.apache.org/docs/latest/ml-features.html
 
@@ -149,12 +149,20 @@ Estimator     → learns from data, has .fit(), produces a Transformer
 Transformer   → transforms a DataFrame, has .transform()
 Pipeline      → unfitted sequence of stages (is an Estimator)
 PipelineModel → fitted sequence (is a Transformer, used for inference)
-
-StringIndexer = Estimator → StringIndexerModel = Transformer
-OneHotEncoder = Estimator → OneHotEncoderModel = Transformer
-VectorAssembler = Transformer (no fitting)
-LogisticRegression = Estimator → LogisticRegressionModel = Transformer
 ```
+
+**Typical categorical-feature flow:**
+```text
+StringIndexer (Estimator)      --fit()------> StringIndexerModel (Transformer)
+OneHotEncoder (Estimator)      --fit()------> OneHotEncoderModel (Transformer)
+VectorAssembler (Transformer)  --transform()-> features vector
+LogisticRegression (Estimator) --fit()------> LogisticRegressionModel (Transformer)
+```
+
+**Exam traps:**
+- `VectorAssembler` combines numeric and vector inputs; it does not encode string categories.
+- `Pipeline.fit()` fits its Estimator stages and produces a `PipelineModel`.
+- `PipelineModel.transform()` runs the fitted Transformer stages in order.
 
 Also know that a fitted `PipelineModel` can be saved, loaded, and reused for batch or streaming inference; keeping preprocessing in the same pipeline preserves training/inference consistency.
 
@@ -162,11 +170,13 @@ Also know that a fitted `PipelineModel` can be saved, loaded, and reused for bat
 
 ### Tue Jul 14 — SparkML II: algorithms, evaluators, tuning, inference modes
 
+**Reading guide:** follow the [exact July 14 documentation scope](guides/july-14-15-reading-guide.md#july-14-spark-ml-models-evaluation-tuning-and-inference). Use the [detailed Spark ML companion](guides/sparkml-metrics-scaling.html#2-july-14-models-evaluators-tuning-and-inference) ([Markdown](guides/sparkml-metrics-scaling.md#2-july-14-models-evaluators-tuning-and-inference)) when a concept needs more explanation or practice.
+
 **Read:**
 1. **[REFERENCE]** Classification & regression algorithm catalog: https://spark.apache.org/docs/latest/ml-classification-regression.html
-2. **[MUST]** Evaluation metrics — evaluator selection: https://spark.apache.org/docs/latest/mllib-evaluation-metrics.html
+2. **[MUST]** Evaluation metrics — concepts only; skip the legacy RDD code: https://spark.apache.org/docs/latest/mllib-evaluation-metrics.html
 3. **[MUST]** ML tuning — CrossValidator and TrainValidationSplit: https://spark.apache.org/docs/latest/ml-tuning.html
-4. **[SKIM]** Model inference — batch versus streaming: https://docs.databricks.com/aws/en/machine-learning/model-inference/
+4. **[SKIM]** Databricks ML capabilities — batch versus real-time inference: https://docs.databricks.com/aws/en/machine-learning/concepts/ml-capabilities
 5. **[REFERENCE]** Log Loss API: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.log_loss.html
 
 **Algorithms to know:** Logistic/Linear Regression, Decision Tree, Random Forest, GBT (classifier + regressor), Naive Bayes at a high level.
@@ -200,11 +210,13 @@ Streaming  → continuously arriving records, Structured Streaming pipeline
 Real-time  → request/response, low latency, Model Serving endpoint
 ```
 
-**API recall:** use [API companion §1](api-reference.html#1-spark-ml-pipelines-tuning-evaluation-and-scoring). Reconstruct the pipeline fit/transform chain, the tiny tuning-grid/evaluator chain, and the `readStream` → model `transform` → checkpointed `writeStream` shape.
+**API recall:** use [API companion §1](guides/api-reference.html#1-spark-ml-pipelines-tuning-evaluation-and-scoring). Reconstruct the pipeline fit/transform chain, the tiny tuning-grid/evaluator chain, and the `readStream` → model `transform` → checkpointed `writeStream` shape.
 
 **Hands-on:** use a prepared small dataset to fit one pipeline and one tiny tuning grid, then score in batch. Write the streaming-scoring skeleton from memory; do not build a streaming source today.
 
 ### Wed Jul 15 — Scaling I: pandas Function APIs & UDFs
+
+**Reading guide:** follow the [exact July 15 documentation scope](guides/july-14-15-reading-guide.md#july-15-pandas-function-apis-and-pandas-udfs). Use the [detailed Spark ML companion](guides/sparkml-metrics-scaling.html#3-july-15-pandas-function-apis-and-pandas-udfs) ([Markdown](guides/sparkml-metrics-scaling.md#3-july-15-pandas-function-apis-and-pandas-udfs)) when a concept needs more explanation or practice.
 
 **Read:**
 1. **[MUST]** pandas function APIs: https://docs.databricks.com/aws/en/pandas/pandas-function-apis
@@ -261,7 +273,7 @@ Model parallelism → model itself cannot fit one accelerator/node;
                     splits the model, with the highest communication and engineering complexity.
 ```
 
-**API recall:** use [API companion §2](api-reference.html#2-pandas-function-apis-optuna-and-ray). Write the Optuna storage → Spark study → `optimize` chain and the Ray cluster setup → `Tuner.fit()` → two-layer shutdown chain without looking.
+**API recall:** use [API companion §2](guides/api-reference.html#2-pandas-function-apis-optuna-and-ray). Write the Optuna storage → Spark study → `optimize` chain and the Ray cluster setup → `Tuner.fit()` → two-layer shutdown chain without looking.
 
 **Your task:** run the distributed Optuna pattern when supported; otherwise annotate exactly what `MlflowStorage`, `MlflowSparkStudy`, `n_trials`, and `n_jobs` control. For Ray, reconstruct and annotate the lifecycle from the companion. Answer at least three explicit scaling cases: (1) model fits but one node lacks RAM, (2) dataset is huge but a model replica fits each worker, and (3) the model cannot fit one accelerator. Justify vertical, data-parallel/horizontal, or model-parallel selection and name the coordination/cost trade-off.
 
@@ -285,7 +297,7 @@ Existing unsigned version → downstream limitations (no input enforcement, fewe
 Input example → recommended; MLflow can infer the required signature from it automatically
 ```
 
-**API recall:** use [API companion §3](api-reference.html#3-mlflow-tracking-api). From memory, write one experiment with a parent run, two `nested=True` child runs, param/metric/tag/artifact logging, and `search_runs` ordered by the validation metric. Explain `step`, the parent-run filter tag, and singular versus plural logging methods.
+**API recall:** use [API companion §3](guides/api-reference.html#3-mlflow-tracking-api). From memory, write one experiment with a parent run, two `nested=True` child runs, param/metric/tag/artifact logging, and `search_runs` ordered by the validation metric. Explain `step`, the parent-run filter tag, and singular versus plural logging methods.
 
 **Keep these API jobs separate:**
 ```text
@@ -296,7 +308,7 @@ FeatureEngineeringClient.log_model        → log model together with feature-lo
 mlflow.deployments client.predict         → query a deployed serving endpoint
 ```
 
-**Custom PyFunc recall:** use [API companion §4](api-reference.html#4-mlflow-models-and-custom-pyfunc) to reconstruct `PythonModel`, `load_context`, `predict`, signature inference, and `log_model` once. Then close it and write the owning module, required methods, and packaging arguments from memory.
+**Custom PyFunc recall:** use [API companion §4](guides/api-reference.html#4-mlflow-models-and-custom-pyfunc) to reconstruct `PythonModel`, `load_context`, `predict`, signature inference, and `log_model` once. Then close it and write the owning module, required methods, and packaging arguments from memory.
 
 ```text
 artifacts        → files packaged with the model
@@ -329,7 +341,7 @@ Custom PyFunc use case: real-time feature engineering inside predict()
 
 **What matters:** feature governance, reuse, and lineage; `FeatureEngineeringClient.create_table` / `write_table`; primary and timestamp keys; training sets; point-in-time joins.
 
-**API recall:** use [API companion §6](api-reference.html#6-feature-engineering-and-point-in-time-lookups). Reconstruct `FeatureLookup` → `create_training_set` → `load_df`, including the point-in-time parameter and the later `log_model`/`score_batch` pair.
+**API recall:** use [API companion §6](guides/api-reference.html#6-feature-engineering-and-point-in-time-lookups). Reconstruct `FeatureLookup` → `create_training_set` → `load_df`, including the point-in-time parameter and the later `log_model`/`score_batch` pair.
 
 ```text
 Typical UC feature table = Delta table + PK constraint; a constrained simple SELECT view can be used for offline training/evaluation only
@@ -364,7 +376,7 @@ Streaming feature freshness       → Structured Streaming writes to feature tab
 
 **Terminology:** the live Sept 2025 exam guide explicitly tests configuring **online tables with the Databricks SDK**. Current 2026 docs use **Databricks Online Feature Store**, backed by Lakebase, and no longer support creating legacy online tables for new workflows. Study both workflows; do not collapse them into one API.
 
-**API recall:** use [API companion §7](api-reference.html#7-online-features-and-streaming-publication) for both generations. Write the guide-era `WorkspaceClient().online_tables.create_and_wait` object chain and the current `create_online_store` → wait for `AVAILABLE` → `publish_table` chain from memory.
+**API recall:** use [API companion §7](guides/api-reference.html#7-online-features-and-streaming-publication) for both generations. Write the guide-era `WorkspaceClient().online_tables.create_and_wait` object chain and the current `create_online_store` → wait for `AVAILABLE` → `publish_table` chain from memory.
 
 ```text
 Legacy OnlineTableSpec: choose run_continuously OR run_triggered.
@@ -377,7 +389,7 @@ SNAPSHOT = one full sync · TRIGGERED = incremental on demand/schedule
 CONTINUOUS = stream changes for the freshest online values.
 ```
 
-**Streaming feature pipeline:** reconstruct `readStream` → feature computation → `fe.write_table(mode="merge", checkpoint_location=..., trigger=...)` from [API companion §7](api-reference.html#7-online-features-and-streaming-publication).
+**Streaming feature pipeline:** reconstruct `readStream` → feature computation → `fe.write_table(mode="merge", checkpoint_location=..., trigger=...)` from [API companion §7](guides/api-reference.html#7-online-features-and-streaming-publication).
 
 ```text
 Streaming source → Structured Streaming computation → offline UC feature table
@@ -417,9 +429,9 @@ Custom file needed at inference      → model artifact
 Reliable serving schema              → model signature
 ```
 
-**[WRITE] Core UC registry workflow:** use [API companion §5](api-reference.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. For MLflow 3, register the `model_info.model_uri` returned by `log_model` (`models:/<model_id>`); recognize `runs:/<run_id>/<model-path>` as the MLflow 2.x form. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
+**[WRITE] Core UC registry workflow:** use [API companion §5](guides/api-reference.html#5-unity-catalog-model-registry) to reconstruct this chain: set UC registry URI → register the logged artifact → set alias → resolve alias → load `models:/catalog.schema.model@Alias`. For MLflow 3, register the `model_info.model_uri` returned by `log_model` (`models:/<model_id>`); recognize `runs:/<run_id>/<model-path>` as the MLflow 2.x form. Be able to name which calls use the fluent `mlflow` module and which use `MlflowClient`.
 
-**[RECOGNIZE] Registry creation/deletion/admin methods:** study the exact call shapes and side effects in [API companion §5](api-reference.html#5-unity-catalog-model-registry). Key distinction: deleting an alias removes only a pointer; `delete_model_version` removes one version; `delete_registered_model` removes everything. Python uses underscores, never `delete_model-version`. Do not run deletion methods in the study lab.
+**[RECOGNIZE] Registry creation/deletion/admin methods:** study the exact call shapes and side effects in [API companion §5](guides/api-reference.html#5-unity-catalog-model-registry). Key distinction: deleting an alias removes only a pointer; `delete_model_version` removes one version; `delete_registered_model` removes everything. Python uses underscores, never `delete_model-version`. Do not run deletion methods in the study lab.
 
 **Your task:** register a model in UC, set `@champion`, load it by alias.
 
@@ -489,7 +501,7 @@ Terraform            → broader infra; DAB is the Databricks-native exam answer
 MLflow Projects      → packages reproducible code, doesn't deploy resources
 ```
 
-**API/config recall:** use [API companion §9](api-reference.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job, one MLflow experiment, one UC registered model, one configured model-serving endpoint, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence. The endpoint must contain `config.served_entities`; naming the resource without configuring it is not enough.
+**API/config recall:** use [API companion §9](guides/api-reference.html#9-declarative-automation-bundles-and-testing-commands). Reconstruct the `databricks.yml` top-level keys, one job, one MLflow experiment, one UC registered model, one configured model-serving endpoint, dev/prod targets, and the `bundle validate` → `deploy` → `run` command sequence. The endpoint must contain `config.served_entities`; naming the resource without configuring it is not enough.
 
 **Environment architecture:** isolate dev/staging/prod with bundle targets and environment-specific configuration; use source control, service identities, least privilege, and validation gates rather than manual workspace changes.
 
@@ -585,7 +597,7 @@ Baseline table = optional user-supplied reference input
 Other outputs/config = auto-generated dashboard + optional refresh schedule
 ```
 
-**API recall:** use [API companion §8](api-reference.html#8-data-profiling-lakehouse-monitoring) to write the three mutually exclusive `DataProfilingConfig` shapes from memory: `snapshot=SnapshotConfig()`, `time_series=TimeSeriesConfig(...)`, and `inference_log=InferenceLogConfig(...)`. For each one, explain which table shape it fits and which fields are required.
+**API recall:** use [API companion §8](guides/api-reference.html#8-data-profiling-lakehouse-monitoring) to write the three mutually exclusive `DataProfilingConfig` shapes from memory: `snapshot=SnapshotConfig()`, `time_series=TimeSeriesConfig(...)`, and `inference_log=InferenceLogConfig(...)`. For each one, explain which table shape it fits and which fields are required.
 
 **Hands-on:** start or refresh the inference profile and inspect both metric tables. If the refresh is slow, use existing/tutorial output rows. Identify one `BASELINE` row, one `CONSECUTIVE` row, and one model-quality metric; leave full automation to Lab 3. The runnable profile can be inference, but the snapshot and time-series configurations must still be written correctly from memory.
 
@@ -617,7 +629,7 @@ AI Gateway inference table (raw JSON request/response)
 
 **Slices/granularity:** configure daily/weekly granularities and at least one column or predicate slice. Query `slice_key`, `slice_value`, `granularity`, and `window`; compare a whole-table row (`slice_key IS NULL`) with one segment and explain why aggregate health can hide a segment regression.
 
-**API recall:** use [API companion §8](api-reference.html#8-data-profiling-lakehouse-monitoring) to distinguish the current `data_quality` API from guide-era `quality_monitors`, then reconstruct one aggregate `MonitorMetric` with `type`, `name`, `input_columns`, `definition`, and `output_data_type`.
+**API recall:** use [API companion §8](guides/api-reference.html#8-data-profiling-lakehouse-monitoring) to distinguish the current `data_quality` API from guide-era `quality_monitors`, then reconstruct one aggregate `MonitorMetric` with `type`, `name`, `input_columns`, `definition`, and `output_data_type`.
 
 ```text
 Aggregate metric reads primary-table columns.
@@ -678,7 +690,7 @@ Query: REST /serving-endpoints/{name}/invocations
 Input formats: dataframe_split, dataframe_records, instances, inputs
 ```
 
-**API recall:** use [API companion §10](api-reference.html#10-model-serving-rest-and-mlflow-deployments). From memory, write `get_deploy_client("databricks")`, `client.create_endpoint(name=..., config=...)`, `client.update_endpoint_config(endpoint=..., config=...)`, and `client.predict(endpoint=..., inputs=...)`. Also write one REST `POST /api/2.0/serving-endpoints` creation body and one REST invocations payload. Explain why creation uses `name`, updates/queries use `endpoint`, and prediction data belongs in `inputs`.
+**API recall:** use [API companion §10](guides/api-reference.html#10-model-serving-rest-and-mlflow-deployments). From memory, write `get_deploy_client("databricks")`, `client.create_endpoint(name=..., config=...)`, `client.update_endpoint_config(endpoint=..., config=...)`, and `client.predict(endpoint=..., inputs=...)`. Also write one REST `POST /api/2.0/serving-endpoints` creation body and one REST invocations payload. Explain why creation uses `name`, updates/queries use `endpoint`, and prediction data belongs in `inputs`.
 
 **Lab 3 (must finish by Fri Jul 31) — Minimum viable production lifecycle:**
 1. Answer 15 interleaved scenarios: 6 Model Development, 7 MLOps, 2 Deployment.
@@ -966,8 +978,10 @@ At the start of each session, complete any due retests before new reading. An it
 
 **Local companions**
 - Daily schedule and decisions: this document
-- Exact API calls and parameters: [Markdown](api-reference.md) · [searchable HTML](api-reference.html)
-- Exam-focused SQL, Databricks metadata commands, and monitoring queries: [Markdown](sql-guide.md) · [searchable HTML](sql-guide.html)
+- Jul 14–15 official-document reading itinerary: [Markdown](guides/july-14-15-reading-guide.md)
+- Jul 14–15 Spark ML explanations and practice: [Markdown](guides/sparkml-metrics-scaling.md) · [searchable HTML](guides/sparkml-metrics-scaling.html)
+- Exact API calls and parameters: [Markdown](guides/api-reference.md) · [searchable HTML](guides/api-reference.html)
+- Exam-focused SQL, Databricks metadata commands, and monitoring queries: [Markdown](guides/sql-guide.md) · [searchable HTML](guides/sql-guide.html)
 
 **Official**
 - Exam page: https://www.databricks.com/learn/certification/machine-learning-professional
