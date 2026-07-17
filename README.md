@@ -13,7 +13,7 @@ Start with [`plan.html`](plan.html) for the interactive schedule or [`study-plan
 `-- scripts/            Markdown-to-HTML generators
 ```
 
-The July 14-15 official-document itinerary is in [`guides/july-14-15-reading-guide.md`](guides/july-14-15-reading-guide.md). The longer Spark ML guide in `guides/` is for explanations and revision.
+The complete Spark ML exam guide is [`guides/sparkml-metrics-scaling.md`](guides/sparkml-metrics-scaling.md), with a searchable generated HTML version beside it.
 
 ## Regenerate HTML
 

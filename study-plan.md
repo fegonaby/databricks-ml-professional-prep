@@ -170,7 +170,7 @@ Also know that a fitted `PipelineModel` can be saved, loaded, and reused for bat
 
 ### Tue Jul 14 — SparkML II: algorithms, evaluators, tuning, inference modes
 
-**Reading guide:** follow the [exact July 14 documentation scope](guides/july-14-15-reading-guide.md#july-14-spark-ml-models-evaluation-tuning-and-inference). Use the [detailed Spark ML companion](guides/sparkml-metrics-scaling.html#2-july-14-models-evaluators-tuning-and-inference) ([Markdown](guides/sparkml-metrics-scaling.md#2-july-14-models-evaluators-tuning-and-inference)) when a concept needs more explanation or practice.
+**Complete companion:** use the [Spark ML and pandas scaling exam guide](guides/sparkml-metrics-scaling.html#2-july-14-models-evaluators-tuning-and-inference) ([Markdown](guides/sparkml-metrics-scaling.md#2-july-14-models-evaluators-tuning-and-inference)). It contains the exact reading scope, model knowledge, metric definitions, evaluator syntax, tuning, and inference decisions required for this part of the exam.
 
 **Read:**
 1. **[REFERENCE]** Classification & regression algorithm catalog: https://spark.apache.org/docs/latest/ml-classification-regression.html
@@ -216,7 +216,7 @@ Real-time  → request/response, low latency, Model Serving endpoint
 
 ### Wed Jul 15 — Scaling I: pandas Function APIs & UDFs
 
-**Reading guide:** follow the [exact July 15 documentation scope](guides/july-14-15-reading-guide.md#july-15-pandas-function-apis-and-pandas-udfs). Use the [detailed Spark ML companion](guides/sparkml-metrics-scaling.html#3-july-15-pandas-function-apis-and-pandas-udfs) ([Markdown](guides/sparkml-metrics-scaling.md#3-july-15-pandas-function-apis-and-pandas-udfs)) when a concept needs more explanation or practice.
+**Complete companion:** continue with [pandas Function APIs and pandas UDFs](guides/sparkml-metrics-scaling.html#3-july-15-pandas-function-apis-and-pandas-udfs) ([Markdown](guides/sparkml-metrics-scaling.md#3-july-15-pandas-function-apis-and-pandas-udfs)). The comparison table, memory risks, and API shapes are the required study scope.
 
 **Read:**
 1. **[MUST]** pandas function APIs: https://docs.databricks.com/aws/en/pandas/pandas-function-apis
@@ -978,8 +978,7 @@ At the start of each session, complete any due retests before new reading. An it
 
 **Local companions**
 - Daily schedule and decisions: this document
-- Jul 14–15 official-document reading itinerary: [Markdown](guides/july-14-15-reading-guide.md)
-- Jul 14–15 Spark ML explanations and practice: [Markdown](guides/sparkml-metrics-scaling.md) · [searchable HTML](guides/sparkml-metrics-scaling.html)
+- Spark ML, models, metrics, tuning, inference, and pandas scaling: [Markdown](guides/sparkml-metrics-scaling.md) · [searchable HTML](guides/sparkml-metrics-scaling.html)
 - Exact API calls and parameters: [Markdown](guides/api-reference.md) · [searchable HTML](guides/api-reference.html)
 - Exam-focused SQL, Databricks metadata commands, and monitoring queries: [Markdown](guides/sql-guide.md) · [searchable HTML](guides/sql-guide.html)
 
