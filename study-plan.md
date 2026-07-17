@@ -414,6 +414,7 @@ Models in UC: 3-level names (catalog.schema.model), versions, ALIASES, tags, lin
 UC model aliases are the current deployment-status mechanism; legacy stages are not used
 Webhook objectives were removed from the Sept 2025 exam guide
 Latest version ≠ production version
+Alias = movable pointer to any existing version; it never means latest
 @champion / Production alias  → stable reference to the prod version
 @challenger / Candidate alias → version under evaluation
 URI by alias:   models:/catalog.schema.model@champion
@@ -609,6 +610,7 @@ Other outputs/config = auto-generated dashboard + optional refresh schedule
 3. **[SKIM]** Monitor/diagnose serving endpoints: https://docs.databricks.com/aws/en/machine-learning/model-serving/monitor-diagnose-endpoints
 4. **[REFERENCE]** Endpoint metrics export: https://docs.databricks.com/aws/en/machine-learning/model-serving/metrics-export-serving-endpoint
 5. **[MUST]** AI Gateway inference-table schema/workflow: https://docs.databricks.com/aws/en/ai-gateway/inference-tables-serving-endpoints
+6. **[SKIM]** Lakeflow Jobs schedules and triggers: https://docs.databricks.com/aws/en/jobs/triggers
 
 **Know cold:**
 ```text
@@ -618,6 +620,10 @@ Granularity → time-window level for metric computation
 
 Alert workflow: monitor output table → SQL query → threshold → alert → notification/webhook
 Retraining requires separate automation: webhook receiver/orchestrator → retraining Job
+
+Lakeflow Job triggers (recognize): scheduled / table update / file arrival /
+model update / continuous / manual or external orchestration
+Do not confuse a Job trigger with TRIGGERED online-feature synchronization.
 
 Model quality  ≠  Endpoint health
   quality: accuracy, AUC, RMSE, drift, label-based performance

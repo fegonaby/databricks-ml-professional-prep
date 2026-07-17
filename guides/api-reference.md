@@ -321,6 +321,8 @@ assert logged_model.source_run_id == run_id
 | REFERENCE | `update_registered_model` / `update_model_version` | `name`, optional `version`, `description` | Updates descriptions | Does not change endpoint traffic. |
 | REFERENCE | registered-model/version tag setters/deleters | `name`, optional `version`, `key`, `value` | Metadata tags | Tags are not aliases. |
 
+An alias is a movable pointer to any existing model version. It does not mean the highest or latest version, and moving it backward is a valid rollback operation.
+
 ### The registry flow to remember
 
 ```python

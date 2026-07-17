@@ -51,14 +51,19 @@ This guide repeats a few earlier concepts so it can serve as a self-contained re
 
 ### When Spark ML is the right choice
 
+A **single-node model** is trained or run on one machine using that machine's CPU and memory; Spark can still distribute separate models or model copies across multiple workers.
+Examples include scikit-learn, non-Spark XGBoost, pandas-based libraries, and TensorFlow or PyTorch running on one machine.
+
 | Situation | Best first choice | Why |
 |---|---|---|
 | Training data and preprocessing are already large Spark DataFrames | Spark ML | Distributed transformations and supported estimators remain in Spark |
 | The dataset cannot fit on one machine and a supported Spark estimator fits the use case | Spark ML | Training and transformation are distributed across the cluster |
 | The fitted Spark pipeline must score a large batch table or stream | Spark `PipelineModel.transform()` | The same preprocessing and model stages run on distributed DataFrames |
 | Data and model fit comfortably on one machine | scikit-learn or another single-node library | Simpler development and a broader algorithm ecosystem may be preferable |
-| One independent single-node model is needed per store/customer | `groupBy().applyInPandas()` | Spark distributes the groups while each group uses a local library |
-| A single-node model must score a huge Spark DataFrame | pandas UDF, `mapInPandas`, or MLflow Spark UDF | Model replicas score distributed batches on workers |
+| Each store or customer needs its own independently trained single-node model | `groupBy().applyInPandas()` | Spark distributes the groups while each worker trains a local model |
+| Custom model code must add one prediction per row to a huge Spark DataFrame | pandas UDF | Spark performs vectorized column scoring in distributed Arrow batches |
+| Custom model code must process whole pandas DataFrame batches | `mapInPandas()` | Each worker receives and returns an iterator of pandas DataFrames using an explicit output schema |
+| A model already logged in MLflow must score a huge Spark DataFrame | `mlflow.pyfunc.spark_udf()` | The model URI is converted directly into a distributed Spark UDF |
 | Individual low-latency requests need predictions | Model Serving | Real-time request/response is a serving problem, not a Spark batch job |
 
 Do not choose Spark ML merely because the platform is Databricks. The deciding factors are data size, model support, required inference mode, and whether distributed DataFrame execution is useful.
@@ -93,7 +98,7 @@ VectorAssembler (Transformer)  --transform()-> one features vector
 | Stage | Job | Key exam distinction |
 |---|---|---|
 | `StringIndexer` | Convert string categories or labels to numeric indices | Learns category ordering, so it must be fitted |
-| `OneHotEncoder` | Convert category indices to sparse indicator vectors | Use after indexing for linear models when categories should not appear ordinal |
+| `OneHotEncoder` | Convert category indices to sparse indicator vectors | Expects numeric category indices, so use it after `StringIndexer`; for linear models, this prevents categories from appearing ordinal |
 | `VectorAssembler` | Combine numeric and vector columns into one `features` vector | It does not encode strings and requires no fitting |
 | `StandardScaler` | Learn means/standard deviations and scale vector features | Often useful for linear or distance-based methods; trees do not require scaling |
 
@@ -579,6 +584,7 @@ You are done when you can select the evaluator, metric, tuning strategy, and inf
 | MUST | [pandas UDF: Series to Series](https://docs.databricks.com/aws/en/udf/pandas) | Vectorized column calculation or scoring |
 | MUST | `Iterator of Series to Iterator of Series` | Initialize expensive state once, then process several batches |
 | SKIM | `Iterator of multiple Series to Iterator of Series` | Same iterator idea with several input columns |
+| RECOGNIZE | [MLflow Spark UDF](https://docs.databricks.com/aws/en/mlflow/models#api-commands) | Convert a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference |
 | REFERENCE | Series-to-scalar, Arrow tuning, timestamps, benchmark notebook | Not required for today's exam decision |
 
 ### Shared mental model
@@ -596,6 +602,8 @@ They differ in what one function invocation receives and what it may return.
 | Add one vectorized Spark column | Series-to-Series pandas UDF | one or more `pandas.Series -> pandas.Series` | Output length equals input length |
 | Load a model once and score several column batches | Iterator pandas UDF | `iterator[Series or tuple[Series]] -> iterator[Series]` | Total output length equals total input length |
 | Turn an MLflow PyFunc model directly into a Spark UDF | `mlflow.pyfunc.spark_udf(...)` | Spark UDF backed by a model URI | Declared `result_type` controls returned Spark type |
+
+**Exam priority:** you must distinguish a pandas UDF from `mapInPandas()` by its input/output shape and scenario. For `mlflow.pyfunc.spark_udf()`, recognize when to select it and know the roles of `spark`, `model_uri`, and `result_type`; its internal implementation is not required.
 
 ### `applyInPandas`: one group at a time
 
