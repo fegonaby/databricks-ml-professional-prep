@@ -177,7 +177,39 @@ High-value parameters are `regParam`, `elasticNetParam`, `maxIter`, and `loss`. 
 
 A Decision Tree recursively splits the feature space using threshold rules. Spark has separate classifier and regressor Estimators.
 
-Choose it when nonlinear rules, interactions, or easy-to-explain decisions matter. Trees do not require feature standardization. Spark trees support continuous and indexed categorical features; categorical metadata must be present, and `maxBins` must be large enough for the categorical feature cardinality.
+Choose it when nonlinear rules, interactions, or easy-to-explain decisions matter. Trees do not require feature standardization.
+
+Spark trees support continuous and indexed categorical features:
+
+#### Continuous features
+
+A continuous feature is a measured number whose ordering is meaningful, such as age or income. A tree can split it at an ordered cutoff such as `age <= 35`. Spark bins continuous values to create candidate split points.
+
+#### Indexed categorical features
+
+A categorical feature represents distinct groups, such as `region = east/west/north`. Spark models require numeric features, so `StringIndexer` converts the strings to indices such as `east -> 0`, `west -> 1`, and `north -> 2`. Those numbers are identifiers: category `2` is not greater than category `1`.
+
+The index alone is not enough because the `features` vector contains only numbers. `StringIndexer` or `VectorIndexer` attaches hidden **categorical metadata**, and `VectorAssembler` carries it into the assembled vector. The metadata tells the tree that a vector position contains categories, allowing category-based splits instead of treating the indices as a continuous measurement. One-hot encoding is usually unnecessary for Spark trees.
+
+`featuresCol="features"` only names the vector column, while `labelCol="label"` only names the target column. Neither parameter is the metadata. You can inspect the vector metadata with `df.schema["features"].metadata`; you do not need to memorize its JSON structure. Without categorical metadata, manually created numeric category IDs can be treated as continuous values.
+
+#### Why `maxBins` must cover category cardinality
+
+**Cardinality** is the number of distinct categories. `maxBins` controls how many bins Spark may use when evaluating feature splits, and it must be at least as large as the category count of every categorical feature.
+
+```text
+Largest categorical feature: region with 50 categories
+maxBins=32                       -> too small
+maxBins=50 or greater            -> valid
+```
+
+The default is `32`. Increasing it supports higher-cardinality features and gives continuous features more candidate split granularity, but it also increases computation and memory use.
+
+```text
+featuresCol -> where the feature vector is
+metadata    -> what each vector position means
+maxBins     -> must cover the largest categorical feature's category count
+```
 
 Know these parameters:
 

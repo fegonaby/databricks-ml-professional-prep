@@ -78,7 +78,23 @@ L2 penalty -&gt; sum of squared coefficient values: sum(coefficient^2)
 <p>High-value parameters are <code>regParam</code>, <code>elasticNetParam</code>, <code>maxIter</code>, and <code>loss</code>. Spark supports squared error and Huber loss; Huber is less dominated by large residuals. L1 regularization can drive some coefficients to zero, while L2 shrinks them without usually making them exactly zero.</p>
 <h3 id="decision-tree">Decision Tree</h3>
 <p>A Decision Tree recursively splits the feature space using threshold rules. Spark has separate classifier and regressor Estimators.</p>
-<p>Choose it when nonlinear rules, interactions, or easy-to-explain decisions matter. Trees do not require feature standardization. Spark trees support continuous and indexed categorical features; categorical metadata must be present, and <code>maxBins</code> must be large enough for the categorical feature cardinality.</p>
+<p>Choose it when nonlinear rules, interactions, or easy-to-explain decisions matter. Trees do not require feature standardization.</p>
+<p>Spark trees support continuous and indexed categorical features:</p>
+<p>#### Continuous features</p>
+<p>A continuous feature is a measured number whose ordering is meaningful, such as age or income. A tree can split it at an ordered cutoff such as <code>age &lt;= 35</code>. Spark bins continuous values to create candidate split points.</p>
+<p>#### Indexed categorical features</p>
+<p>A categorical feature represents distinct groups, such as <code>region = east/west/north</code>. Spark models require numeric features, so <code>StringIndexer</code> converts the strings to indices such as <code>east -&gt; 0</code>, <code>west -&gt; 1</code>, and <code>north -&gt; 2</code>. Those numbers are identifiers: category <code>2</code> is not greater than category <code>1</code>.</p>
+<p>The index alone is not enough because the <code>features</code> vector contains only numbers. <code>StringIndexer</code> or <code>VectorIndexer</code> attaches hidden <strong>categorical metadata</strong>, and <code>VectorAssembler</code> carries it into the assembled vector. The metadata tells the tree that a vector position contains categories, allowing category-based splits instead of treating the indices as a continuous measurement. One-hot encoding is usually unnecessary for Spark trees.</p>
+<p><code>featuresCol=&quot;features&quot;</code> only names the vector column, while <code>labelCol=&quot;label&quot;</code> only names the target column. Neither parameter is the metadata. You can inspect the vector metadata with <code>df.schema[&quot;features&quot;].metadata</code>; you do not need to memorize its JSON structure. Without categorical metadata, manually created numeric category IDs can be treated as continuous values.</p>
+<p>#### Why <code>maxBins</code> must cover category cardinality</p>
+<p><strong>Cardinality</strong> is the number of distinct categories. <code>maxBins</code> controls how many bins Spark may use when evaluating feature splits, and it must be at least as large as the category count of every categorical feature.</p>
+<pre data-language="text"><code>Largest categorical feature: region with 50 categories
+maxBins=32                       -&gt; too small
+maxBins=50 or greater            -&gt; valid</code></pre>
+<p>The default is <code>32</code>. Increasing it supports higher-cardinality features and gives continuous features more candidate split granularity, but it also increases computation and memory use.</p>
+<pre data-language="text"><code>featuresCol -&gt; where the feature vector is
+metadata    -&gt; what each vector position means
+maxBins     -&gt; must cover the largest categorical feature&#x27;s category count</code></pre>
 <p>Know these parameters:</p>
 <div class="table-wrap"><table><tr><th>Parameter</th><th>Effect</th></tr><tr><td><code>maxDepth</code></td><td>Deeper trees learn more complex rules but increase compute and overfitting risk</td></tr><tr><td><code>maxBins</code></td><td>Controls split candidates; must be at least the number of categories for a categorical feature</td></tr><tr><td><code>minInstancesPerNode</code></td><td>Larger values prevent tiny leaves and regularize the tree</td></tr><tr><td><code>minInfoGain</code></td><td>Requires a split to improve impurity by a minimum amount</td></tr><tr><td><code>impurity</code></td><td>Classification split criterion such as Gini/entropy; regression uses variance</td></tr></table></div>
 <h3 id="random-forest">Random Forest</h3>
