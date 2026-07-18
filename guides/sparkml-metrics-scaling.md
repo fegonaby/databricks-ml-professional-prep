@@ -62,7 +62,7 @@ Examples include scikit-learn, non-Spark XGBoost, pandas-based libraries, and Te
 | Data and model fit comfortably on one machine | scikit-learn or another single-node library | Simpler development and a broader algorithm ecosystem may be preferable |
 | Each store or customer needs its own independently trained single-node model | `groupBy().applyInPandas()` | Spark distributes the groups while each worker trains a local model |
 | Custom model code must add one prediction per row to a huge Spark DataFrame | pandas UDF | Spark performs vectorized column scoring in distributed Arrow batches |
-| Custom model code must process whole pandas DataFrame batches | `mapInPandas()` | Each worker receives and returns an iterator of pandas DataFrames using an explicit output schema |
+| Custom model code must process Spark data as pandas DataFrame batches | `mapInPandas()` | Each worker receives and returns an iterator of pandas DataFrames using an explicit output schema |
 | A model already logged in MLflow must score a huge Spark DataFrame | `mlflow.pyfunc.spark_udf()` | The model URI is converted directly into a distributed Spark UDF |
 | Individual low-latency requests need predictions | Model Serving | Real-time request/response is a serving problem, not a Spark batch job |
 
@@ -143,10 +143,23 @@ Know these parameters:
 | `regParam` | Overall regularization strength; increasing it shrinks coefficients and can reduce overfitting |
 | `elasticNetParam` | Mix of L2 and L1 regularization: `0.0` is L2, `1.0` is L1, values between mix both |
 | `maxIter` | Maximum optimization iterations |
-| `threshold` / `thresholds` | Converts probability/confidence to a final class; changing it trades false positives against false negatives |
-| `family` | `binomial`, `multinomial`, or automatic selection |
+| `threshold` | Binary classification: one class-1 probability cutoff, default `0.5`; lowering it predicts more positives, while raising it predicts fewer |
+| `thresholds` | Usually multiclass/multinomial: one positive value per class; Spark predicts the class with the largest `probability / threshold`, so lowering one class's value favors that class. A two-value array is also valid for binary classification |
+| `family` | `binomial`, `multinomial`, or `auto`; `auto` selects from the number of classes, so using multiclass `thresholds` does not require explicitly setting `family="multinomial"` |
 
-More regularization is not automatically better: too much can underfit. A threshold changes decisions, precision, and recall; it does not retrain the model or change the underlying ranking scores.
+For binary classification, `threshold=p` is equivalent to `thresholds=[1-p, p]`. Do not normally set both; if both appear in a parameter map, they must be equivalent. Threshold settings change decisions, precision, and recall, but do not retrain the model or change its underlying ranking scores. More regularization is not automatically better: too much can underfit.
+
+These regularization rules apply to both Spark `LogisticRegression` and `LinearRegression`:
+
+```text
+regParam        -> how much regularization
+elasticNetParam -> which kind: 0 = L2, 1 = L1
+
+L1 penalty -> sum of absolute coefficient values: sum(abs(coefficient))
+           -> some coefficients can become zero -> sparse model / feature selection
+L2 penalty -> sum of squared coefficient values: sum(coefficient^2)
+           -> coefficients become smaller but usually remain nonzero
+```
 
 ### Linear Regression
 
@@ -634,6 +647,8 @@ Critical risk: every row for one group is loaded into memory together. A very la
 
 ### `mapInPandas`: iterator of DataFrame batches
 
+`mapInPandas()` does not collect the entire Spark DataFrame onto one machine. Spark divides its partitions into Arrow-backed pandas DataFrame batches and distributes those batch iterators across Python worker tasks.
+
 ```python
 import mlflow
 import pandas as pd
@@ -655,7 +670,9 @@ scored = input_df.mapInPandas(score_batches, schema=output_schema)
 
 Why this fits: the function receives pandas DataFrame batches from a partition, can initialize a model once for that iterator, and can return multiple columns or a different number of rows.
 
-It does not guarantee one call per store or customer. Use `applyInPandas` when the business key defines the unit of work.
+The declared output schema tells Spark how to reconstruct the resulting Spark DataFrame. Every yielded pandas DataFrame must match its column names and compatible data types.
+
+Batch boundaries have no business meaning: one store or customer can be split across batches. Use `applyInPandas` when the business key defines the unit of work.
 
 ### Series-to-Series pandas UDF
 
