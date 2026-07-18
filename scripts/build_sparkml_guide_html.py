@@ -35,6 +35,8 @@ function fallbackCopy(text) {
   area.remove();
   if (!copied) throw new Error('Copy command failed');
 }
+const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
 document.querySelectorAll('pre').forEach((pre) => {
   const wrapper = document.createElement('div');
   wrapper.className = 'code-wrap';
@@ -43,10 +45,9 @@ document.querySelectorAll('pre').forEach((pre) => {
   const button = document.createElement('button');
   button.className = 'code-copy';
   button.type = 'button';
-  button.textContent = 'Copy';
-  button.title = 'Copy this snippet';
-  button.setAttribute('aria-label', 'Copy this snippet');
-  button.setAttribute('aria-live', 'polite');
+  button.innerHTML = COPY_ICON;
+  button.title = 'Copy snippet';
+  button.setAttribute('aria-label', 'Copy snippet');
   button.addEventListener('click', async () => {
     try {
       const value = pre.querySelector('code').textContent;
@@ -55,11 +56,16 @@ document.querySelectorAll('pre').forEach((pre) => {
       } else {
         fallbackCopy(value);
       }
-      button.textContent = 'Copied';
-      window.setTimeout(() => { button.textContent = 'Copy'; }, 1200);
+      button.innerHTML = CHECK_ICON;
+      button.classList.add('copied');
+      button.title = 'Copied';
+      window.setTimeout(() => {
+        button.innerHTML = COPY_ICON;
+        button.classList.remove('copied');
+        button.title = 'Copy snippet';
+      }, 1200);
     } catch (error) {
-      button.textContent = 'Try again';
-      window.setTimeout(() => { button.textContent = 'Copy'; }, 1600);
+      button.title = 'Copy failed — select the text manually';
     }
   });
   wrapper.appendChild(button);
@@ -67,10 +73,14 @@ document.querySelectorAll('pre').forEach((pre) => {
 """
 
 GUIDE_CSS = r"""
-.code-wrap{position:relative;margin:1em 0}.code-wrap pre{margin:0;padding-top:46px}
-.code-copy{position:absolute;top:8px;right:8px;z-index:2;min-width:66px;height:30px;border:1px solid #465568;border-radius:5px;background:#202a35;color:#e8edf3;font:600 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;cursor:pointer}
-.code-copy:hover{background:#2b3745;border-color:#64748b}.code-copy:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-@media print{.code-copy{display:none}.code-wrap pre{padding-top:16px}}
+.code-wrap{position:relative;margin:1em 0}.code-wrap pre{margin:0}
+.code-copy{position:absolute;top:7px;right:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid #2d3845;border-radius:6px;background:rgba(20,27,35,.55);color:#aab4c2;cursor:pointer;opacity:.5;transition:opacity .12s,background .12s,color .12s}
+.code-wrap:hover .code-copy{opacity:1}
+.code-copy:hover{background:#2b3745;color:#e8edf3;border-color:#64748b}
+.code-copy:focus-visible{outline:2px solid var(--teal);outline-offset:2px;opacity:1}
+.code-copy.copied{color:var(--green);border-color:var(--green);opacity:1}
+.code-copy svg{width:15px;height:15px;display:block}
+@media print{.code-copy{display:none}}
 """
 
 
