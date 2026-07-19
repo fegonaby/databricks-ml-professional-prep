@@ -217,9 +217,9 @@ Know these parameters:
 |---|---|
 | `maxDepth` | Deeper trees learn more complex rules but increase compute and overfitting risk |
 | `maxBins` | Controls split candidates; must be at least the number of categories for a categorical feature |
-| `minInstancesPerNode` | Larger values prevent tiny leaves and regularize the tree |
-| `minInfoGain` | Requires a split to improve impurity by a minimum amount |
-| `impurity` | Classification split criterion such as Gini/entropy; regression uses variance |
+| `minInstancesPerNode` | Minimum rows required in each child after a split; raising it prevents tiny leaves |
+| `minInfoGain` | Minimum improvement required to accept a split; raising it makes splitting harder |
+| `impurity` | Measures split quality; a classifier uses `"gini"` or `"entropy"`, while a regressor uses `"variance"` |
 
 ### Random Forest
 
@@ -229,12 +229,23 @@ Choose it for a strong, stable nonlinear baseline when one tree is too variable.
 
 Know these parameters:
 
-| Parameter | Effect |
-|---|---|
-| `numTrees` | Number of independent trees in the ensemble |
-| `featureSubsetStrategy` | Number/fraction of features considered at each split; creates tree diversity |
-| `subsamplingRate` | Fraction of rows used to train each tree |
-| `maxDepth`, `maxBins`, node constraints | Control the complexity of each tree |
+| Parameter | Type | Effect |
+|---|---|---|
+| `numTrees` | Integer | Number of independent trees in the ensemble |
+| `featureSubsetStrategy` | String | Controls which feature columns are considered at each split, such as `"sqrt"`, `"all"`, `"0.5"`, or `"10"` |
+| `subsamplingRate` | Float | Controls the fraction of training rows used for each tree, such as `0.8` for about 80% of the rows |
+| `maxDepth`, `maxBins`, node constraints | Integer/numeric | Control the complexity of each tree |
+
+These parameters create diversity in different ways:
+
+```text
+subsamplingRate       -> different rows for different trees
+featureSubsetStrategy -> different candidate features at each split
+```
+
+For example, with 10,000 rows and 100 features, `subsamplingRate=0.8` gives each tree about 8,000 rows. `featureSubsetStrategy="sqrt"` then considers about 10 randomly selected features at each split because the square root of 100 is 10. The feature subset is selected again at each split; it is not one fixed subset for the entire tree.
+
+Remember that `featureSubsetStrategy` is a string parameter. Even a fraction or fixed count is written as a string, such as `"0.5"` or `"10"`. Do not confuse it with `subsamplingRate`, which is a numeric float.
 
 ### Gradient-Boosted Trees
 
