@@ -191,6 +191,8 @@ A categorical feature represents distinct groups, such as `region = east/west/no
 
 The index alone is not enough because the `features` vector contains only numbers. `StringIndexer` or `VectorIndexer` attaches hidden **categorical metadata**, and `VectorAssembler` carries it into the assembled vector. The metadata tells the tree that a vector position contains categories, allowing category-based splits instead of treating the indices as a continuous measurement. One-hot encoding is usually unnecessary for Spark trees.
 
+For example, a categorical split can send indices `{0, 2}` left and `{1}` right based on set membership; it does not have to use an ordered cutoff such as `index <= 1`.
+
 `featuresCol="features"` only names the vector column, while `labelCol="label"` only names the target column. Neither parameter is the metadata. You can inspect the vector metadata with `df.schema["features"].metadata`; you do not need to memorize its JSON structure. Without categorical metadata, manually created numeric category IDs can be treated as continuous values.
 
 #### Why `maxBins` must cover category cardinality
@@ -264,9 +266,30 @@ Spark-specific trap: `GBTClassifier` supports **binary classification**, not mul
 
 ### Naive Bayes
 
-Naive Bayes applies Bayes' rule with a strong conditional-independence assumption between features given the class. It is a classifier, not a regressor.
+Naive Bayes starts with how common each class is, then uses the observed features as evidence for each class. To simplify the calculation, it assumes that once a possible class is chosen, each feature provides independent evidence. It is a classifier, not a regressor.
 
-Choose it for high-dimensional sparse classification such as document or count-feature problems. `multinomial` works with count/frequency-like nonnegative features; `bernoulli` models binary presence/absence; current Spark also supports Gaussian features. Know `modelType` and `smoothing`; smoothing prevents unseen feature/class combinations from receiving zero probability.
+`modelType` tells Spark how to interpret the feature values:
+
+| `modelType` | How it interprets a feature | Example |
+|---|---|---|
+| `"multinomial"` (default) | A nonnegative count or frequency; larger values mean more occurrences | A word appears `3` times |
+| `"bernoulli"` | Binary presence or absence; repetition does not matter | A word is present (`1`) or absent (`0`) |
+| `"gaussian"` | A continuous measurement whose values follow an approximate bell-shaped distribution within each class | Age, income, or temperature, including negative values |
+| `"complement"` | Nonnegative counts like multinomial, but estimated using the other classes; mainly recognize it as an alternative for imbalanced text data | Word counts in an imbalanced document dataset |
+
+Multinomial, Bernoulli, and Complement inputs must be nonnegative. The `modelType` value is a case-sensitive string, for example `NaiveBayes(modelType="bernoulli")`.
+
+For the count and presence models, `smoothing` adds small artificial counts when estimating probabilities. Without smoothing, a feature never observed with a class can receive probability zero and eliminate that class's entire score. Spark defaults to `smoothing=1.0`.
+
+Know these Naive Bayes parameters:
+
+| Parameter | Effect |
+|---|---|
+| `modelType` | Selects how Spark interprets the features; use the model-type table above |
+| `smoothing` | Prevents zero or overly extreme estimates for unseen or rare feature/class combinations; default `1.0` |
+| `thresholds` | Adjusts how readily each class is predicted; a lower threshold favors that class, without retraining the model |
+
+Choose Naive Bayes for high-dimensional sparse classification such as document or count-feature problems.
 
 Do not choose Naive Bayes when feature interactions are central or when the task requires a continuous numeric prediction.
 
@@ -282,14 +305,20 @@ Do not choose Naive Bayes when feature interactions are central or when the task
 | Decrease GBT `stepSize` | Smaller corrections; often needs more iterations |
 | Increase `minInstancesPerNode` | Larger leaves and a more regularized tree |
 
-### Prediction columns
+### Standard Spark estimator column parameters
 
-| Column | Meaning | Used by |
-|---|---|---|
-| `label` | Known ground-truth target | All supervised evaluators |
-| `prediction` | Final predicted class index or regression value | Multiclass and regression metrics |
-| `rawPrediction` | Unnormalized class scores/margins | `BinaryClassificationEvaluator` for AUROC/AUPRC |
-| `probability` | Vector of class probabilities or confidence-like values | Log Loss and threshold decisions |
+These parameters follow the same pattern across Spark classifiers and regressors; they are not specific to Naive Bayes:
+
+| Parameter | Default column | Meaning | Used by |
+|---|---|---|---|
+| `featuresCol` | `"features"` | Input feature-vector column | Classifiers and regressors |
+| `labelCol` | `"label"` | Known training target or ground truth | Classifiers, regressors, and supervised evaluators |
+| `predictionCol` | `"prediction"` | Final predicted class index or regression value | Classifiers, regressors, and their evaluators |
+| `rawPredictionCol` | `"rawPrediction"` | Unnormalized class scores or margins | Classifiers; AUROC/AUPRC evaluation |
+| `probabilityCol` | `"probability"` | Vector of class probabilities or confidence-like values | Probabilistic classifiers; Log Loss and threshold decisions |
+| `weightCol` | Unset by default | Optional input giving some training rows more influence | Estimators and evaluators that support row weights |
+
+Regressors normally produce `predictionCol` but not `rawPredictionCol` or `probabilityCol`. Not every estimator supports every optional column parameter.
 
 Do not treat every model's `probability` values as perfectly calibrated probabilities. Spark explicitly notes that some model probability outputs are better interpreted as confidences.
 
