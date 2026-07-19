@@ -96,7 +96,6 @@ def main():
 <header class="top"><div class="top-inner"><span class="brand">Spark ML Exam Guide</span><input id="search" class="search" type="search" placeholder="Filter models, metrics, tuning, pandas APIs, or traps" aria-label="Filter Spark ML guide"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
 <div class="meta">Generated from <a href="sparkml-metrics-scaling.md">the Markdown source</a>. Verified July 16, 2026.</div>
-<div class="stats"><div class="stat"><b>Spark ML</b><span>complete objective scope</span></div><div class="stat"><b>pandas</b><span>distributed scaling</span></div><div class="stat"><b>24</b><span>closed-book checks</span></div></div>
 {content}<p id="empty" class="empty">No matching sections.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")
     print(f"wrote {OUT_PATH} ({len(page)} bytes)")
