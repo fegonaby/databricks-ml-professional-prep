@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Render the July 14-15 Spark ML companion as standalone HTML."""
 
+import base64
 import html
+import mimetypes
 from pathlib import Path
+import re
 
 from build_api_reference_html import CSS, SCROLLSPY_JS, render_markdown
+from generate_metric_curve_plots import OUTPUT as METRIC_PLOT_PATH, build_svg as build_metric_plot
 
 ROOT = Path(__file__).resolve().parent.parent
 GUIDES_DIR = ROOT / "guides"
@@ -80,12 +84,41 @@ GUIDE_CSS = r"""
 .code-copy:focus-visible{outline:2px solid var(--teal);outline-offset:2px;opacity:1}
 .code-copy.copied{color:var(--green);border-color:var(--green);opacity:1}
 .code-copy svg{width:15px;height:15px;display:block}
+.metric-plot{margin:1.1em 0 .45em}.metric-plot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#0f151c}
+.metric-caption{margin:.35em 0 1.2em;color:var(--muted);font-size:.92rem}
 @media print{.code-copy{display:none}}
 """
 
 
+def embed_local_images(content):
+    def replace(match):
+        source = match.group(1)
+        if source.startswith(("data:", "http://", "https://")):
+            return match.group(0)
+        image_path = (GUIDES_DIR / source).resolve()
+        if not image_path.is_file() or ROOT.resolve() not in image_path.parents:
+            return match.group(0)
+        mime_type = mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
+        payload = base64.b64encode(image_path.read_bytes()).decode("ascii")
+        return match.group(0).replace(source, f"data:{mime_type};base64,{payload}")
+
+    return re.sub(r'<img src="([^"]+)"', replace, content)
+
+
 def main():
+    METRIC_PLOT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    METRIC_PLOT_PATH.write_text(build_metric_plot(), encoding="utf-8")
     title, toc, content = render_markdown(MD_PATH.read_text(encoding="utf-8"))
+    content = re.sub(
+        r'<p>(<img src="\.\./assets/roc-pr-curves\.svg"[^>]*>)</p>',
+        r'<figure class="metric-plot">\1</figure>',
+        content,
+    )
+    content = content.replace(
+        '<p><strong>Plot reading:</strong>',
+        '<p class="metric-caption"><strong>Plot reading:</strong>',
+    )
+    content = embed_local_images(content)
     toc_html = "".join(
         '<a href="#%s">%s</a>' % (anchor, html.escape(text))
         for anchor, text in toc

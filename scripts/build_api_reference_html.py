@@ -33,6 +33,17 @@ def inline(value):
         lambda match: stash("<code>%s</code>" % html.escape(match.group(1))),
         value,
     )
+    value = re.sub(
+        r"!\[([^\]]*)\]\(([^)]+)\)",
+        lambda match: stash(
+            '<img src="%s" alt="%s" loading="lazy">'
+            % (
+                html.escape(match.group(2), quote=True),
+                html.escape(match.group(1), quote=True),
+            )
+        ),
+        value,
+    )
     value = html.escape(value, quote=False)
     value = re.sub(
         r"\[([^\]]+)\]\(([^)]+)\)",

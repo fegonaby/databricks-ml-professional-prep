@@ -262,6 +262,14 @@ Choose it when predictive performance is more important than the simplicity and 
 | `subsamplingRate` | Fraction of training rows used per iteration |
 | `maxDepth` | Complexity of each weak tree |
 
+`stepSize` scales how much each new tree changes the ensemble, while `maxIter` controls how many trees get a chance to make corrections. In a simplified regression example with a target of `120` and a current prediction of `100`, `stepSize=0.5` applies half of the first tree's `+20` correction to reach `110`; the next tree learns the remaining error and applies half of its `+10` correction to reach `115`. Smaller corrections therefore usually require more trees:
+
+```text
+smaller stepSize -> less correction per tree -> larger maxIter often needed
+```
+
+For regression, this can be understood as correcting residual errors. Classification uses the same sequential principle by fitting each new tree to the direction that reduces the classification loss.
+
 Spark-specific trap: `GBTClassifier` supports **binary classification**, not multiclass classification. `GBTRegressor` predicts continuous values.
 
 ### Naive Bayes
@@ -291,7 +299,7 @@ Know these Naive Bayes parameters:
 
 Choose Naive Bayes for high-dimensional sparse classification such as document or count-feature problems.
 
-Do not choose Naive Bayes when feature interactions are central or when the task requires a continuous numeric prediction.
+Naive Bayes may be a poor choice when the prediction depends heavily on combinations or relationships between features, because it treats each feature as independent evidence once the class is assumed. It is also unsuitable when the task requires a continuous numeric prediction.
 
 ### Model tuning directions to reason about
 
@@ -356,19 +364,25 @@ Keep these three rate names straight:
 | `TNR` | True Negative Rate | Another name for Specificity: how many real negatives the model correctly leaves negative |
 | `FPR` | False Positive Rate | How many real negatives the model incorrectly flags positive; `FPR = 1 - TNR` |
 
-Fraud example: TNR measures the share of legitimate transactions the model correctly leaves unflagged. FPR measures the share of legitimate transactions it wrongly flags as fraud.
+In this fraud example, **fraud is the positive class** and **legitimate is the negative class**. TNR measures the share of legitimate transactions the model correctly leaves unflagged, while FPR measures the share of legitimate transactions it wrongly flags as fraud.
 
 ### Threshold, curve, and probability metrics
 
 | Metric | Definition | What it answers | Important trap |
 |---|---|---|---|
 | ROC curve | Receiver Operating Characteristic curve: TPR versus FPR across all thresholds | How does class separation change as the decision threshold moves? | It is a curve, not one fixed-threshold score |
-| AUROC | Area Under the ROC Curve | Across all thresholds, how well does the model rank positive examples above negative examples? | Can look reassuring on highly imbalanced data |
+| AUROC | Area Under the ROC Curve | Across all thresholds, how consistently does the model give actual positive examples higher scores than actual negative examples? * | May produce a high score that hides a large number of false alerts when the positive class is rare; AUPRC is often more informative for rare positives |
 | PR curve | Precision-Recall curve across all thresholds | As the model catches more positives, what happens to the accuracy of its positive predictions? | Focuses on the positive class |
 | AUPRC | Area Under the Precision-Recall Curve | Across all thresholds, how good is the model at finding positives without creating too many false alarms? | Often more informative for rare positives |
 | Log Loss | Mean negative log probability assigned to the true class | Are predicted probabilities confident and correct? | Confident wrong predictions receive a very large penalty |
 
-Useful AUROC interpretation: it is the probability that a randomly chosen positive receives a higher score than a randomly chosen negative. Log Loss approaches zero for confident correct probabilities and grows without a fixed upper bound for confident wrong probabilities. You need the meanings and directions; you do not need to derive the integrals or logarithm formula.
+* **Example:** Fraud is the positive class. Giving a real fraud transaction a score of `0.85` and a legitimate transaction a score of `0.20` is a correct ordering because the positive example receives the higher score. Giving fraud `0.30` and a legitimate transaction `0.90` is an incorrect ordering. AUROC summarizes how often the model orders positive-negative pairs correctly; an AUROC of `0.90` means it does so about 90% of the time.
+
+![ROC and Precision-Recall curves generated from deterministic mock fraud scores](../assets/roc-pr-curves.svg)
+
+**Plot reading:** The ROC curve plots TPR/Recall against FPR and is better when it bends toward the upper-left. The Precision-Recall curve plots Precision against Recall and is better when it stays high as Recall moves right. AUROC and AUPRC are the shaded areas summarized as single numbers.
+
+Log Loss approaches zero for confident correct probabilities and grows without a fixed upper bound for confident wrong probabilities. You need the meanings and directions; you do not need to derive the integrals or logarithm formula.
 
 ### Multiclass averaging definitions
 
