@@ -394,6 +394,16 @@ For the PR curve, **"the model catches more positives" means Recall increases**,
 
 Log Loss approaches zero for confident correct probabilities and grows without a fixed upper bound for confident wrong probabilities. You need the meanings and directions; you do not need to derive the integrals or logarithm formula.
 
+**Log Loss example:** suppose the true class is positive:
+
+```text
+Prediction A: P(positive) = 0.90 -> confident and correct -> small loss
+Prediction B: P(positive) = 0.55 -> uncertain but correct  -> larger loss
+Prediction C: P(positive) = 0.01 -> confident and wrong   -> very large loss
+```
+
+Here, "correct" assumes the usual `0.5` classification threshold, so `0.55` becomes a positive prediction. Log Loss itself does not use that threshold: it gives `0.55` more loss than `0.90` because the model assigned less probability to the true positive class.
+
 ### Multiclass averaging definitions
 
 Spark computes precision, recall, and F-measure for individual labels and can combine them using class support.
@@ -405,6 +415,16 @@ Spark computes precision, recall, and F-measure for individual labels and can co
 | `"f1"` in `MulticlassClassificationEvaluator` | Support-weighted F1 across classes; it is also the default |
 
 **By-label metric:** choose one class `c` and calculate the metric as though that class were the positive class. Spark's `metricLabel=c` tells the evaluator which class to focus on. It returns that class's result, not an average across all classes.
+
+These `metricName` options use `metricLabel`:
+
+```text
+truePositiveRateByLabel
+falsePositiveRateByLabel
+precisionByLabel
+recallByLabel
+fMeasureByLabel
+```
 
 Suppose the encoded labels are:
 
@@ -423,6 +443,8 @@ evaluator = MulticlassClassificationEvaluator(
 )
 ```
 
+Spark evaluates class `1.0` using a **one-versus-rest** view: fraud is the positive class, while legitimate and chargeback are grouped together as "not fraud." In the formulas below, `c` means the selected class, so here `c` is fraud (`1.0`). Spark counts true positives, false positives, and false negatives for that class and uses them in these formulas:
+
 ```math
 \text{precision}_c = \frac{TP_c}{TP_c + FP_c}
 \text{recall}_c = \frac{TP_c}{TP_c + FN_c}
@@ -431,7 +453,9 @@ F_{1,c} = \frac{2 \cdot \text{precision}_c \cdot \text{recall}_c}{\text{precisio
 
 Use a by-label metric when one class has special business importance, such as fraud, a dangerous diagnosis, or a severe failure type.
 
-**Weighted metric:** first calculate the metric separately for every class. Then average those class-level results, giving each class a weight based on its **support**. Support is the number of actual examples whose true label is that class. With `support_c` the support of class `c` and `N` the total number of rows:
+**Weighted metric:** first calculate the metric separately for every class. Then average those class-level results, giving each class a weight based on its **support**. Support is the number of actual examples whose true label is that class.
+
+With `support_c` the support of class `c` and `N` the total number of rows:
 
 ```math
 \text{weight}_c = \frac{\text{support}_c}{N}
@@ -443,6 +467,26 @@ For example, Spark's weighted F1 is:
 ```math
 \text{weightedF1} = \sum_{c} \frac{\text{support}_c}{N} \cdot F_{1,c}
 ```
+
+Suppose a dataset has 100 rows with these per-class F1 scores:
+
+```text
+Legitimate: support = 80, F1 = 0.90
+Fraud:      support = 15, F1 = 0.60
+Chargeback: support =  5, F1 = 0.40
+```
+
+Convert each support into a weight and multiply it by that class's F1:
+
+```text
+Legitimate: weight = 80 / 100 = 0.80 -> 0.80 x 0.90 = 0.72
+Fraud:      weight = 15 / 100 = 0.15 -> 0.15 x 0.60 = 0.09
+Chargeback: weight =  5 / 100 = 0.05 -> 0.05 x 0.40 = 0.02
+
+Weighted F1 = 0.72 + 0.09 + 0.02 = 0.83
+```
+
+The legitimate class influences the result most because it contains 80% of the true examples.
 
 With the same three labels, this evaluator calculates support-weighted F1 across legitimate, fraud, and chargeback:
 
@@ -458,7 +502,15 @@ This is an average of the per-class F1 scores. It is not calculated by first ave
 
 Weighted metrics can hide poor performance on a rare class because majority classes receive more weight. Inspect a business-critical label directly when that class matters.
 
-In ordinary single-label multiclass classification, support-weighted Recall equals overall Accuracy. The weighting cancels each class's support denominator, leaving the total number of correct predictions divided by all predictions.
+In ordinary single-label multiclass classification, support-weighted Recall always equals overall Accuracy. For each class:
+
+```text
+class weight x class Recall
+= (class support / total rows) x (correct predictions for the class / class support)
+= correct predictions for the class / total rows
+```
+
+The class support cancels. Adding the result for every class gives `total correct predictions / total rows`, which is Accuracy. This equivalence is specific to support-weighted Recall; weighted Precision and weighted F1 generally do not equal Accuracy.
 
 ### Regression metric definitions
 
@@ -469,7 +521,7 @@ Let a residual/error be `actual - prediction`.
 | MSE | Mean of squared residuals | Penalizes large errors strongly; units are squared | Lower |
 | RMSE | Square root of MSE | Penalizes large errors strongly and returns to target units | Lower |
 | MAE | Mean absolute residual | Typical absolute error; less dominated by outliers than RMSE | Lower |
-| R2 | `1 - model squared error / mean-baseline squared error` | Improvement over always predicting the target mean | Higher |
+| R2 | `1 - model MSE / mean-baseline MSE` | Improvement over always predicting the average of the actual target values for every row | Higher |
 | Explained Variance | `1 - variance(residuals) / variance(actual)` | How much of the target's variation do the predictions capture? | Higher |
 
 Interpret R2 carefully:
@@ -481,16 +533,16 @@ Interpret R2 carefully:
 
 ### Ranking metric definitions
 
-These are recognition-level unless a scenario explicitly concerns recommendations or ordered results.
+For the exam, know what each metric measures and which one fits a recommendation, search, or other ordered-results scenario. Do not memorize their formulas.
 
 | Metric | Definition | Best when |
 |---|---|---|
-| Precision at K | Relevant items in the top K divided by K | Top result slots are scarce and false recommendations matter |
-| Recall at K | Relevant items in the top K divided by all relevant items | Retrieving more of the relevant set matters |
-| Average Precision | Average of precision values at ranks where a relevant item appears | Both relevance and ordering matter for one query/user |
-| MAP | Mean Average Precision across queries/users | Comparing overall ranked retrieval quality |
-| MAP at K | MAP calculated only through the top K positions | Only the visible/retrieved prefix matters |
-| NDCG at K | Discounted relevance by rank, normalized against ideal ordering | Higher-ranked and possibly graded relevance matters |
+| Precision at K | Relevant items in the top K divided by K | You have limited top-K slots and irrelevant recommendations or results are costly |
+| Recall at K | Relevant items in the top K divided by all relevant items | Finding as many relevant items as possible matters more than avoiding every irrelevant result |
+| Average Precision | Average of precision values at ranks where a relevant item appears | You are evaluating one customer's or query's list and relevant items should appear early |
+| MAP | Mean Average Precision across queries/users | You are comparing overall ranking quality across many customers or queries |
+| MAP at K | MAP calculated only through the top K positions | Only the first K displayed or retrieved positions matter |
+| NDCG at K | Discounted relevance by rank, normalized against ideal ordering | The exact ordering within the top K matters, with relevant items near the top receiving more credit |
 
 ### Metric decision rules
 
@@ -503,10 +555,11 @@ These are recognition-level unless a scenario explicitly concerns recommendation
 | False positives are especially costly | Precision | Higher | When the model predicts positive, how often is it right? |
 | False negatives are especially costly | Recall | Higher | How many of the real positives did the model catch? |
 | Balance precision and recall | F1 | Higher | Harmonic mean of precision and recall |
-| Penalize large numeric errors more strongly | RMSE | Lower | Squaring gives large errors extra weight |
+| Penalize large numeric errors more strongly; squared units are acceptable | MSE | Lower | Squaring gives large errors extra weight |
+| Penalize large numeric errors more strongly; keep the result in target units | RMSE | Lower | It is the square root of MSE, so it retains the large-error penalty but is easier to interpret |
 | Treat absolute numeric errors uniformly | MAE | Lower | Less dominated by large errors than RMSE |
 | Compare regression with a mean baseline | R2 | Higher | Can be negative when the model is worse |
-| Ordered recommendation quality near the top | NDCG at K | Higher | Rewards correct ordering and graded relevance |
+| Ordered recommendation quality near the top | NDCG at K | Higher | Rewards relevant results that appear closer to the top |
 
 ### Evaluator classes, columns, and exact metric names
 
@@ -545,41 +598,46 @@ precisionByLabel, recallByLabel, fMeasureByLabel,
 logLoss, hammingLoss
 ```
 
-Write the first six high-value names in the evaluator table from memory. Recognition is sufficient for the remaining weighted and by-label variants, but know that `metricLabel` selects the class and `beta` controls the F-measure precision/recall weighting.
+* Remember that `metricLabel` selects the class and `beta` controls the F-measure precision/recall weighting.
 
 Exam traps:
 
 - `BinaryClassificationEvaluator` supports only AUROC and AUPRC. It does not use `"accuracy"`, `"f1"`, or `"logLoss"`.
-- `MulticlassClassificationEvaluator` can evaluate binary predictions when the desired metric is F1, accuracy, precision, recall, or log loss.
+- `MulticlassClassificationEvaluator` also works with binary labels. Use it for `"f1"`, `"accuracy"`, weighted or by-label Precision/Recall, and `"logLoss"`; `BinaryClassificationEvaluator` is only for AUROC/AUPRC.
 - Log Loss requires `probabilityCol`, while AUROC/AUPRC use `rawPredictionCol`.
 - The evaluator controls which parameter configuration wins during tuning.
 - Most metrics are maximized, but loss/error metrics such as Log Loss, RMSE, MAE, MSE, and Hamming Loss are minimized. Spark evaluators know the correct direction.
 
-### Log Loss in one example
+### From evaluation to tuning
 
-Suppose the true class is positive:
+The sections above answer **how to score predictions**: choose the metric that matches the business goal, then configure the Spark Evaluator that calculates it.
+
+Tuning answers a different question: **which parameter settings should be kept?** If you set fixed parameters and call `estimator.fit(training_df)`, Spark fits one model and performs no automatic selection. To compare candidate settings, give a parameter grid and an Evaluator to `CrossValidator` or `TrainValidationSplit`. The tuner fits the candidates, and the Evaluator acts as the judge that selects the winner.
+
+### How Spark tuning pieces fit together
+
+Spark tuning tries several settings for the same Estimator and uses validation results to select the best settings. Four pieces work together:
+
+| Piece | Its job | Example |
+|---|---|---|
+| Estimator | The model or Pipeline to fit repeatedly | `lr` or `pipeline` |
+| Parameter maps | The candidate settings to try | Different `regParam` and `elasticNetParam` values |
+| Evaluator | Scores each candidate's validation predictions | AUROC for a binary classifier or RMSE for a regressor |
+| Tuner | Creates the validation splits and coordinates fitting, scoring, and selection | `CrossValidator` or `TrainValidationSplit` |
+
+Calling `fit()` on the tuner runs this sequence:
 
 ```text
-Prediction A: P(positive) = 0.90 -> confident and correct -> small loss
-Prediction B: P(positive) = 0.55 -> uncertain but correct  -> larger loss
-Prediction C: P(positive) = 0.01 -> confident and wrong   -> very large loss
+Fit the Estimator with every parameter combination
+-> score each candidate with the Evaluator on validation data
+-> select the best parameters
+-> refit the Estimator with those parameters on all supplied training data
+-> return a fitted tuning model containing bestModel
 ```
 
-Log Loss evaluates probability quality, not only whether the final class label was correct.
+For example, `cv.fit(training_df)` returns a `CrossValidatorModel`; `tvs.fit(training_df)` returns a `TrainValidationSplitModel`. Each returned object has `bestModel`, which is the winning fitted model, and can also call `transform()` to make predictions with that winner.
 
-### The tuning object model
-
-```text
-Estimator + ParamMap combinations + Evaluator
-                       |
-                       v
-          CrossValidator or TrainValidationSplit
-                       |
-                       v
-             fitted tuning Model with bestModel
-```
-
-`ParamGridBuilder` creates the Cartesian product of the values added with `addGrid`:
+`ParamGridBuilder` creates every combination of the values added with `addGrid`:
 
 ```python
 grid = (
@@ -677,10 +735,10 @@ best_model = tvs_model.bestModel
 | Mode | Choose it when | Databricks/Spark shape |
 |---|---|---|
 | Batch | Many stored rows can be scored together | Scheduled job, Spark `model.transform(df)`, PyFunc/Spark UDF, or supported batch inference function |
-| Streaming | New records arrive continuously and near-real-time micro-batches are acceptable | `readStream` -> fitted model `transform` -> checkpointed `writeStream` |
-| Real-time | Each request needs a low-latency response | Model Serving endpoint exposed through an API |
+| Streaming | Records arrive continuously and should automatically be scored and written downstream | `readStream` -> fitted model `transform` -> checkpointed `writeStream` |
+| Real-time serving | An application sends an individual request and must immediately receive a prediction | Model Serving endpoint exposed through an API |
 
-Streaming is not the same as real-time serving. Structured Streaming normally processes incremental micro-batches; a serving endpoint responds to individual requests.
+Use the interaction pattern, not latency alone, to distinguish them. Structured Streaming is a continuous **source-to-sink pipeline**: it reads arriving records, normally scores them in incremental micro-batches, and writes the results to a destination; its checkpoint tracks processing progress. Model Serving is **request/response**: an application calls an endpoint with one or a few records and waits for the prediction. Databricks also has a low-latency Structured Streaming real-time mode, but it remains a streaming pipeline rather than a Model Serving endpoint.
 
 ### July 14 practice
 
