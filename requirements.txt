@@ -1,0 +1,4 @@
+# Build-time dependency for the HTML generators.
+# Optional: without it, math (```math fences) falls back to raw LaTeX text
+# and the build still succeeds. Install to get typeset MathML.
+latex2mathml>=3.78

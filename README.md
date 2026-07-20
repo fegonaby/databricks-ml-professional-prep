@@ -25,3 +25,17 @@ python3 scripts/build_api_reference_html.py
 python3 scripts/build_sql_guide_html.py
 python3 scripts/build_sparkml_guide_html.py
 ```
+
+### Math in guides
+
+Write display formulas in a fenced `math` block — one LaTeX equation per line:
+
+````text
+```math
+\text{precision}_c = \frac{TP_c}{TP_c + FP_c}
+```
+````
+
+They are rendered to MathML at build time (no CDN), so they display inside the
+sandboxed artifacts. This needs `latex2mathml` (`pip install -r requirements.txt`).
+Without it the build still works but formulas show their raw LaTeX.

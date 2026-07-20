@@ -368,6 +368,15 @@ In this fraud example, **fraud is the positive class** and **legitimate is the n
 
 ### Threshold, curve, and probability metrics
 
+Changing the classification threshold changes which scores become positive predictions; it does not retrain the model or change the scores themselves. A higher threshold predicts fewer positives, so it usually misses more real positives (`FN` rises) while wrongly flagging fewer negatives (`FP` falls). Recall therefore decreases, while Precision usually increases. Lowering the threshold usually reverses this tradeoff:
+
+```text
+higher threshold -> fewer positive predictions -> more FN, fewer FP -> lower Recall, usually higher Precision
+lower threshold  -> more positive predictions  -> fewer FN, more FP -> higher Recall, usually lower Precision
+```
+
+We say Precision **usually** increases because `TP` also changes, so Precision can fluctuate rather than move smoothly at every threshold. This is why an observed Precision-Recall curve can look jagged.
+
 | Metric | Definition | What it answers | Important trap |
 |---|---|---|---|
 | ROC curve | Receiver Operating Characteristic curve: TPR versus FPR across all thresholds | How does class separation change as the decision threshold moves? | It is a curve, not one fixed-threshold score |
@@ -378,9 +387,10 @@ In this fraud example, **fraud is the positive class** and **legitimate is the n
 
 * **Example:** Fraud is the positive class. Giving a real fraud transaction a score of `0.85` and a legitimate transaction a score of `0.20` is a correct ordering because the positive example receives the higher score. Giving fraud `0.30` and a legitimate transaction `0.90` is an incorrect ordering. AUROC summarizes how often the model orders positive-negative pairs correctly; an AUROC of `0.90` means it does so about 90% of the time.
 
-![ROC and Precision-Recall curves generated from deterministic mock fraud scores](../assets/roc-pr-curves.svg)
 
-**Plot reading:** The ROC curve plots TPR/Recall against FPR and is better when it bends toward the upper-left. The Precision-Recall curve plots Precision against Recall and is better when it stays high as Recall moves right. AUROC and AUPRC are the shaded areas summarized as single numbers.
+For the PR curve, **"the model catches more positives" means Recall increases**, while **"the accuracy of its positive predictions" means Precision**. In exam terminology, the question is: **As Recall increases, what happens to Precision?**
+
+![ROC and Precision-Recall curves generated from deterministic mock fraud scores](../assets/roc-pr-curves.svg)
 
 Log Loss approaches zero for confident correct probabilities and grows without a fixed upper bound for confident wrong probabilities. You need the meanings and directions; you do not need to derive the integrals or logarithm formula.
 
@@ -390,17 +400,33 @@ Spark computes precision, recall, and F-measure for individual labels and can co
 
 | Term | Definition |
 |---|---|
-| By-label metric | Compute the metric for one class selected with `metricLabel` |
+| By-label metric | Compute the metric for one class selected with `metricLabel` in `MulticlassClassificationEvaluator`|
 | Weighted metric | Compute a metric for each class, then weight each class by its number of true examples (support) |
 | `"f1"` in `MulticlassClassificationEvaluator` | Support-weighted F1 across classes; it is also the default |
 
 **By-label metric:** choose one class `c` and calculate the metric as though that class were the positive class. Spark's `metricLabel=c` tells the evaluator which class to focus on. It returns that class's result, not an average across all classes.
 
+Suppose the encoded labels are:
+
 ```text
-precision for class c = TP_c / (TP_c + FP_c)
-recall for class c    = TP_c / (TP_c + FN_c)
-F1 for class c        = 2 * precision_c * recall_c
-                        / (precision_c + recall_c)
+0.0 -> legitimate
+1.0 -> fraud
+2.0 -> chargeback
+```
+
+This evaluator calculates Precision only for fraud:
+
+```python
+evaluator = MulticlassClassificationEvaluator(
+    metricName="precisionByLabel",
+    metricLabel=1.0,
+)
+```
+
+```math
+\text{precision}_c = \frac{TP_c}{TP_c + FP_c}
+\text{recall}_c = \frac{TP_c}{TP_c + FN_c}
+F_{1,c} = \frac{2 \cdot \text{precision}_c \cdot \text{recall}_c}{\text{precision}_c + \text{recall}_c}
 ```
 
 Use a by-label metric when one class has special business importance, such as fraud, a dangerous diagnosis, or a severe failure type.
@@ -423,6 +449,16 @@ For example, Spark's weighted F1 is:
 weightedF1 = sum over all classes c of:
              (support_c / N) * F1_c
 ```
+
+With the same three labels, this evaluator calculates support-weighted F1 across legitimate, fraud, and chargeback:
+
+```python
+evaluator = MulticlassClassificationEvaluator(
+    metricName="f1",
+)
+```
+
+`metricLabel` is not used because `"f1"` combines the per-class F1 results instead of selecting one class.
 
 This is an average of the per-class F1 scores. It is not calculated by first averaging Precision and Recall and then applying the F1 formula.
 
