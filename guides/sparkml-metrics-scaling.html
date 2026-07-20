@@ -172,17 +172,10 @@ lower threshold  -&gt; more positive predictions  -&gt; fewer FN, more FP -&gt; 
 )</code></pre>
 <div class="math-block" role="math"><div class="math-row"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mtext>precision</mtext><mi>c</mi></msub><mo>&#x0003D;</mo><mfrac><mrow><mi>T</mi><msub><mi>P</mi><mi>c</mi></msub></mrow><mrow><mi>T</mi><msub><mi>P</mi><mi>c</mi></msub><mo>&#x0002B;</mo><mi>F</mi><msub><mi>P</mi><mi>c</mi></msub></mrow></mfrac></mrow></math></div><div class="math-row"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mtext>recall</mtext><mi>c</mi></msub><mo>&#x0003D;</mo><mfrac><mrow><mi>T</mi><msub><mi>P</mi><mi>c</mi></msub></mrow><mrow><mi>T</mi><msub><mi>P</mi><mi>c</mi></msub><mo>&#x0002B;</mo><mi>F</mi><msub><mi>N</mi><mi>c</mi></msub></mrow></mfrac></mrow></math></div><div class="math-row"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mi>F</mi><mrow><mn>1</mn><mo>&#x0002C;</mo><mi>c</mi></mrow></msub><mo>&#x0003D;</mo><mfrac><mrow><mn>2</mn><mi>&#x000B7;</mi><msub><mtext>precision</mtext><mi>c</mi></msub><mi>&#x000B7;</mi><msub><mtext>recall</mtext><mi>c</mi></msub></mrow><mrow><msub><mtext>precision</mtext><mi>c</mi></msub><mo>&#x0002B;</mo><msub><mtext>recall</mtext><mi>c</mi></msub></mrow></mfrac></mrow></math></div></div>
 <p>Use a by-label metric when one class has special business importance, such as fraud, a dangerous diagnosis, or a severe failure type.</p>
-<p><strong>Weighted metric:</strong> first calculate the metric separately for every class. Then average those class-level results, giving each class a weight based on its <strong>support</strong>. Support is the number of actual examples whose true label is that class.</p>
-<pre data-language="text"><code>support_c = number of rows whose true label is class c
-N         = total number of rows
-
-weight_c = support_c / N
-
-weighted metric = sum over all classes c of:
-                  weight_c * metric_c</code></pre>
+<p><strong>Weighted metric:</strong> first calculate the metric separately for every class. Then average those class-level results, giving each class a weight based on its <strong>support</strong>. Support is the number of actual examples whose true label is that class. With <code>support_c</code> the support of class <code>c</code> and <code>N</code> the total number of rows:</p>
+<div class="math-block" role="math"><div class="math-row"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><msub><mtext>weight</mtext><mi>c</mi></msub><mo>&#x0003D;</mo><mfrac><mrow><msub><mtext>support</mtext><mi>c</mi></msub></mrow><mrow><mi>N</mi></mrow></mfrac></mrow></math></div><div class="math-row"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mtext>weighted&#x000A0;metric</mtext><mo>&#x0003D;</mo><msub><mo>&#x02211;</mo><mrow><mi>c</mi></mrow></msub><msub><mtext>weight</mtext><mi>c</mi></msub><mi>&#x000B7;</mi><msub><mtext>metric</mtext><mi>c</mi></msub></mrow></math></div></div>
 <p>For example, Spark's weighted F1 is:</p>
-<pre data-language="text"><code>weightedF1 = sum over all classes c of:
-             (support_c / N) * F1_c</code></pre>
+<div class="math-block" role="math"><div class="math-row"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow><mtext>weightedF1</mtext><mo>&#x0003D;</mo><msub><mo>&#x02211;</mo><mrow><mi>c</mi></mrow></msub><mfrac><mrow><msub><mtext>support</mtext><mi>c</mi></msub></mrow><mrow><mi>N</mi></mrow></mfrac><mi>&#x000B7;</mi><msub><mi>F</mi><mrow><mn>1</mn><mo>&#x0002C;</mo><mi>c</mi></mrow></msub></mrow></math></div></div>
 <p>With the same three labels, this evaluator calculates support-weighted F1 across legitimate, fraud, and chargeback:</p>
 <pre data-language="python"><code><span class="tk-pm">evaluator</span> = <span class="tk-ty">MulticlassClassificationEvaluator</span>(
     <span class="tk-pm">metricName</span>=<span class="tk-st">&quot;f1&quot;</span>,

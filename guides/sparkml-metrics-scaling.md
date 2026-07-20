@@ -431,23 +431,17 @@ F_{1,c} = \frac{2 \cdot \text{precision}_c \cdot \text{recall}_c}{\text{precisio
 
 Use a by-label metric when one class has special business importance, such as fraud, a dangerous diagnosis, or a severe failure type.
 
-**Weighted metric:** first calculate the metric separately for every class. Then average those class-level results, giving each class a weight based on its **support**. Support is the number of actual examples whose true label is that class.
+**Weighted metric:** first calculate the metric separately for every class. Then average those class-level results, giving each class a weight based on its **support**. Support is the number of actual examples whose true label is that class. With `support_c` the support of class `c` and `N` the total number of rows:
 
-```text
-support_c = number of rows whose true label is class c
-N         = total number of rows
-
-weight_c = support_c / N
-
-weighted metric = sum over all classes c of:
-                  weight_c * metric_c
+```math
+\text{weight}_c = \frac{\text{support}_c}{N}
+\text{weighted metric} = \sum_{c} \text{weight}_c \cdot \text{metric}_c
 ```
 
 For example, Spark's weighted F1 is:
 
-```text
-weightedF1 = sum over all classes c of:
-             (support_c / N) * F1_c
+```math
+\text{weightedF1} = \sum_{c} \frac{\text{support}_c}{N} \cdot F_{1,c}
 ```
 
 With the same three labels, this evaluator calculates support-weighted F1 across legitimate, fraud, and chargeback:
