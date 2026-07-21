@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-"""Render the July 14-15 Spark ML companion as standalone HTML."""
+"""Render the July 16 distributed tuning and scaling guide as HTML."""
 
-import base64
 import html
-import mimetypes
 from pathlib import Path
-import re
 
 from build_api_reference_html import CSS, SCROLLSPY_JS, render_markdown
-from generate_metric_curve_plots import OUTPUT as METRIC_PLOT_PATH, build_svg as build_metric_plot
 
 ROOT = Path(__file__).resolve().parent.parent
 GUIDES_DIR = ROOT / "guides"
 MARKDOWN_DIR = GUIDES_DIR / "markdown"
 HTML_DIR = GUIDES_DIR / "html"
-MD_PATH = MARKDOWN_DIR / "sparkml-metrics-scaling.md"
-OUT_PATH = HTML_DIR / "sparkml-metrics-scaling.html"
+MD_PATH = MARKDOWN_DIR / "distributed-tuning-scaling.md"
+OUT_PATH = HTML_DIR / "distributed-tuning-scaling.html"
 
 JS = r"""
 const search = document.getElementById('search');
@@ -71,7 +67,7 @@ document.querySelectorAll('pre').forEach((pre) => {
         button.title = 'Copy snippet';
       }, 1200);
     } catch (error) {
-      button.title = 'Copy failed — select the text manually';
+      button.title = 'Copy failed - select the text manually';
     }
   });
   wrapper.appendChild(button);
@@ -86,44 +82,15 @@ GUIDE_CSS = r"""
 .code-copy:focus-visible{outline:2px solid var(--teal);outline-offset:2px;opacity:1}
 .code-copy.copied{color:var(--green);border-color:var(--green);opacity:1}
 .code-copy svg{width:15px;height:15px;display:block}
-.metric-plot{margin:1.1em 0 .45em}.metric-plot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#0f151c}
-.metric-caption{margin:.35em 0 1.2em;color:var(--muted);font-size:.92rem}
 .doc-section table{min-width:0}
 .doc-section td:first-child{white-space:normal}
-.doc-section th:first-child,.doc-section td:first-child{max-width:230px}
+.doc-section th:first-child,.doc-section td:first-child{max-width:240px}
 @media print{.code-copy{display:none}}
 """
 
 
-def embed_local_images(content):
-    def replace(match):
-        source = match.group(1)
-        if source.startswith(("data:", "http://", "https://")):
-            return match.group(0)
-        image_path = (MD_PATH.parent / source).resolve()
-        if not image_path.is_file() or ROOT.resolve() not in image_path.parents:
-            return match.group(0)
-        mime_type = mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
-        payload = base64.b64encode(image_path.read_bytes()).decode("ascii")
-        return match.group(0).replace(source, f"data:{mime_type};base64,{payload}")
-
-    return re.sub(r'<img src="([^"]+)"', replace, content)
-
-
 def main():
-    METRIC_PLOT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    METRIC_PLOT_PATH.write_text(build_metric_plot(), encoding="utf-8")
     title, toc, content = render_markdown(MD_PATH.read_text(encoding="utf-8"))
-    content = re.sub(
-        r'<p>(<img src="\.\./\.\./assets/roc-pr-curves\.svg"[^>]*>)</p>',
-        r'<figure class="metric-plot">\1</figure>',
-        content,
-    )
-    content = content.replace(
-        '<p><strong>Plot reading:</strong>',
-        '<p class="metric-caption"><strong>Plot reading:</strong>',
-    )
-    content = embed_local_images(content)
     toc_html = "".join(
         '<a href="#%s">%s</a>' % (anchor, html.escape(text))
         for anchor, text in toc
@@ -131,9 +98,9 @@ def main():
     page = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(title)}</title><style>{CSS}{GUIDE_CSS}</style></head><body>
-<header class="top"><div class="top-inner"><span class="brand">Spark ML Exam Guide</span><input id="search" class="search" type="search" placeholder="Filter models, metrics, tuning, pandas APIs, or traps" aria-label="Filter Spark ML guide"></div></header>
+<header class="top"><div class="top-inner"><span class="brand">Distributed Tuning Guide</span><input id="search" class="search" type="search" placeholder="Filter Optuna, Ray, scaling, parallelism, APIs, or traps" aria-label="Filter distributed tuning guide"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
-<div class="meta">Generated from <a href="../markdown/sparkml-metrics-scaling.md">the Markdown source</a>. Verified July 16, 2026.</div>
+<div class="meta">Generated from <a href="../markdown/distributed-tuning-scaling.md">the Markdown source</a>. Verified July 21, 2026.</div>
 {content}<p id="empty" class="empty">No matching sections.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")
     print(f"wrote {OUT_PATH} ({len(page)} bytes)")

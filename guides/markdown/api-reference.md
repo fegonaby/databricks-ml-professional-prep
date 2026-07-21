@@ -117,10 +117,14 @@ query = (predictions.writeStream
 | WRITE | `study.optimize(objective, n_trials=..., n_jobs=...)` | Objective, total trials, concurrency | Executes the HPO search | `n_trials` is total work; `n_jobs` controls parallel execution. |
 | WRITE | `setup_ray_cluster(min_worker_nodes=..., max_worker_nodes=...)` | Worker-node bounds | Creates Ray-on-Spark cluster | Ray on Spark is unavailable on serverless compute. |
 | WRITE | `ray.init()` | Usually no explicit address after setup | Connects Python to Ray cluster | Setup and initialization are separate. |
-| WRITE | `tune.Tuner(trainable, param_space=..., tune_config=...)` | Trainable, search space, `TuneConfig` | Tuner; `.fit()` returns results | Ray Tune is task-oriented; Spark is DataFrame/data-parallel. |
+| WRITE | `tune.report(metrics)` | Dictionary whose keys include the optimized metric | Reports one trial's metrics to Ray Tune | The reported key must match `TuneConfig.metric`. |
+| WRITE | `tune.TuneConfig(metric=..., mode=..., num_samples=..., max_concurrent_trials=...)` | Metric name, `"min"`/`"max"`, sampled-trial count, concurrency limit | Tuning behavior configuration | `num_samples` is total sampled work; `max_concurrent_trials` limits parallel execution. |
+| WRITE | `tune.Tuner(trainable, param_space=..., tune_config=...)` | Trainable, search space, `TuneConfig` | Configured Ray Tune job | Constructing a `Tuner` does not execute the trials. |
+| WRITE | `tuner.fit()` | None | `ResultGrid` containing trial results | It does not return one fitted production model. |
+| RECOGNIZE | `results.get_best_result(metric=..., mode=...)` | Optional metric and direction; defaults can come from `TuneConfig` | Best `Result`; `.config` contains its hyperparameters | A best configuration still is not a registered/deployed model. |
 | WRITE | `ray.shutdown()` and `shutdown_ray_cluster()` | None | Disconnects Ray, then tears down cluster | Clean up both layers. |
 
-**Sources:** [pandas Function APIs](https://docs.databricks.com/aws/en/pandas/pandas-function-apis), [Optuna on Databricks](https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/optuna), [Ray on Databricks](https://docs.databricks.com/aws/en/machine-learning/ray/)
+**Sources:** [pandas Function APIs](https://docs.databricks.com/aws/en/pandas/pandas-function-apis), [Optuna on Databricks](https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/optuna), [Ray on Databricks](https://docs.databricks.com/aws/en/machine-learning/ray/), [Ray Tune key concepts](https://docs.ray.io/en/latest/tune/key-concepts.html)
 
 ---
 

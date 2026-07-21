@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Distributed Tuning and Scaling Exam Guide</title><style>
+:root{--bg:#f7f8fa;--surface:#fff;--ink:#19202a;--muted:#5b6573;--line:#d9dee6;--soft:#eef1f5;--red:#b42318;--teal:#087f78;--green:#2e7d4f;--amber:#8a5a00}
+@media(prefers-color-scheme:dark){:root{--bg:#12161c;--surface:#191f27;--ink:#edf1f7;--muted:#aab4c2;--line:#333c49;--soft:#242c36;--red:#ff857a;--teal:#64d5cc;--green:#79c99b;--amber:#e5b95f}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;letter-spacing:0}.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.top-inner{max-width:1440px;margin:auto;padding:10px 24px;display:flex;align-items:center;gap:14px}.brand{font-weight:750;white-space:nowrap}.search{width:min(620px,100%);margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:9px 11px;font:inherit}.search:focus{outline:2px solid var(--teal);outline-offset:1px}.layout{max-width:1440px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:34px;padding:28px 24px 80px}.toc{position:sticky;top:72px;align-self:start;max-height:calc(100vh - 92px);overflow:auto}.toc h2{font-size:12px;text-transform:uppercase;color:var(--muted);margin:0 0 8px}.toc a{display:block;padding:6px 8px;border-left:2px solid var(--line);color:var(--muted);text-decoration:none}.toc a:hover{color:var(--ink);border-color:var(--teal)}.toc a.active{color:var(--ink);border-color:var(--teal);font-weight:650;background:color-mix(in srgb,var(--teal) 10%,transparent)}main{min-width:0;max-width:1080px}h1{font-size:34px;line-height:1.15;margin:0 0 18px}h2{font-size:24px;line-height:1.25;margin:0 0 14px;padding-top:10px}h3{font-size:17px;margin:24px 0 10px}h4{font-size:14px;margin:18px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}p{margin:8px 0 14px}.doc-section{padding:26px 0;border-top:1px solid var(--line)}a{color:var(--teal);text-underline-offset:2px}code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--soft);border-radius:4px;padding:1px 4px;font-size:.92em}pre{position:relative;background:#111820;color:#e8edf3;border:1px solid #2d3845;border-radius:6px;padding:16px;overflow:auto;line-height:1.5}pre code{background:none;padding:0;color:inherit}.table-wrap{overflow:auto;margin:12px 0 20px;border:1px solid var(--line);border-radius:6px}table{width:100%;border-collapse:collapse;min-width:780px;background:var(--surface)}th,td{padding:9px 11px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}th{position:sticky;top:0;background:var(--soft);font-size:12px;text-transform:uppercase;color:var(--muted)}tr:last-child td{border-bottom:0}tbody tr:hover{background:color-mix(in srgb,var(--teal) 7%,var(--surface))}td:first-child{font-weight:750;white-space:nowrap}td:first-child strong{color:var(--red)}blockquote{margin:14px 0;padding:10px 14px;border-left:3px solid var(--amber);background:var(--soft)}ul,ol{padding-left:22px}li{margin:5px 0}input[type=checkbox]{accent-color:var(--green)}.meta{color:var(--muted);font-size:13px}.stats{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0 28px}.stat{border-left:3px solid var(--teal);padding-left:10px}.stat b{display:block;font-size:20px}.empty{display:none;color:var(--muted);padding:24px 0}.source-link{font-size:13px;color:var(--muted)}@media(max-width:900px){.layout{grid-template-columns:1fr;padding:20px 16px 60px}.toc{position:static;max-height:none;columns:2}.top-inner{padding:9px 14px}.brand{display:none}h1{font-size:28px}}@media(max-width:560px){.toc{columns:1}.top-inner{display:block}.search{width:100%}th,td{padding:8px}table{min-width:720px}}@media print{.top,.toc{display:none}.layout{display:block;padding:0}.doc-section{break-before:auto}a{color:inherit}pre{white-space:pre-wrap}.table-wrap{overflow:visible}table{min-width:0;font-size:10px}}
+pre .tk-cm{color:#6a9955}pre .tk-st{color:#ce9178}pre .tk-kw{color:#c586c0}pre .tk-bi{color:#569cd6}pre .tk-ty{color:#4ec9b0}pre .tk-fn{color:#dcdcaa}pre .tk-nm{color:#b5cea8}pre .tk-pm{color:#9cdcfe}.prio{display:inline-block;font-size:11px;font-weight:750;letter-spacing:.05em;padding:1px 7px;border-radius:4px;white-space:nowrap}.prio-must,.prio-write{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red)}.prio-skim,.prio-recognize{background:color-mix(in srgb,var(--teal) 16%,transparent);color:var(--teal)}.prio-reference{background:var(--soft);color:var(--muted)}.prio-skip{background:transparent;color:var(--muted);border:1px dashed var(--line)}.math-block{overflow-x:auto;margin:1.1em 0;padding:10px 18px;background:var(--soft);border:1px solid var(--line);border-radius:8px;color:var(--ink)}.math-row{padding:4px 0}.math-block math{display:inline-block;font-size:1.18em}.math-fallback{color:var(--ink)}
+.code-wrap{position:relative;margin:1em 0}.code-wrap pre{margin:0}
+.code-copy{position:absolute;top:7px;right:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid #2d3845;border-radius:6px;background:rgba(20,27,35,.55);color:#aab4c2;cursor:pointer;opacity:.5;transition:opacity .12s,background .12s,color .12s}
+.code-wrap:hover .code-copy{opacity:1}
+.code-copy:hover{background:#2b3745;color:#e8edf3;border-color:#64748b}
+.code-copy:focus-visible{outline:2px solid var(--teal);outline-offset:2px;opacity:1}
+.code-copy.copied{color:var(--green);border-color:var(--green);opacity:1}
+.code-copy svg{width:15px;height:15px;display:block}
+.doc-section table{min-width:0}
+.doc-section td:first-child{white-space:normal}
+.doc-section th:first-child,.doc-section td:first-child{max-width:240px}
+@media print{.code-copy{display:none}}
+</style></head><body>
+<header class="top"><div class="top-inner"><span class="brand">Distributed Tuning Guide</span><input id="search" class="search" type="search" placeholder="Filter Optuna, Ray, scaling, parallelism, APIs, or traps" aria-label="Filter distributed tuning guide"></div></header>
+<div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2><a href="#1-exam-scope-and-target">1. Exam scope and target</a><a href="#2-july-16-reading-scope">2. July 16 reading scope</a><a href="#3-hyperparameter-tuning-vocabulary">3. Hyperparameter tuning vocabulary</a><a href="#4-distributed-optuna-with-mlflow">4. Distributed Optuna with MLflow</a><a href="#5-spark-versus-ray">5. Spark versus Ray</a><a href="#6-ray-on-databricks">6. Ray on Databricks</a><a href="#7-distributed-hyperparameter-tuning-with-ray-tune">7. Distributed hyperparameter tuning with Ray Tune</a><a href="#8-vertical-and-horizontal-scaling">8. Vertical and horizontal scaling</a><a href="#9-data-task-and-model-parallelism">9. Data, task, and model parallelism</a><a href="#10-scenario-decision-process">10. Scenario decision process</a><a href="#11-api-signatures-to-reconstruct">11. API signatures to reconstruct</a><a href="#12-common-exam-traps">12. Common exam traps</a><a href="#13-closed-book-checkpoint">13. Closed-book checkpoint</a><a href="#14-official-sources">14. Official sources</a></nav><main>
+<div class="meta">Generated from <a href="../markdown/distributed-tuning-scaling.md">the Markdown source</a>. Verified July 21, 2026.</div>
+<h1 id="distributed-tuning-and-scaling-exam-guide">Distributed Tuning and Scaling Exam Guide</h1>
+<p><strong>What this is for:</strong> the complete July 16 guide for the Databricks Machine Learning Professional objectives on distributed hyperparameter tuning, Ray, Spark-versus-Ray selection, and scaling strategies.</p>
+<p><strong>Last checked:</strong> July 21, 2026 against the live September 2025 exam guide and current Databricks, MLflow, and Ray documentation.</p>
+<section class="doc-section" id="1-exam-scope-and-target"><h2>1. Exam scope and target</h2>
+<p>The official exam outline expects you to:</p>
+<ol><li>Perform distributed hyperparameter tuning with Optuna and MLflow.</li><li>Perform distributed hyperparameter tuning with Ray.</li><li>Compare vertical and horizontal scaling for ML workloads.</li><li>Choose between data parallelism and model parallelism for large-scale training.</li><li>Compare Ray and Spark for distributing ML training workloads.</li></ol>
+<p>The official guide also includes pandas Function APIs in the same Scaling and Tuning domain. Those APIs were covered on July 15 in the <a href="../html/sparkml-metrics-scaling.html#3-july-15-pandas-function-apis-and-pandas-udfs">Spark ML and pandas scaling guide</a>. This guide mentions them only when they are a possible answer to a scaling scenario.</p>
+<p>This is not a distributed-systems engineering course. For the exam, you need to identify the workload shape, choose the correct framework or parallelization strategy, recognize the current API, and reject nearby distractors. You do not need to derive optimization algorithms, configure networking internals, or memorize every Ray scheduler.</p>
+<h3 id="what-should-be-automatic-by-the-end">What should be automatic by the end</h3>
+<pre data-language="text"><code>Many Optuna trials on Spark executors -&gt; MlflowStorage + MlflowSparkStudy
+Independent Python training trials    -&gt; Ray Tune
+Large DataFrame transformations       -&gt; Spark
+One model per business group          -&gt; groupBy().applyInPandas()
+
+One machine needs more resources      -&gt; vertical scaling
+More machines are needed              -&gt; horizontal scaling
+Same computation over data shards     -&gt; data parallelism
+Independent jobs run concurrently     -&gt; task parallelism
+One model cannot fit on one device     -&gt; model parallelism</code></pre>
+</section>
+<section class="doc-section" id="2-july-16-reading-scope"><h2>2. July 16 reading scope</h2>
+<p>Read only the sections listed here. Documentation trees contain much more than this exam block requires.</p>
+<div class="table-wrap"><table><tr><th>Priority</th><th>Source</th><th>Read</th><th>Skip</th></tr><tr><td><span class="prio prio-skim">SKIM</span></td><td><a href="https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/">Databricks hyperparameter-tuning overview</a></td><td>Optuna, Ray Tune, and the Hyperopt deprecation note</td><td>Old Hyperopt workflows and detailed MLlib automated-tracking history</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><a href="https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/optuna">Distributed Optuna on Databricks</a></td><td>Introduction, the three workflow steps, <code>MlflowStorage</code>, <code>MlflowSparkStudy</code>, <code>optimize</code>, and best parameters</td><td>Installation commands, downloadable notebook, and storage flushing parameters</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><a href="https://docs.databricks.com/aws/en/machine-learning/ray/spark-ray-overview">When to use Spark versus Ray</a></td><td>When to use Spark, Ray, or both; then recognize the cluster-setup block</td><td>Advanced Ray-inside-UDF and concurrent Spark/Ray patterns</td></tr><tr><td><span class="prio prio-skim">SKIM</span></td><td><a href="https://docs.databricks.com/aws/en/machine-learning/ray/">Ray on Databricks</a></td><td>What Ray is, ML use cases, and limitations</td><td>Platform-benefit marketing detail and GPU troubleshooting</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><a href="https://docs.ray.io/en/latest/tune/key-concepts.html">Ray Tune key concepts</a></td><td>Trainable, search space, <code>Tuner</code>, <code>TuneConfig</code>, <code>tune.report</code>, <code>fit</code>, and best-result retrieval</td><td>Specialized search algorithms, schedulers, checkpointing, restoration, and internal architecture</td></tr><tr><td><span class="prio prio-skim">SKIM</span></td><td><a href="https://docs.databricks.com/aws/en/machine-learning/ray/ray-create">Create and connect to Ray clusters</a></td><td>Requirements, fixed/autoscaling setup, <code>ray.init</code>, and shutdown</td><td>Global clusters, remote client connections, dashboard profiling, and detailed authentication setup</td></tr><tr><td><span class="prio prio-skim">SKIM</span></td><td><a href="https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/">Distributed training</a></td><td>Opening recommendation plus the DeepSpeed, TorchDistributor, Ray, and Spark ML summaries</td><td>Framework-specific tutorials</td></tr><tr><td><span class="prio prio-reference">REFERENCE</span></td><td><a href="https://docs.databricks.com/aws/en/compute/configure">Compute configuration</a></td><td>Worker type, single versus multi-node compute, and autoscaling only when a scenario needs them</td><td>Cloud instance catalogs, storage, networking, tags, policies, and advanced Spark configuration</td></tr></table></div>
+<h3 id="one-current-document-warning">One current-document warning</h3>
+<p>The general Ray overview no longer contains a full Ray Tune walkthrough. Use it for Ray concepts and platform limitations. Use the official Ray Tune key-concepts page for the current <code>Tuner</code> workflow, and the Databricks Ray-cluster page for <code>setup_ray_cluster()</code>.</p>
+<h3 id="legacy-recognition">Legacy recognition</h3>
+<p>Current Databricks documentation says open-source Hyperopt is no longer maintained and is not included after Databricks Runtime 16.4 LTS ML. Older questions may still mention it, but the current exam explicitly names Optuna and Ray.</p>
+<pre data-language="text"><code>Current distributed Optuna question -&gt; MlflowStorage + MlflowSparkStudy
+General distributed Python HPO      -&gt; Ray Tune
+Hyperopt/SparkTrials                 -&gt; legacy, not the current first choice</code></pre>
+</section>
+<section class="doc-section" id="3-hyperparameter-tuning-vocabulary"><h2>3. Hyperparameter tuning vocabulary</h2>
+<p>Hyperparameters are settings chosen before or around training rather than values learned from the training data. Examples include a tree's maximum depth, a learning rate, or regularization strength.</p>
+<p>Hyperparameter tuning repeatedly trains and evaluates candidates to find a good configuration.</p>
+<pre data-language="text"><code>Search space -&gt; possible hyperparameter values
+Trial        -&gt; one candidate configuration and its evaluation
+Objective    -&gt; code that trains/evaluates one trial and returns or reports a metric
+Metric       -&gt; value used to compare trials
+Direction    -&gt; whether lower or higher metric values are better
+Best params  -&gt; configuration associated with the best completed trial</code></pre>
+<h3 id="one-trial-is-not-one-training-epoch">One trial is not one training epoch</h3>
+<p>A <strong>trial</strong> is one complete candidate evaluation. The trial may itself train for many epochs, folds, or iterations.</p>
+<p>For example:</p>
+<pre data-language="text"><code>Trial 1: max_depth=4, learning_rate=0.10 -&gt; validation loss 0.31
+Trial 2: max_depth=8, learning_rate=0.05 -&gt; validation loss 0.27
+Trial 3: max_depth=6, learning_rate=0.01 -&gt; validation loss 0.35</code></pre>
+<p>If loss is minimized, Trial 2 is currently best.</p>
+<h3 id="tuning-parallelism-is-normally-task-parallelism">Tuning parallelism is normally task parallelism</h3>
+<p>Different trials can usually run independently. Distributing several trials at once is therefore <strong>task parallelism</strong>.</p>
+<p>Do not confuse this with how one trial trains its model:</p>
+<pre data-language="text"><code>Across trials: independent candidates                 -&gt; task parallelism
+Inside one trial: model replicas process data shards  -&gt; data parallelism
+Inside one trial: one large model spans devices       -&gt; model parallelism</code></pre>
+<p>A question can combine these layers. For example, Ray Tune can run four trials concurrently, while each individual deep-learning trial uses data parallelism across two GPUs.</p>
+<h3 id="search-algorithm-versus-early-stopping">Search algorithm versus early stopping</h3>
+<div class="table-wrap"><table><tr><th>Component</th><th>Question it answers</th><th>Optuna term</th><th>Ray Tune term</th></tr><tr><td>Search strategy</td><td>Which hyperparameters should be tried next?</td><td><code>sampler</code></td><td><code>search_alg</code> or the search-space sampling rules</td></tr><tr><td>Early stopping</td><td>Should an unpromising running trial stop early?</td><td><code>pruner</code></td><td><code>scheduler</code> such as ASHA/HyperBand</td></tr></table></div>
+<p>These are recognition-level distinctions. Do not memorize the algorithm mathematics or a catalog of implementations.</p>
+</section>
+<section class="doc-section" id="4-distributed-optuna-with-mlflow"><h2>4. Distributed Optuna with MLflow</h2>
+<h3 id="the-three-part-workflow">The three-part workflow</h3>
+<p>Distributed Optuna on Databricks has three essential pieces:</p>
+<ol><li>An objective function defines one trial.</li><li><code>MlflowStorage</code> provides shared Optuna state through the MLflow Tracking Server.</li><li><code>MlflowSparkStudy</code> launches trials through Spark executors.</li></ol>
+<p>Then <code>study.optimize()</code> runs the search.</p>
+<h3 id="step-1-define-one-objective">Step 1: define one objective</h3>
+<pre data-language="python"><code><span class="tk-bi">def</span> <span class="tk-fn">objective</span>(trial):
+    <span class="tk-pm">max_depth</span> = trial.<span class="tk-fn">suggest_int</span>(<span class="tk-st">&quot;max_depth&quot;</span>, <span class="tk-nm">2</span>, <span class="tk-nm">12</span>)
+    <span class="tk-pm">learning_rate</span> = trial.<span class="tk-fn">suggest_float</span>(
+        <span class="tk-st">&quot;learning_rate&quot;</span>,
+        <span class="tk-nm">0.001</span>,
+        <span class="tk-nm">0.1</span>,
+        <span class="tk-pm">log</span>=<span class="tk-bi">True</span>,
+    )
+    <span class="tk-pm">booster</span> = trial.<span class="tk-fn">suggest_categorical</span>(
+        <span class="tk-st">&quot;booster&quot;</span>,
+        [<span class="tk-st">&quot;gbtree&quot;</span>, <span class="tk-st">&quot;dart&quot;</span>],
+    )
+
+    <span class="tk-pm">model</span> = <span class="tk-fn">train_model</span>(
+        <span class="tk-pm">max_depth</span>=max_depth,
+        <span class="tk-pm">learning_rate</span>=learning_rate,
+        <span class="tk-pm">booster</span>=booster,
+    )
+    <span class="tk-pm">validation_loss</span> = <span class="tk-fn">evaluate_model</span>(model)
+    <span class="tk-kw">return</span> validation_loss</code></pre>
+<p>The important methods are:</p>
+<div class="table-wrap"><table><tr><th>Method</th><th>Defines</th></tr><tr><td><code>trial.suggest_int(name, low, high)</code></td><td>Integer search range</td></tr><tr><td><code>trial.suggest_float(name, low, high, log=...)</code></td><td>Continuous search range; <code>log=True</code> is useful across orders of magnitude</td></tr><tr><td><code>trial.suggest_categorical(name, choices)</code></td><td>Discrete choices such as model family or solver</td></tr></table></div>
+<p>The objective returns the value Optuna compares. If it returns validation loss, lower is better. If it returns AUROC, higher is better. The optimization direction must agree with the metric meaning.</p>
+<h3 id="step-2-create-shared-storage">Step 2: create shared storage</h3>
+<pre data-language="python"><code><span class="tk-kw">import</span> mlflow
+<span class="tk-kw">from</span> mlflow.optuna.storage <span class="tk-kw">import</span> <span class="tk-ty">MlflowStorage</span>
+
+<span class="tk-pm">experiment</span> = mlflow.<span class="tk-fn">get_experiment_by_name</span>(
+    <span class="tk-st">&quot;/Shared/distributed-optuna&quot;</span>
+)
+
+<span class="tk-pm">storage</span> = <span class="tk-ty">MlflowStorage</span>(
+    <span class="tk-pm">experiment_id</span>=experiment.experiment_id,
+)</code></pre>
+<p><code>MlflowStorage</code> is not merely a logger. It is the shared storage backend through which distributed workers coordinate the study and its trials.</p>
+<pre data-language="text"><code>MlflowStorage
+-&gt; receives an MLflow experiment ID
+-&gt; stores shared Optuna study/trial state through MLflow
+-&gt; allows distributed workers to see consistent optimization state</code></pre>
+<p>Do not memorize <code>batch_flush_interval</code>, <code>batch_size_threshold</code>, or the code used to discover the current notebook path.</p>
+<h3 id="step-3-create-and-optimize-the-spark-study">Step 3: create and optimize the Spark study</h3>
+<pre data-language="python"><code><span class="tk-kw">from</span> mlflow.pyspark.optuna.study <span class="tk-kw">import</span> <span class="tk-ty">MlflowSparkStudy</span>
+
+<span class="tk-pm">study</span> = <span class="tk-ty">MlflowSparkStudy</span>(
+    <span class="tk-pm">study_name</span>=<span class="tk-st">&quot;fraud-tuning&quot;</span>,
+    <span class="tk-pm">storage</span>=storage,
+)
+
+study.<span class="tk-fn">optimize</span>(
+    objective,
+    <span class="tk-pm">n_trials</span>=<span class="tk-nm">20</span>,
+    <span class="tk-pm">n_jobs</span>=<span class="tk-nm">4</span>,
+)
+
+<span class="tk-pm">best_params</span> = study.best_params</code></pre>
+<h3 id="parameter-meanings">Parameter meanings</h3>
+<div class="table-wrap"><table><tr><th>Parameter or property</th><th>Meaning</th><th>Common mistake</th></tr><tr><td><code>study_name</code></td><td>Logical name of the Optuna study</td><td>It is not the MLflow experiment path</td></tr><tr><td><code>storage</code></td><td>The <code>MlflowStorage</code> used for shared study state</td><td>An MLflow callback is not a replacement</td></tr><tr><td><code>objective</code></td><td>Callable that executes one candidate trial</td><td>It is not the complete Spark study</td></tr><tr><td><code>n_trials</code></td><td>Total number of objective evaluations requested</td><td>It is not the concurrency level</td></tr><tr><td><code>n_jobs</code></td><td>Maximum concurrent trial executions</td><td>It does not create additional candidate values by itself</td></tr><tr><td><code>best_params</code></td><td>Hyperparameters belonging to the best trial</td><td>It is not a fitted prediction model</td></tr><tr><td><code>sampler</code></td><td>Strategy for suggesting parameter values</td><td>It does not distribute work</td></tr><tr><td><code>pruner</code></td><td>Stops weak trials early</td><td>It does not choose the final metric direction</td></tr></table></div>
+<p>With <code>n_trials=20</code> and <code>n_jobs=4</code>, Optuna requests 20 trials and can run up to four at once. If the trials took equal time and resources were always available, they would run in roughly five waves. <code>n_jobs</code> changes concurrency, not the total requested trial count.</p>
+<h3 id="the-official-callback-trap">The official callback trap</h3>
+<p>The official exam guide includes a sample question that distinguishes <code>MLflowCallback</code> from <code>MlflowStorage</code>.</p>
+<pre data-language="text"><code>MLflowCallback  -&gt; logs trial information to MLflow
+MlflowStorage   -&gt; provides shared Optuna storage through MLflow
+MlflowSparkStudy -&gt; distributes trials with Spark</code></pre>
+<p>Therefore:</p>
+<pre data-language="text"><code>Distributed Optuna + MLflow, minimal setup
+-&gt; MlflowStorage(experiment_id=...)
+-&gt; MlflowSparkStudy(study_name=..., storage=...)
+-&gt; study.optimize(objective, n_trials=..., n_jobs=...)</code></pre>
+<p>A callback alone does not create distributed shared storage. Pairing <code>MLflowCallback</code> with <code>MlflowSparkStudy</code> while omitting <code>MlflowStorage</code> misses the required storage component.</p>
+<h3 id="what-each-object-returns-or-exposes">What each object returns or exposes</h3>
+<pre data-language="text"><code>objective(trial)                    -&gt; objective metric value
+MlflowStorage(...)                  -&gt; shared storage object
+MlflowSparkStudy(...)               -&gt; distributed Optuna Study wrapper
+study.optimize(...)                 -&gt; runs the optimization
+study.best_params                   -&gt; dictionary of winning parameters</code></pre>
+<p>The best parameters still need to be used to train or select the final model. They are not themselves a model artifact.</p>
+<h3 id="optuna-versus-spark-crossvalidator">Optuna versus Spark CrossValidator</h3>
+<div class="table-wrap"><table><tr><th>Situation</th><th>Better fit</th><th>Why</th></tr><tr><td>Tune a Spark ML Pipeline over a small explicit parameter grid</td><td><code>CrossValidator</code> or <code>TrainValidationSplit</code></td><td>Native Spark ML tuning over <code>ParamMap</code> combinations</td></tr><tr><td>Use a dynamic or conditional search space</td><td>Optuna</td><td>The objective can suggest values conditionally</td></tr><tr><td>Distribute Optuna trials across Spark executors with MLflow-backed state</td><td><code>MlflowStorage</code> + <code>MlflowSparkStudy</code></td><td>This is the current Databricks integration tested by the official sample</td></tr><tr><td>Run general independent Python tuning workloads on Ray</td><td>Ray Tune</td><td>Ray is designed for task-parallel Python computation</td></tr></table></div>
+<p>Do not assume that Optuna means Spark ML. The objective can train a single-node library such as scikit-learn; <code>MlflowSparkStudy</code> distributes the independent trials through Spark executors.</p>
+</section>
+<section class="doc-section" id="5-spark-versus-ray"><h2>5. Spark versus Ray</h2>
+<h3 id="the-main-distinction">The main distinction</h3>
+<pre data-language="text"><code>Spark excels at data parallelism.
+Ray excels at task parallelism.</code></pre>
+<p>That sentence is a starting point, not a rule that excludes every overlap.</p>
+<h3 id="spark">Spark</h3>
+<p>Spark is the first choice when the work is naturally expressed as operations over large distributed datasets.</p>
+<p>Typical Spark workloads:</p>
+<ul><li>Joins, filters, aggregations, and table transformations.</li><li>ETL, analytics, feature engineering, and preprocessing.</li><li>Fitting supported Spark ML estimators on large Spark DataFrames.</li><li>Applying a fitted Spark <code>PipelineModel</code> to large batch or streaming DataFrames.</li></ul>
+<p>Spark partitions the data and schedules the same logical operation over those partitions.</p>
+<h3 id="ray">Ray</h3>
+<p>Ray is the first choice when the work is naturally expressed as independent or dynamic Python tasks.</p>
+<p>Typical Ray workloads:</p>
+<ul><li>Hyperparameter search with independent training trials.</li><li>Independent forecasts for many time series.</li><li>Simulation and high-performance computing workloads.</li><li>Reinforcement learning.</li><li>Distributed deep-learning or Python-native training workloads.</li><li>Concurrent training, evaluation, or batch inference with libraries such as scikit-learn or non-Spark XGBoost.</li></ul>
+<p>Ray can also work with data, and Spark can schedule different tasks. The exam distinction concerns each framework's primary strength and the shape of the proposed workload.</p>
+<h3 id="use-both-when-the-pipeline-has-both-shapes">Use both when the pipeline has both shapes</h3>
+<p>A pipeline can use Spark for data-intensive preparation and Ray for computation-intensive Python tasks.</p>
+<pre data-language="text"><code>Delta tables
+-&gt; Spark joins, cleans, and creates training data
+-&gt; Ray runs independent training or tuning tasks
+-&gt; results/models are saved to MLflow or Unity Catalog</code></pre>
+<p>This does not mean Spark and Ray must compete for the same resources simultaneously. Separate workflow tasks can isolate ETL from Ray training when resource needs differ.</p>
+<h3 id="decision-table">Decision table</h3>
+<div class="table-wrap"><table><tr><th>Requirement</th><th>Best first answer</th><th>Reason</th></tr><tr><td>Join billion-row tables and create features</td><td>Spark</td><td>Distributed DataFrame processing is the central problem</td></tr><tr><td>Fit a supported Spark estimator on a huge Spark DataFrame</td><td>Spark ML</td><td>Training remains within Spark's distributed ML pipeline</td></tr><tr><td>Run 100 independent Python training configurations</td><td>Ray Tune</td><td>The workload is task-parallel HPO</td></tr><tr><td>Run distributed Optuna trials through Spark and share state in MLflow</td><td><code>MlflowStorage</code> + <code>MlflowSparkStudy</code></td><td>This is the specific Optuna-on-Databricks integration</td></tr><tr><td>Train one local model independently for every store</td><td><code>groupBy().applyInPandas()</code></td><td>The business groups already live in a Spark DataFrame</td></tr><tr><td>Use Spark for preparation and custom Python computation afterward</td><td>Spark plus Ray</td><td>Each engine handles the stage that matches its strength</td></tr><tr><td>Train one neural network that cannot fit on one GPU</td><td>Model-parallel framework such as DeepSpeed</td><td>HPO/task parallelism does not solve the model-memory problem</td></tr></table></div>
+<h3 id="framework-and-parallelism-are-different-decisions">Framework and parallelism are different decisions</h3>
+<p>Do not answer a parallelism question only with a framework name.</p>
+<pre data-language="text"><code>Framework choice:      Spark, Ray, pandas Function API, TorchDistributor, DeepSpeed
+Parallelism strategy:  data, task, or model parallelism
+Resource scaling:      vertical or horizontal</code></pre>
+<p>For example, "use Ray" does not explain whether one training trial is data-parallel or model-parallel. Ray might instead be distributing many independent trials.</p>
+</section>
+<section class="doc-section" id="6-ray-on-databricks"><h2>6. Ray on Databricks</h2>
+<h3 id="two-clusters-and-one-connection">Two clusters and one connection</h3>
+<p>Ray on Spark introduces layers that are easy to collapse mentally:</p>
+<pre data-language="text"><code>Databricks compute / Spark cluster
+-&gt; supplies the machines and Spark executors
+
+Ray cluster created on that compute
+-&gt; supplies Ray head/worker processes and schedules Ray work
+
+ray.init()
+-&gt; connects the current Python process to Ray</code></pre>
+<p><code>setup_ray_cluster()</code> and <code>ray.init()</code> are therefore separate calls with separate jobs.</p>
+<h3 id="create-and-connect">Create and connect</h3>
+<pre data-language="python"><code><span class="tk-kw">import</span> ray
+<span class="tk-kw">from</span> ray.util.spark <span class="tk-kw">import</span> (
+    setup_ray_cluster,
+    shutdown_ray_cluster,
+)
+
+<span class="tk-fn">setup_ray_cluster</span>(
+    <span class="tk-pm">min_worker_nodes</span>=<span class="tk-nm">2</span>,
+    <span class="tk-pm">max_worker_nodes</span>=<span class="tk-nm">4</span>,
+)
+
+ray.<span class="tk-fn">init</span>()</code></pre>
+<div class="table-wrap"><table><tr><th>Call or parameter</th><th>Meaning</th></tr><tr><td><code>setup_ray_cluster(...)</code></td><td>Creates a Ray cluster on the Databricks Spark compute</td></tr><tr><td><code>min_worker_nodes</code></td><td>Lower worker-node bound for an autoscaling Ray cluster</td></tr><tr><td><code>max_worker_nodes</code></td><td>Upper worker-node bound or maximum Ray worker count</td></tr><tr><td><code>ray.init()</code></td><td>Connects the notebook/application process to Ray</td></tr></table></div>
+<p>Recognize that a fixed-size example may use <code>max_worker_nodes</code> or <code>num_worker_nodes</code> depending on the documented setup form and installed Ray version. For the exam companion, reconstruct the current min/max pattern and focus on the two-step lifecycle.</p>
+<h3 id="shut-down-both-layers">Shut down both layers</h3>
+<pre data-language="python"><code>ray.<span class="tk-fn">shutdown</span>()
+<span class="tk-fn">shutdown_ray_cluster</span>()</code></pre>
+<p><code>ray.shutdown()</code> disconnects the local Ray client/process. <code>shutdown_ray_cluster()</code> tears down the Ray-on-Spark cluster. Databricks can also stop a notebook-scoped Ray cluster when the notebook detaches, the job finishes, the Databricks compute terminates, or the Ray cluster stays idle long enough, but explicit cleanup remains the clearest exam pattern.</p>
+<h3 id="platform-limitations-worth-recognizing">Platform limitations worth recognizing</h3>
+<ul><li>Ray on Spark cannot be initialized on serverless compute.</li><li>Ray is included in modern Databricks Runtime ML releases.</li><li>Install required libraries before creating the Ray cluster; running <code>%pip</code> on an active Ray cluster can shut it down.</li><li>A Ray cluster created from a notebook is normally scoped to that notebook user unless a global cluster is deliberately created.</li></ul>
+<p>For Free Edition, treat Ray-on-Spark execution as conceptual because Free Edition uses serverless compute.</p>
+</section>
+<section class="doc-section" id="7-distributed-hyperparameter-tuning-with-ray-tune"><h2>7. Distributed hyperparameter tuning with Ray Tune</h2>
+<h3 id="the-object-model">The object model</h3>
+<pre data-language="text"><code>trainable   -&gt; function/class that trains and reports metrics
+param_space -&gt; hyperparameter values or distributions
+TuneConfig  -&gt; metric, min/max direction, samples, concurrency, search behavior
+Tuner       -&gt; configured tuning job
+Tuner.fit() -&gt; executes trials and returns ResultGrid
+ResultGrid  -&gt; collection of trial results</code></pre>
+<h3 id="a-current-minimal-shape">A current minimal shape</h3>
+<pre data-language="python"><code><span class="tk-kw">from</span> ray <span class="tk-kw">import</span> tune
+
+
+<span class="tk-bi">def</span> <span class="tk-fn">trainable</span>(config):
+    <span class="tk-pm">model</span> = <span class="tk-fn">train_model</span>(
+        <span class="tk-pm">learning_rate</span>=config[<span class="tk-st">&quot;learning_rate&quot;</span>],
+        <span class="tk-pm">max_depth</span>=config[<span class="tk-st">&quot;max_depth&quot;</span>],
+    )
+    <span class="tk-pm">validation_loss</span> = <span class="tk-fn">evaluate_model</span>(model)
+
+    tune.<span class="tk-fn">report</span>({
+        <span class="tk-st">&quot;validation_loss&quot;</span>: validation_loss,
+    })
+
+
+<span class="tk-pm">tuner</span> = tune.<span class="tk-ty">Tuner</span>(
+    trainable,
+    <span class="tk-pm">param_space</span>={
+        <span class="tk-st">&quot;learning_rate&quot;</span>: tune.<span class="tk-fn">loguniform</span>(<span class="tk-nm">0.001</span>, <span class="tk-nm">0.1</span>),
+        <span class="tk-st">&quot;max_depth&quot;</span>: tune.<span class="tk-fn">choice</span>([<span class="tk-nm">4</span>, <span class="tk-nm">6</span>, <span class="tk-nm">8</span>, <span class="tk-nm">10</span>]),
+    },
+    <span class="tk-pm">tune_config</span>=tune.<span class="tk-ty">TuneConfig</span>(
+        <span class="tk-pm">metric</span>=<span class="tk-st">&quot;validation_loss&quot;</span>,
+        <span class="tk-pm">mode</span>=<span class="tk-st">&quot;min&quot;</span>,
+        <span class="tk-pm">num_samples</span>=<span class="tk-nm">20</span>,
+        <span class="tk-pm">max_concurrent_trials</span>=<span class="tk-nm">4</span>,
+    ),
+)
+
+<span class="tk-pm">results</span> = tuner.<span class="tk-fn">fit</span>()
+<span class="tk-pm">best_result</span> = results.<span class="tk-fn">get_best_result</span>()
+<span class="tk-pm">best_config</span> = best_result.config</code></pre>
+<h3 id="what-belongs-where">What belongs where</h3>
+<div class="table-wrap"><table><tr><th>Component</th><th>Owns</th><th>Common mistake</th></tr><tr><td><code>trainable</code></td><td>Training/evaluation logic for one trial</td><td>It does not define the full search by itself</td></tr><tr><td><code>param_space</code></td><td>Candidate values or sampling distributions</td><td>It is not the validation metric</td></tr><tr><td><code>tune.report({...})</code></td><td>Metrics produced by a running trial</td><td>Returning or printing a value is not the same API shape</td></tr><tr><td><code>TuneConfig(metric=...)</code></td><td>Name of the reported metric used to rank trials</td><td>The name must match a key reported by the trainable</td></tr><tr><td><code>TuneConfig(mode=...)</code></td><td><code>&quot;min&quot;</code> or <code>&quot;max&quot;</code> direction</td><td>Loss is usually minimized; accuracy/AUROC are usually maximized</td></tr><tr><td><code>num_samples</code></td><td>Number of samples from the search space</td><td>It is not the concurrency limit</td></tr><tr><td><code>max_concurrent_trials</code></td><td>Upper limit on concurrent trials</td><td>It does not change the search-space definition</td></tr><tr><td><code>Tuner.fit()</code></td><td>Executes the configured tuning run</td><td>It returns <code>ResultGrid</code>, not one fitted model</td></tr><tr><td><code>ResultGrid.get_best_result()</code></td><td>Retrieves the best trial result</td><td>The result's <code>.config</code> contains its hyperparameters</td></tr></table></div>
+<h3 id="search-space-examples">Search space examples</h3>
+<pre data-language="python"><code><span class="tk-pm">param_space</span> = {
+    <span class="tk-st">&quot;learning_rate&quot;</span>: tune.<span class="tk-fn">loguniform</span>(1e-<span class="tk-nm">4</span>, 1e-<span class="tk-nm">1</span>),
+    <span class="tk-st">&quot;max_depth&quot;</span>: tune.<span class="tk-fn">choice</span>([<span class="tk-nm">4</span>, <span class="tk-nm">6</span>, <span class="tk-nm">8</span>]),
+    <span class="tk-st">&quot;subsample&quot;</span>: tune.<span class="tk-fn">uniform</span>(<span class="tk-nm">0.6</span>, <span class="tk-nm">1.0</span>),
+    <span class="tk-st">&quot;fixed_seed&quot;</span>: <span class="tk-nm">42</span>,
+}</code></pre>
+<pre data-language="text"><code>tune.choice([...])       -&gt; choose from discrete values
+tune.uniform(low, high)  -&gt; sample a continuous uniform value
+tune.loguniform(low, high) -&gt; sample across orders of magnitude
+plain value              -&gt; fixed for every trial</code></pre>
+<p>These calls are useful recognition patterns. You do not need to memorize the full search-space API.</p>
+<h3 id="ray-tune-versus-optuna-on-spark">Ray Tune versus Optuna on Spark</h3>
+<div class="table-wrap"><table><tr><th>Question wording</th><th>Think</th></tr><tr><td>"Optuna", "MLflow experiment ID", "minimal setup", "Spark executors"</td><td><code>MlflowStorage</code> + <code>MlflowSparkStudy</code></td></tr><tr><td>"Ray", "independent Python trials", "Ray Tune"</td><td><code>tune.Tuner(...).fit()</code></td></tr><tr><td>"Spark ML Pipeline", "ParamGridBuilder", "folds"</td><td><code>CrossValidator</code></td></tr><tr><td>"one train/validation split", "faster tuning"</td><td><code>TrainValidationSplit</code></td></tr></table></div>
+<p>The goal is not to declare one tuner universally better. Choose the tool named by the workload and the execution model required by the scenario.</p>
+</section>
+<section class="doc-section" id="8-vertical-and-horizontal-scaling"><h2>8. Vertical and horizontal scaling</h2>
+<h3 id="vertical-scaling">Vertical scaling</h3>
+<p>Vertical scaling means giving one machine more resources.</p>
+<pre data-language="text"><code>Same number of machines
+-&gt; more RAM
+-&gt; more CPU cores
+-&gt; larger/faster GPU</code></pre>
+<p>Choose it when the workload is fundamentally single-node and nearly fits, or when distributing it would add unnecessary complexity.</p>
+<div class="table-wrap"><table><tr><th>Strength</th><th>Limitation</th></tr><tr><td>Simple because the program can remain single-node</td><td>Eventually reaches the largest available machine</td></tr><tr><td>Avoids distributed coordination and network transfer</td><td>Larger instances may be expensive</td></tr><tr><td>Often helps memory-bound local models quickly</td><td>Does not make an inherently unbounded dataset distributed</td></tr></table></div>
+<p>Example: a scikit-learn model and its training data require 48 GB of RAM, but the current node has 32 GB. Moving to a memory-optimized node with enough RAM is vertical scaling.</p>
+<h3 id="horizontal-scaling">Horizontal scaling</h3>
+<p>Horizontal scaling means adding machines or workers.</p>
+<pre data-language="text"><code>Same or similar worker type
+-&gt; more worker nodes
+-&gt; more aggregate CPU, memory, or GPU capacity</code></pre>
+<p>Choose it when the work can be divided across workers and the increased parallel throughput outweighs coordination costs.</p>
+<div class="table-wrap"><table><tr><th>Strength</th><th>Limitation</th></tr><tr><td>Can process more partitions or independent tasks concurrently</td><td>Adds scheduling, synchronization, shuffle, and network overhead</td></tr><tr><td>Can grow beyond the limit of one machine</td><td>Some algorithms do not distribute efficiently</td></tr><tr><td>Supports elasticity and autoscaling</td><td>More workers do not automatically fix driver or per-device memory limits</td></tr></table></div>
+<p>Databricks compute autoscaling is a horizontal mechanism: it adjusts the number of workers between configured minimum and maximum bounds. Choosing a larger worker node type is vertical scaling.</p>
+<h3 id="horizontal-scaling-is-not-the-same-as-data-parallelism">Horizontal scaling is not the same as data parallelism</h3>
+<p>Horizontal scaling describes the <strong>resources</strong>: more machines. Parallelism describes <strong>how the program uses them</strong>.</p>
+<pre data-language="text"><code>More machines running data shards      -&gt; horizontal + data parallelism
+More machines running separate trials  -&gt; horizontal + task parallelism
+More devices holding pieces of a model -&gt; horizontal + model parallelism</code></pre>
+<h3 id="driver-versus-worker-memory">Driver versus worker memory</h3>
+<p>In Databricks multi-node compute, the driver coordinates the application and workers execute distributed processing. A larger worker type helps executor-side work. A larger driver helps driver-side state or deliberate collection, but <code>collect()</code> can still be the wrong design for a large dataset.</p>
+<p>Do not answer a large-data problem with "increase driver memory" when the requirement is to preserve distributed processing.</p>
+</section>
+<section class="doc-section" id="9-data-task-and-model-parallelism"><h2>9. Data, task, and model parallelism</h2>
+<h3 id="data-parallelism">Data parallelism</h3>
+<p>Data parallelism splits the dataset while workers perform the same kind of computation.</p>
+<pre data-language="text"><code>Worker 1 -&gt; data shard A -&gt; model replica / same operation
+Worker 2 -&gt; data shard B -&gt; model replica / same operation
+Worker 3 -&gt; data shard C -&gt; model replica / same operation
+                         -&gt; combine or synchronize results</code></pre>
+<p>Use it when:</p>
+<ul><li>The dataset is too large for one node.</li><li>A model replica or computation fits on each worker/device.</li><li>The operation can be applied across data partitions.</li></ul>
+<p>Spark's central strength is data parallelism over partitioned datasets. In distributed deep learning, workers often hold model replicas, process different mini-batches, and synchronize gradients.</p>
+<p>The main costs are data movement, shuffle, gradient synchronization, stragglers, and coordination.</p>
+<h3 id="task-parallelism">Task parallelism</h3>
+<p>Task parallelism runs separate units of work concurrently.</p>
+<pre data-language="text"><code>Worker 1 -&gt; trial A
+Worker 2 -&gt; trial B
+Worker 3 -&gt; trial C</code></pre>
+<p>Use it when tasks are mostly independent, such as:</p>
+<ul><li>Hyperparameter trials.</li><li>Simulation runs.</li><li>Separate forecasts.</li><li>Independent training or evaluation jobs.</li></ul>
+<p>Ray's central strength is task parallelism. Distributed Optuna trials are also task-parallel even though Spark executors launch them.</p>
+<h3 id="model-parallelism">Model parallelism</h3>
+<p>Model parallelism splits one model across devices because a complete model cannot fit on one device.</p>
+<pre data-language="text"><code>GPU 1 -&gt; part of the model
+GPU 2 -&gt; another part
+GPU 3 -&gt; another part
+      -&gt; activations/gradients cross device boundaries</code></pre>
+<p>Use it when:</p>
+<ul><li>The model's parameters, activations, optimizer state, or training memory exceed one device.</li><li>A larger single accelerator is unavailable or still insufficient.</li></ul>
+<p>The main cost is heavy device-to-device communication and substantially greater engineering complexity. Databricks names DeepSpeed as a solution for memory-constrained large models; TorchDistributor launches distributed PyTorch training jobs.</p>
+<h3 id="data-parallelism-versus-model-parallelism">Data parallelism versus model parallelism</h3>
+<div class="table-wrap"><table><tr><th>Question</th><th>Data parallelism</th><th>Model parallelism</th></tr><tr><td>What is split?</td><td>Training data</td><td>One model</td></tr><tr><td>Does a complete model replica fit on each worker/device?</td><td>Yes</td><td>No</td></tr><tr><td>Main reason</td><td>Dataset or training throughput is too large for one worker</td><td>Model itself exceeds per-device memory</td></tr><tr><td>Main communication</td><td>Combine results or synchronize gradients</td><td>Transfer activations/gradients between model pieces</td></tr><tr><td>Complexity</td><td>Moderate</td><td>Highest</td></tr></table></div>
+<h3 id="hybrid-parallelism">Hybrid parallelism</h3>
+<p>Very large training jobs can combine strategies: split a model across a group of GPUs and run replicated groups on different data shards. Recognize this possibility, but the exam is more likely to ask which primary constraint leads to data or model parallelism.</p>
+</section>
+<section class="doc-section" id="10-scenario-decision-process"><h2>10. Scenario decision process</h2>
+<p>Use this order when a question presents a scaling problem.</p>
+<h3 id="step-1-identify-what-does-not-fit">Step 1: identify what does not fit</h3>
+<pre data-language="text"><code>The local workload nearly fits but needs more RAM/CPU/GPU -&gt; vertical
+The dataset or number of tasks exceeds one node           -&gt; horizontal
+The model itself exceeds one device                       -&gt; model parallel</code></pre>
+<h3 id="step-2-identify-what-can-be-divided">Step 2: identify what can be divided</h3>
+<pre data-language="text"><code>Rows/partitions          -&gt; data parallelism
+Independent trials/jobs -&gt; task parallelism
+Layers/tensors/model     -&gt; model parallelism</code></pre>
+<h3 id="step-3-choose-the-framework">Step 3: choose the framework</h3>
+<pre data-language="text"><code>Large DataFrame processing or Spark ML -&gt; Spark
+Independent Python computation/HPO     -&gt; Ray
+Optuna trials on Spark with MLflow      -&gt; MlflowStorage + MlflowSparkStudy
+One local model per Spark group         -&gt; groupBy().applyInPandas()
+Large distributed PyTorch model         -&gt; TorchDistributor/DeepSpeed, based on constraint</code></pre>
+<h3 id="step-4-state-the-trade-off">Step 4: state the trade-off</h3>
+<pre data-language="text"><code>Vertical -&gt; simpler, but limited by the largest machine and its cost
+Horizontal/data -&gt; scalable throughput, but shuffle/synchronization overhead
+Task parallel -&gt; excellent independence, but each task still needs enough resources
+Model parallel -&gt; solves per-device model memory, but communication/complexity are highest</code></pre>
+<h3 id="worked-scenarios">Worked scenarios</h3>
+<p><strong>Scenario A:</strong> A scikit-learn training job fits logically on one machine but runs out of RAM.</p>
+<pre data-language="text"><code>Choice: vertical scaling
+Why: the job is single-node and only needs a larger memory envelope
+Trade-off: simple change, but bounded by available machine size and cost</code></pre>
+<p><strong>Scenario B:</strong> A supported Spark estimator must train on a table too large for one machine, while the model representation fits on each worker.</p>
+<pre data-language="text"><code>Choice: Spark ML with horizontal/data-parallel execution
+Why: the large distributed dataset is the constraint
+Trade-off: scalable data processing with shuffle and coordination overhead</code></pre>
+<p><strong>Scenario C:</strong> Twenty independent Python model configurations must train concurrently.</p>
+<pre data-language="text"><code>Choice: Ray Tune task parallelism
+Why: each trial is an independent Python computation
+Trade-off: good concurrency, but each trial must still fit its allocated resources</code></pre>
+<p><strong>Scenario D:</strong> The question explicitly requires distributed Optuna with outcomes associated with an MLflow experiment and minimal setup.</p>
+<pre data-language="text"><code>Choice: MlflowStorage + MlflowSparkStudy
+Why: storage coordinates Optuna state through MLflow; the Spark study distributes trials
+Reject: MLflowCallback alone, async Python orchestration, or Ray added without need</code></pre>
+<p><strong>Scenario E:</strong> One neural network cannot fit in the memory of a single GPU.</p>
+<pre data-language="text"><code>Choice: model parallelism, potentially through DeepSpeed
+Why: the model itself, not merely its dataset, exceeds one device
+Trade-off: solves memory capacity but introduces heavy cross-device communication</code></pre>
+</section>
+<section class="doc-section" id="11-api-signatures-to-reconstruct"><h2>11. API signatures to reconstruct</h2>
+<h3 id="distributed-optuna">Distributed Optuna</h3>
+<pre data-language="python"><code><span class="tk-kw">from</span> mlflow.optuna.storage <span class="tk-kw">import</span> <span class="tk-ty">MlflowStorage</span>
+<span class="tk-kw">from</span> mlflow.pyspark.optuna.study <span class="tk-kw">import</span> <span class="tk-ty">MlflowSparkStudy</span>
+
+<span class="tk-pm">storage</span> = <span class="tk-ty">MlflowStorage</span>(
+    <span class="tk-pm">experiment_id</span>=experiment_id,
+)
+
+<span class="tk-pm">study</span> = <span class="tk-ty">MlflowSparkStudy</span>(
+    <span class="tk-pm">study_name</span>=<span class="tk-st">&quot;study-name&quot;</span>,
+    <span class="tk-pm">storage</span>=storage,
+)
+
+study.<span class="tk-fn">optimize</span>(
+    objective,
+    <span class="tk-pm">n_trials</span>=<span class="tk-nm">20</span>,
+    <span class="tk-pm">n_jobs</span>=<span class="tk-nm">4</span>,
+)
+
+<span class="tk-pm">best_params</span> = study.best_params</code></pre>
+<h3 id="ray-cluster-lifecycle">Ray cluster lifecycle</h3>
+<pre data-language="python"><code><span class="tk-kw">import</span> ray
+<span class="tk-kw">from</span> ray.util.spark <span class="tk-kw">import</span> (
+    setup_ray_cluster,
+    shutdown_ray_cluster,
+)
+
+<span class="tk-fn">setup_ray_cluster</span>(
+    <span class="tk-pm">min_worker_nodes</span>=<span class="tk-nm">2</span>,
+    <span class="tk-pm">max_worker_nodes</span>=<span class="tk-nm">4</span>,
+)
+ray.<span class="tk-fn">init</span>()
+
+<span class="tk-cm"># Ray work runs here.</span>
+
+ray.<span class="tk-fn">shutdown</span>()
+<span class="tk-fn">shutdown_ray_cluster</span>()</code></pre>
+<h3 id="ray-tune">Ray Tune</h3>
+<pre data-language="python"><code><span class="tk-kw">from</span> ray <span class="tk-kw">import</span> tune
+
+<span class="tk-pm">tuner</span> = tune.<span class="tk-ty">Tuner</span>(
+    trainable,
+    <span class="tk-pm">param_space</span>=search_space,
+    <span class="tk-pm">tune_config</span>=tune.<span class="tk-ty">TuneConfig</span>(
+        <span class="tk-pm">metric</span>=<span class="tk-st">&quot;validation_loss&quot;</span>,
+        <span class="tk-pm">mode</span>=<span class="tk-st">&quot;min&quot;</span>,
+        <span class="tk-pm">num_samples</span>=<span class="tk-nm">20</span>,
+        <span class="tk-pm">max_concurrent_trials</span>=<span class="tk-nm">4</span>,
+    ),
+)
+
+<span class="tk-pm">results</span> = tuner.<span class="tk-fn">fit</span>()
+<span class="tk-pm">best_result</span> = results.<span class="tk-fn">get_best_result</span>()
+<span class="tk-pm">best_config</span> = best_result.config</code></pre>
+<h3 id="memory-rule">Memory rule</h3>
+<pre data-language="text"><code>Optuna on Spark:
+storage -&gt; study -&gt; optimize -&gt; best_params
+
+Ray on Databricks:
+setup cluster -&gt; connect -&gt; Tuner.fit -&gt; inspect results -&gt; disconnect -&gt; tear down</code></pre>
+</section>
+<section class="doc-section" id="12-common-exam-traps"><h2>12. Common exam traps</h2>
+<div class="table-wrap"><table><tr><th>Trap</th><th>Correct rule</th></tr><tr><td><code>MLflowCallback</code> distributes Optuna trials</td><td>A callback logs; <code>MlflowStorage</code> provides shared state and <code>MlflowSparkStudy</code> distributes trials</td></tr><tr><td><code>n_jobs</code> is the total number of Optuna trials</td><td><code>n_trials</code> is total; <code>n_jobs</code> is concurrency</td></tr><tr><td>More machines always solve an out-of-memory model</td><td>If one model cannot fit on one device, choose model parallelism or a larger device</td></tr><tr><td>Horizontal scaling and data parallelism are synonyms</td><td>Horizontal describes adding machines; data parallelism describes splitting data</td></tr><tr><td>Ray is the first choice for joins and aggregations</td><td>Spark is optimized for large-scale DataFrame processing</td></tr><tr><td>Spark is the first choice for many unrelated Python tasks</td><td>Ray is designed for independent task-parallel computation</td></tr><tr><td><code>setup_ray_cluster()</code> connects the notebook automatically in every pattern</td><td><code>ray.init()</code> is the explicit connection step</td></tr><tr><td><code>ray.init()</code> creates the Databricks/Spark compute</td><td>Databricks compute already exists; Ray is created on top of it</td></tr><tr><td><code>Tuner.fit()</code> returns the fitted production model</td><td>It returns a <code>ResultGrid</code>; retrieve a best result/configuration and train/select the final model appropriately</td></tr><tr><td><code>num_samples</code> controls Ray trial concurrency</td><td><code>num_samples</code> controls sampled trials; <code>max_concurrent_trials</code> limits concurrency</td></tr><tr><td>Ray on Spark works on Free Edition/serverless</td><td>Ray-on-Spark cluster initialization is not supported on serverless runtimes</td></tr><tr><td>Hyperopt is the safest current answer</td><td>It is legacy; current objectives name Optuna and Ray</td></tr></table></div>
+</section>
+<section class="doc-section" id="13-closed-book-checkpoint"><h2>13. Closed-book checkpoint</h2>
+<p>Answer these without opening the guide.</p>
+<ol><li>Which two objects are required to distribute Optuna trials on Spark while using MLflow-backed shared state?</li><li>What does <code>MLflowCallback</code> do, and what does it not do?</li><li>What is the difference between <code>n_trials=20</code> and <code>n_jobs=4</code>?</li><li>What type of parallelism is used when four independent hyperparameter trials run at once?</li><li>What type of parallelism is required when one model cannot fit on one GPU?</li><li>Why is adding workers not automatically the answer to a per-GPU model-memory problem?</li><li>When should Spark normally be chosen over Ray?</li><li>When should Ray normally be chosen over Spark?</li><li>What are the separate jobs of <code>setup_ray_cluster()</code> and <code>ray.init()</code>?</li><li>What does <code>Tuner.fit()</code> return?</li><li>In Ray Tune, where are <code>metric</code>, <code>mode</code>, and <code>num_samples</code> configured?</li><li>How can a workload be horizontally scaled without using data parallelism?</li><li>A single-node model needs 64 GB but the node has 32 GB. Which scaling direction fits first?</li><li>A model replica fits on each worker, but the training data is enormous. Which parallelism strategy fits?</li><li>Which current framework replaces older Hyperopt-first advice for general task-parallel Python HPO?</li></ol>
+<h3 id="answer-check">Answer check</h3>
+<ol><li><code>MlflowStorage</code> and <code>MlflowSparkStudy</code>.</li><li>It logs trial information; it does not provide the shared distributed Optuna storage required by the official pattern.</li><li>Twenty total trials are requested, with at most four running concurrently.</li><li>Task parallelism.</li><li>Model parallelism.</li><li>Every worker/device would still need to hold the complete model unless the model is split.</li><li>For large distributed DataFrame transformations, ETL, feature engineering, or supported Spark ML training.</li><li>For independent or dynamic Python tasks such as HPO trials, simulations, or separate forecasts.</li><li>The first creates Ray on the Databricks Spark compute; the second connects the Python process to Ray.</li><li>A <code>ResultGrid</code>.</li><li><code>tune.TuneConfig(...)</code>.</li><li>Run independent tasks or trials on the additional machines using task parallelism.</li><li>Vertical scaling to a larger-memory node, assuming the workload otherwise fits one machine.</li><li>Data parallelism, normally with horizontal scaling.</li><li>Ray Tune; for the exam's specific distributed Optuna pattern, use <code>MlflowStorage</code> plus <code>MlflowSparkStudy</code>.</li></ol>
+<h3 id="ready-standard">Ready standard</h3>
+<p>You are done with July 16 when you can:</p>
+<ul><li>Explain every checkpoint answer rather than merely recognize it.</li><li>Reconstruct the three API blocks in Section 11 without autocomplete.</li><li>Correctly solve the five worked scenarios in Section 10.</li><li>State one trade-off for vertical scaling, horizontal/data parallelism, task parallelism, and model parallelism.</li></ul>
+</section>
+<section class="doc-section" id="14-official-sources"><h2>14. Official sources</h2>
+<ul><li><a href="https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf">Databricks Machine Learning Professional exam guide</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/">Databricks hyperparameter tuning</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/optuna">Distributed Optuna on Databricks</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/ray/spark-ray-overview">When to use Spark versus Ray</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/ray/">Ray on Databricks</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/ray/ray-create">Create and connect to Ray clusters</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/">Databricks distributed training</a></li><li><a href="https://docs.databricks.com/aws/en/compute/configure">Databricks compute configuration</a></li><li><a href="https://docs.ray.io/en/latest/tune/key-concepts.html">Ray Tune key concepts</a></li><li><a href="https://docs.ray.io/en/latest/tune/api/doc/ray.tune.Tuner.html"><code>ray.tune.Tuner</code></a></li><li><a href="https://docs.ray.io/en/latest/tune/api/doc/ray.tune.TuneConfig.html"><code>ray.tune.TuneConfig</code></a></li><li><a href="https://docs.ray.io/en/latest/tune/api/doc/ray.tune.report.html"><code>ray.tune.report</code></a></li><li><a href="https://docs.ray.io/en/latest/tune/api/doc/ray.tune.ResultGrid.get_best_result.html"><code>ResultGrid.get_best_result</code></a></li></ul>
+</section><p id="empty" class="empty">No matching sections.</p></main></div><script>
+const search = document.getElementById('search');
+const sections = [...document.querySelectorAll('.doc-section')];
+const rows = [...document.querySelectorAll('tbody tr')];
+sections.forEach(s => s.dataset.search = s.textContent.toLowerCase());
+rows.forEach(r => r.dataset.search = r.textContent.toLowerCase());
+search.addEventListener('input', () => {
+  const q = search.value.trim().toLowerCase();
+  rows.forEach(r => r.hidden = q && !r.dataset.search.includes(q));
+  sections.forEach(s => s.hidden = q && !s.dataset.search.includes(q));
+  document.getElementById('empty').style.display = sections.some(s => !s.hidden) ? 'none' : 'block';
+});
+function fallbackCopy(text) {
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  const copied = document.execCommand('copy');
+  area.remove();
+  if (!copied) throw new Error('Copy command failed');
+}
+const COPY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+document.querySelectorAll('pre').forEach((pre) => {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'code-wrap';
+  pre.parentNode.insertBefore(wrapper, pre);
+  wrapper.appendChild(pre);
+  const button = document.createElement('button');
+  button.className = 'code-copy';
+  button.type = 'button';
+  button.innerHTML = COPY_ICON;
+  button.title = 'Copy snippet';
+  button.setAttribute('aria-label', 'Copy snippet');
+  button.addEventListener('click', async () => {
+    try {
+      const value = pre.querySelector('code').textContent;
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        fallbackCopy(value);
+      }
+      button.innerHTML = CHECK_ICON;
+      button.classList.add('copied');
+      button.title = 'Copied';
+      window.setTimeout(() => {
+        button.innerHTML = COPY_ICON;
+        button.classList.remove('copied');
+        button.title = 'Copy snippet';
+      }, 1200);
+    } catch (error) {
+      button.title = 'Copy failed - select the text manually';
+    }
+  });
+  wrapper.appendChild(button);
+});
+
+const tocBox = document.querySelector('.toc');
+const tocLinks = [...document.querySelectorAll('.toc a')];
+const linkById = new Map(tocLinks.map(a => [a.getAttribute('href').slice(1), a]));
+const spyTargets = sections.filter(s => linkById.has(s.id));
+let spyQueued = false;
+function spy() {
+  spyQueued = false;
+  let current = null;
+  for (const s of spyTargets) {
+    if (s.hidden) continue;
+    if (s.getBoundingClientRect().top <= 130) current = s;
+    else break;
+  }
+  if (!current) current = spyTargets.find(s => !s.hidden) || null;
+  tocLinks.forEach(a => a.classList.remove('active'));
+  if (!current) return;
+  const link = linkById.get(current.id);
+  link.classList.add('active');
+  if (tocBox.scrollHeight > tocBox.clientHeight) {
+    const rel = link.getBoundingClientRect().top - tocBox.getBoundingClientRect().top + tocBox.scrollTop;
+    if (rel < tocBox.scrollTop + 12 || rel > tocBox.scrollTop + tocBox.clientHeight - 36) {
+      tocBox.scrollTop = rel - tocBox.clientHeight / 2;
+    }
+  }
+}
+function queueSpy() { if (!spyQueued) { spyQueued = true; requestAnimationFrame(spy); } }
+window.addEventListener('scroll', queueSpy, {passive: true});
+window.addEventListener('resize', queueSpy, {passive: true});
+search.addEventListener('input', queueSpy);
+spy();
+</script></body></html>

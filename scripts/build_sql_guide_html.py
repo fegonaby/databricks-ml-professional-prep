@@ -12,8 +12,10 @@ from build_api_reference_html import CSS, SCROLLSPY_JS, render_markdown
 
 ROOT = Path(__file__).resolve().parent.parent
 GUIDES_DIR = ROOT / "guides"
-MD_PATH = GUIDES_DIR / "sql-guide.md"
-OUT_PATH = GUIDES_DIR / "sql-guide.html"
+MARKDOWN_DIR = GUIDES_DIR / "markdown"
+HTML_DIR = GUIDES_DIR / "html"
+MD_PATH = MARKDOWN_DIR / "sql-guide.md"
+OUT_PATH = HTML_DIR / "sql-guide.html"
 
 JS = r"""
 const search = document.getElementById('search');
@@ -93,7 +95,7 @@ def main():
 <title>{html.escape(title)}</title><style>{CSS}{SQL_CSS}</style></head><body>
 <header class="top"><div class="top-inner"><span class="brand">Databricks ML SQL Guide</span><input id="search" class="search" type="search" placeholder="Filter clauses, patterns, queries, or traps" aria-label="Filter SQL guide"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
-<div class="meta">Generated from <a href="sql-guide.md">the Markdown source</a>. Verified July 14, 2026.</div>
+<div class="meta">Generated from <a href="../markdown/sql-guide.md">the Markdown source</a>. Verified July 14, 2026.</div>
 <div class="stats"><div class="stat"><b>10&prime;</b><span>closed-book baseline</span></div><div class="stat"><b>5</b><span>monitoring queries</span></div><div class="stat"><b>10</b><span>targeted drills</span></div></div>
 {content}<p id="empty" class="empty">No matching sections.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")

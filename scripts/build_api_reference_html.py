@@ -9,8 +9,10 @@ from render_math import render_math_block
 
 ROOT = Path(__file__).resolve().parent.parent
 GUIDES_DIR = ROOT / "guides"
-MD_PATH = GUIDES_DIR / "api-reference.md"
-OUT_PATH = GUIDES_DIR / "api-reference.html"
+MARKDOWN_DIR = GUIDES_DIR / "markdown"
+HTML_DIR = GUIDES_DIR / "html"
+MD_PATH = MARKDOWN_DIR / "api-reference.md"
+OUT_PATH = HTML_DIR / "api-reference.html"
 
 
 def slugify(value):
@@ -350,7 +352,7 @@ def main():
 <title>{html.escape(title)}</title><style>{CSS}</style></head><body>
 <header class="top"><div class="top-inner"><span class="brand">Databricks ML API Reference</span><input id="search" class="search" type="search" placeholder="Filter methods, parameters, clients, or traps" aria-label="Filter API reference"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
-<div class="meta">Generated from <a href="api-reference.md">the Markdown source</a>. Verified July 10, 2026.</div>
+<div class="meta">Generated from <a href="../markdown/api-reference.md">the Markdown source</a>. Verified July 10, 2026.</div>
 <div class="stats"><div class="stat"><b id="method-count">0</b><span>priority API rows</span></div><div class="stat"><b id="write-count">0</b><span>WRITE rows</span></div><div class="stat"><b>59 / 120</b><span>questions / minutes</span></div></div>
 {content}<p id="empty" class="empty">No matching API entries.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")

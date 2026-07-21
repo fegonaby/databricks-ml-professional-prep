@@ -390,7 +390,7 @@ We say Precision **usually** increases because `TP` also changes, so Precision c
 
 For the PR curve, **"the model catches more positives" means Recall increases**, while **"the accuracy of its positive predictions" means Precision**. In exam terminology, the question is: **As Recall increases, what happens to Precision?**
 
-![ROC and Precision-Recall curves generated from deterministic mock fraud scores](../assets/roc-pr-curves.svg)
+![ROC and Precision-Recall curves generated from deterministic mock fraud scores](../../assets/roc-pr-curves.svg)
 
 Log Loss approaches zero for confident correct probabilities and grows without a fixed upper bound for confident wrong probabilities. You need the meanings and directions; you do not need to derive the integrals or logarithm formula.
 
@@ -782,7 +782,7 @@ There are two primary source pages. The rows below are sections within those pag
 | SKIM | `Iterator of multiple Series to Iterator of Series` | Same iterator idea with several input columns |
 | REFERENCE | Series-to-scalar, Arrow tuning, timestamps, benchmark notebook | Not required for today's exam decision |
 
-**Related connection, studied on July 17:** `mlflow.pyfunc.spark_udf()` converts a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference. On July 15, only recognize when it fits; do not open another reading page. Its MLflow documentation and exact syntax are covered with the July 17 Models & PyFunc reading and [API companion section 4](api-reference.html#4-mlflow-models-and-custom-pyfunc).
+**Related connection, studied on July 17:** `mlflow.pyfunc.spark_udf()` converts a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference. On July 15, only recognize when it fits; do not open another reading page. Its MLflow documentation and exact syntax are covered with the July 17 Models & PyFunc reading and [API companion section 4](../html/api-reference.html#4-mlflow-models-and-custom-pyfunc).
 
 ### Shared mental model
 
