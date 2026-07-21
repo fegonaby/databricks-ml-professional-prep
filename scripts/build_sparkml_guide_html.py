@@ -86,6 +86,9 @@ GUIDE_CSS = r"""
 .code-copy svg{width:15px;height:15px;display:block}
 .metric-plot{margin:1.1em 0 .45em}.metric-plot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#0f151c}
 .metric-caption{margin:.35em 0 1.2em;color:var(--muted);font-size:.92rem}
+.doc-section table{min-width:0}
+.doc-section td:first-child{white-space:normal}
+.doc-section th:first-child,.doc-section td:first-child{max-width:230px}
 @media print{.code-copy{display:none}}
 """
 

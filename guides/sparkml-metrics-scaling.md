@@ -762,17 +762,27 @@ You are done when you can select the evaluator, metric, tuning strategy, and inf
 
 ### July 15 reading scope
 
-| Priority | Source section | Why |
+There are two primary source pages. The rows below are sections within those pages, not additional reading links.
+
+**Source 1: [pandas Function APIs](https://docs.databricks.com/aws/en/pandas/pandas-function-apis)**
+
+| Priority | Section | Why |
 |---|---|---|
-| MUST | [pandas function APIs: introduction](https://docs.databricks.com/aws/en/pandas/pandas-function-apis) | Understand Arrow-backed Spark-to-pandas execution |
+| MUST | Introduction | Understand Arrow-backed Spark-to-pandas execution |
 | MUST | `Grouped map` / `groupBy().applyInPandas()` | One function call receives all rows for one business group |
 | MUST | `Map` / `DataFrame.mapInPandas()` | An iterator processes pandas DataFrame batches without business-key grouping |
 | REFERENCE | `Cogrouped map` | Useful for two grouped DataFrames, but not part of today's required distinction |
-| MUST | [pandas UDF: Series to Series](https://docs.databricks.com/aws/en/udf/pandas) | Vectorized column calculation or scoring |
+
+**Source 2: [pandas UDFs](https://docs.databricks.com/aws/en/udf/pandas)**
+
+| Priority | Section | Why |
+|---|---|---|
+| MUST | Series to Series | Vectorized column calculation or scoring |
 | MUST | `Iterator of Series to Iterator of Series` | Initialize expensive state once, then process several batches |
 | SKIM | `Iterator of multiple Series to Iterator of Series` | Same iterator idea with several input columns |
-| RECOGNIZE | [MLflow Spark UDF](https://docs.databricks.com/aws/en/mlflow/models#api-commands) | Convert a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference |
 | REFERENCE | Series-to-scalar, Arrow tuning, timestamps, benchmark notebook | Not required for today's exam decision |
+
+**Related connection, studied on July 17:** `mlflow.pyfunc.spark_udf()` converts a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference. On July 15, only recognize when it fits; do not open another reading page. Its MLflow documentation and exact syntax are covered with the July 17 Models & PyFunc reading and [API companion section 4](api-reference.html#4-mlflow-models-and-custom-pyfunc).
 
 ### Shared mental model
 
@@ -815,7 +825,7 @@ models_by_store = (
 )
 ```
 
-Why this fits: Spark shuffles rows by `store_id`, then calls the pandas function once with all rows for each store.
+Why `applyInPandas()` fits per-store model training: Spark shuffles rows by `store_id`, then calls the pandas function once with all rows for each store.
 
 Critical risk: every row for one group is loaded into memory together. A very large or skewed group can cause an out-of-memory failure, and `maxRecordsPerBatch` does not split a group.
 
@@ -842,11 +852,45 @@ def score_batches(iterator):
 scored = input_df.mapInPandas(score_batches, schema=output_schema)
 ```
 
-Why this fits: the function receives pandas DataFrame batches from a partition, can initialize a model once for that iterator, and can return multiple columns or a different number of rows.
-
-The declared output schema tells Spark how to reconstruct the resulting Spark DataFrame. Every yielded pandas DataFrame must match its column names and compatible data types.
+Why `mapInPandas()` fits distributed batch scoring: Spark gives each Python worker an iterator of pandas DataFrame batches from one partition. The function loads the model once before the loop and reuses it for every batch in that iterator. It can yield DataFrames with multiple columns and may return a different number of rows from the input. Loading once means once per function invocation or worker task, not once for the entire cluster.
 
 Batch boundaries have no business meaning: one store or customer can be split across batches. Use `applyInPandas` when the business key defines the unit of work.
+
+### Output-schema matching
+
+Now that both APIs have been introduced, notice that each requires a function and an explicit output schema:
+
+```python
+grouped_df.applyInPandas(func, schema)
+df.mapInPandas(func, schema)
+```
+
+The schema, supplied as a DDL string or `StructType`, defines the returned Spark column names, order, and data types. Every pandas DataFrame returned by `applyInPandas()` or yielded by `mapInPandas()` must match it:
+
+```text
+String pandas column labels     -> match the schema field names
+Non-string labels such as 0, 1  -> match schema fields by position and compatible data type
+```
+
+For `schema = "store_id string, prediction double"`, a returned DataFrame with columns `"store_id"` and `"prediction"` matches by name. A DataFrame with default integer columns `0` and `1` matches by position, so column `0` must contain strings and column `1` must contain numbers compatible with `double`. Explicit string names are normally clearer and safer.
+
+For example, omitting `columns=` gives the returned DataFrame default integer labels:
+
+```python
+return pd.DataFrame([
+    ["store_1", 42.5],
+    ["store_2", 17.8],
+])
+```
+
+Spark matches it to the schema by position:
+
+```text
+pandas column 0 -> store_id string
+pandas column 1 -> prediction double
+```
+
+Reversing those values would fail because the first position must be compatible with `string` and the second with `double`.
 
 ### Series-to-Series pandas UDF
 
@@ -864,7 +908,25 @@ scored = input_df.withColumn(
 )
 ```
 
-Why this fits: each input column becomes a pandas Series batch and the function returns one same-length Series that becomes a Spark column.
+The declarations have different jobs:
+
+```text
+@pandas_udf("double")                 -> registers a pandas UDF and declares the Spark output type
+x1: pd.Series, x2: pd.Series          -> the Python function receives pandas Series batches
+-> pd.Series                           -> the Python function returns a pandas Series batch
+```
+
+The decorator's `"double"` describes the resulting Spark column type. The Python type hints describe the function's batch input/output shape; they do not replace the Spark return type declared by the decorator.
+
+Why a Series-to-Series pandas UDF fits adding one calculated column: when Spark evaluates `weighted_score("x1", "x2")`, it takes the same batch of rows from columns `x1` and `x2` and passes those values as two pandas Series. The function calculates one result for each row and returns a Series of the same length. `withColumn("score", ...)` then places each returned value into the `score` column on its corresponding input row.
+
+```text
+x1 batch:    [10, 20]
+x2 batch:    [ 1,  2]
+score batch: [7.3, 14.6]
+```
+
+The lengths must match because Spark needs exactly one output value to align with every input row.
 
 ### Iterator pandas UDF for reusable state
 
@@ -896,10 +958,27 @@ The model is initialized before the loop instead of once per input batch. The re
 
 ### API signatures to reconstruct
 
+- **One function call per business group:**
+
 ```python
 df.groupBy(keys).applyInPandas(func, schema)
+```
+
+- **Iterator of pandas DataFrame batches:**
+
+```python
 df.mapInPandas(func, schema)
+```
+
+- **Declare a pandas UDF and its Spark return type:**
+
+```python
 pandas_udf(func, returnType)
+```
+
+- **Turn an MLflow PyFunc model into a Spark UDF:**
+
+```python
 mlflow.pyfunc.spark_udf(
     spark,
     model_uri,

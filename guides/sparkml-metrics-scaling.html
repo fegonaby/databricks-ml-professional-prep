@@ -14,6 +14,9 @@ pre .tk-cm{color:#6a9955}pre .tk-st{color:#ce9178}pre .tk-kw{color:#c586c0}pre .
 .code-copy svg{width:15px;height:15px;display:block}
 .metric-plot{margin:1.1em 0 .45em}.metric-plot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#0f151c}
 .metric-caption{margin:.35em 0 1.2em;color:var(--muted);font-size:.92rem}
+.doc-section table{min-width:0}
+.doc-section td:first-child{white-space:normal}
+.doc-section th:first-child,.doc-section td:first-child{max-width:230px}
 @media print{.code-copy{display:none}}
 </style></head><body>
 <header class="top"><div class="top-inner"><span class="brand">Spark ML Exam Guide</span><input id="search" class="search" type="search" placeholder="Filter models, metrics, tuning, pandas APIs, or traps" aria-label="Filter Spark ML guide"></div></header>
@@ -327,7 +330,12 @@ logLoss, hammingLoss</code></pre>
 </section>
 <section class="doc-section" id="3-july-15-pandas-function-apis-and-pandas-udfs"><h2>3. July 15: pandas Function APIs and pandas UDFs</h2>
 <h3 id="july-15-reading-scope">July 15 reading scope</h3>
-<div class="table-wrap"><table><tr><th>Priority</th><th>Source section</th><th>Why</th></tr><tr><td><span class="prio prio-must">MUST</span></td><td><a href="https://docs.databricks.com/aws/en/pandas/pandas-function-apis">pandas function APIs: introduction</a></td><td>Understand Arrow-backed Spark-to-pandas execution</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><code>Grouped map</code> / <code>groupBy().applyInPandas()</code></td><td>One function call receives all rows for one business group</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><code>Map</code> / <code>DataFrame.mapInPandas()</code></td><td>An iterator processes pandas DataFrame batches without business-key grouping</td></tr><tr><td><span class="prio prio-reference">REFERENCE</span></td><td><code>Cogrouped map</code></td><td>Useful for two grouped DataFrames, but not part of today's required distinction</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><a href="https://docs.databricks.com/aws/en/udf/pandas">pandas UDF: Series to Series</a></td><td>Vectorized column calculation or scoring</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><code>Iterator of Series to Iterator of Series</code></td><td>Initialize expensive state once, then process several batches</td></tr><tr><td><span class="prio prio-skim">SKIM</span></td><td><code>Iterator of multiple Series to Iterator of Series</code></td><td>Same iterator idea with several input columns</td></tr><tr><td><span class="prio prio-recognize">RECOGNIZE</span></td><td><a href="https://docs.databricks.com/aws/en/mlflow/models#api-commands">MLflow Spark UDF</a></td><td>Convert a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference</td></tr><tr><td><span class="prio prio-reference">REFERENCE</span></td><td>Series-to-scalar, Arrow tuning, timestamps, benchmark notebook</td><td>Not required for today's exam decision</td></tr></table></div>
+<p>There are two primary source pages. The rows below are sections within those pages, not additional reading links.</p>
+<p><strong>Source 1: <a href="https://docs.databricks.com/aws/en/pandas/pandas-function-apis">pandas Function APIs</a></strong></p>
+<div class="table-wrap"><table><tr><th>Priority</th><th>Section</th><th>Why</th></tr><tr><td><span class="prio prio-must">MUST</span></td><td>Introduction</td><td>Understand Arrow-backed Spark-to-pandas execution</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><code>Grouped map</code> / <code>groupBy().applyInPandas()</code></td><td>One function call receives all rows for one business group</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><code>Map</code> / <code>DataFrame.mapInPandas()</code></td><td>An iterator processes pandas DataFrame batches without business-key grouping</td></tr><tr><td><span class="prio prio-reference">REFERENCE</span></td><td><code>Cogrouped map</code></td><td>Useful for two grouped DataFrames, but not part of today's required distinction</td></tr></table></div>
+<p><strong>Source 2: <a href="https://docs.databricks.com/aws/en/udf/pandas">pandas UDFs</a></strong></p>
+<div class="table-wrap"><table><tr><th>Priority</th><th>Section</th><th>Why</th></tr><tr><td><span class="prio prio-must">MUST</span></td><td>Series to Series</td><td>Vectorized column calculation or scoring</td></tr><tr><td><span class="prio prio-must">MUST</span></td><td><code>Iterator of Series to Iterator of Series</code></td><td>Initialize expensive state once, then process several batches</td></tr><tr><td><span class="prio prio-skim">SKIM</span></td><td><code>Iterator of multiple Series to Iterator of Series</code></td><td>Same iterator idea with several input columns</td></tr><tr><td><span class="prio prio-reference">REFERENCE</span></td><td>Series-to-scalar, Arrow tuning, timestamps, benchmark notebook</td><td>Not required for today's exam decision</td></tr></table></div>
+<p><strong>Related connection, studied on July 17:</strong> <code>mlflow.pyfunc.spark_udf()</code> converts a logged PyFunc model URI into a Spark UDF for distributed batch or streaming inference. On July 15, only recognize when it fits; do not open another reading page. Its MLflow documentation and exact syntax are covered with the July 17 Models &amp; PyFunc reading and <a href="api-reference.html#4-mlflow-models-and-custom-pyfunc">API companion section 4</a>.</p>
 <h3 id="shared-mental-model">Shared mental model</h3>
 <p>All three patterns let Spark distribute Python/pandas work across partitions. Apache Arrow moves columnar batches between Spark and Python more efficiently than a row-at-a-time Python UDF.</p>
 <p>They differ in what one function invocation receives and what it may return.</p>
@@ -353,7 +361,7 @@ logLoss, hammingLoss</code></pre>
     .<span class="tk-fn">groupBy</span>(<span class="tk-st">&quot;store_id&quot;</span>)
     .<span class="tk-fn">applyInPandas</span>(train_store_model, <span class="tk-pm">schema</span>=output_schema)
 )</code></pre>
-<p>Why this fits: Spark shuffles rows by <code>store_id</code>, then calls the pandas function once with all rows for each store.</p>
+<p>Why <code>applyInPandas()</code> fits per-store model training: Spark shuffles rows by <code>store_id</code>, then calls the pandas function once with all rows for each store.</p>
 <p>Critical risk: every row for one group is loaded into memory together. A very large or skewed group can cause an out-of-memory failure, and <code>maxRecordsPerBatch</code> does not split a group.</p>
 <h3 id="mapinpandas-iterator-of-dataframe-batches"><code>mapInPandas</code>: iterator of DataFrame batches</h3>
 <p><code>mapInPandas()</code> does not collect the entire Spark DataFrame onto one machine. Spark divides its partitions into Arrow-backed pandas DataFrame batches and distributes those batch iterators across Python worker tasks.</p>
@@ -373,9 +381,25 @@ logLoss, hammingLoss</code></pre>
         })
 
 <span class="tk-pm">scored</span> = input_df.<span class="tk-fn">mapInPandas</span>(score_batches, <span class="tk-pm">schema</span>=output_schema)</code></pre>
-<p>Why this fits: the function receives pandas DataFrame batches from a partition, can initialize a model once for that iterator, and can return multiple columns or a different number of rows.</p>
-<p>The declared output schema tells Spark how to reconstruct the resulting Spark DataFrame. Every yielded pandas DataFrame must match its column names and compatible data types.</p>
+<p>Why <code>mapInPandas()</code> fits distributed batch scoring: Spark gives each Python worker an iterator of pandas DataFrame batches from one partition. The function loads the model once before the loop and reuses it for every batch in that iterator. It can yield DataFrames with multiple columns and may return a different number of rows from the input. Loading once means once per function invocation or worker task, not once for the entire cluster.</p>
 <p>Batch boundaries have no business meaning: one store or customer can be split across batches. Use <code>applyInPandas</code> when the business key defines the unit of work.</p>
+<h3 id="output-schema-matching">Output-schema matching</h3>
+<p>Now that both APIs have been introduced, notice that each requires a function and an explicit output schema:</p>
+<pre data-language="python"><code>grouped_df.<span class="tk-fn">applyInPandas</span>(func, schema)
+df.<span class="tk-fn">mapInPandas</span>(func, schema)</code></pre>
+<p>The schema, supplied as a DDL string or <code>StructType</code>, defines the returned Spark column names, order, and data types. Every pandas DataFrame returned by <code>applyInPandas()</code> or yielded by <code>mapInPandas()</code> must match it:</p>
+<pre data-language="text"><code>String pandas column labels     -&gt; match the schema field names
+Non-string labels such as 0, 1  -&gt; match schema fields by position and compatible data type</code></pre>
+<p>For <code>schema = &quot;store_id string, prediction double&quot;</code>, a returned DataFrame with columns <code>&quot;store_id&quot;</code> and <code>&quot;prediction&quot;</code> matches by name. A DataFrame with default integer columns <code>0</code> and <code>1</code> matches by position, so column <code>0</code> must contain strings and column <code>1</code> must contain numbers compatible with <code>double</code>. Explicit string names are normally clearer and safer.</p>
+<p>For example, omitting <code>columns=</code> gives the returned DataFrame default integer labels:</p>
+<pre data-language="python"><code><span class="tk-kw">return</span> pd.<span class="tk-ty">DataFrame</span>([
+    [<span class="tk-st">&quot;store_1&quot;</span>, <span class="tk-nm">42.5</span>],
+    [<span class="tk-st">&quot;store_2&quot;</span>, <span class="tk-nm">17.8</span>],
+])</code></pre>
+<p>Spark matches it to the schema by position:</p>
+<pre data-language="text"><code>pandas column 0 -&gt; store_id string
+pandas column 1 -&gt; prediction double</code></pre>
+<p>Reversing those values would fail because the first position must be compatible with <code>string</code> and the second with <code>double</code>.</p>
 <h3 id="series-to-series-pandas-udf">Series-to-Series pandas UDF</h3>
 <pre data-language="python"><code><span class="tk-kw">import</span> pandas <span class="tk-kw">as</span> pd
 <span class="tk-kw">from</span> pyspark.sql.functions <span class="tk-kw">import</span> pandas_udf
@@ -388,7 +412,16 @@ logLoss, hammingLoss</code></pre>
     <span class="tk-st">&quot;score&quot;</span>,
     <span class="tk-fn">weighted_score</span>(<span class="tk-st">&quot;x1&quot;</span>, <span class="tk-st">&quot;x2&quot;</span>),
 )</code></pre>
-<p>Why this fits: each input column becomes a pandas Series batch and the function returns one same-length Series that becomes a Spark column.</p>
+<p>The declarations have different jobs:</p>
+<pre data-language="text"><code>@pandas_udf(&quot;double&quot;)                 -&gt; registers a pandas UDF and declares the Spark output type
+x1: pd.Series, x2: pd.Series          -&gt; the Python function receives pandas Series batches
+-&gt; pd.Series                           -&gt; the Python function returns a pandas Series batch</code></pre>
+<p>The decorator's <code>&quot;double&quot;</code> describes the resulting Spark column type. The Python type hints describe the function's batch input/output shape; they do not replace the Spark return type declared by the decorator.</p>
+<p>Why a Series-to-Series pandas UDF fits adding one calculated column: when Spark evaluates <code>weighted_score(&quot;x1&quot;, &quot;x2&quot;)</code>, it takes the same batch of rows from columns <code>x1</code> and <code>x2</code> and passes those values as two pandas Series. The function calculates one result for each row and returns a Series of the same length. <code>withColumn(&quot;score&quot;, ...)</code> then places each returned value into the <code>score</code> column on its corresponding input row.</p>
+<pre data-language="text"><code>x1 batch:    [10, 20]
+x2 batch:    [ 1,  2]
+score batch: [7.3, 14.6]</code></pre>
+<p>The lengths must match because Spark needs exactly one output value to align with every input row.</p>
 <h3 id="iterator-pandas-udf-for-reusable-state">Iterator pandas UDF for reusable state</h3>
 <pre data-language="python"><code><span class="tk-kw">from</span> typing <span class="tk-kw">import</span> <span class="tk-ty">Iterator</span>, <span class="tk-ty">Tuple</span>
 
@@ -413,10 +446,14 @@ logLoss, hammingLoss</code></pre>
 )</code></pre>
 <p>The model is initialized before the loop instead of once per input batch. The returned batches must collectively contain the same number of rows as the input batches.</p>
 <h3 id="api-signatures-to-reconstruct">API signatures to reconstruct</h3>
-<pre data-language="python"><code>df.<span class="tk-fn">groupBy</span>(keys).<span class="tk-fn">applyInPandas</span>(func, schema)
-df.<span class="tk-fn">mapInPandas</span>(func, schema)
-<span class="tk-fn">pandas_udf</span>(func, returnType)
-mlflow.pyfunc.<span class="tk-fn">spark_udf</span>(
+<ul><li><strong>One function call per business group:</strong></li></ul>
+<pre data-language="python"><code>df.<span class="tk-fn">groupBy</span>(keys).<span class="tk-fn">applyInPandas</span>(func, schema)</code></pre>
+<ul><li><strong>Iterator of pandas DataFrame batches:</strong></li></ul>
+<pre data-language="python"><code>df.<span class="tk-fn">mapInPandas</span>(func, schema)</code></pre>
+<ul><li><strong>Declare a pandas UDF and its Spark return type:</strong></li></ul>
+<pre data-language="python"><code><span class="tk-fn">pandas_udf</span>(func, returnType)</code></pre>
+<ul><li><strong>Turn an MLflow PyFunc model into a Spark UDF:</strong></li></ul>
+<pre data-language="python"><code>mlflow.pyfunc.<span class="tk-fn">spark_udf</span>(
     spark,
     model_uri,
     <span class="tk-pm">result_type</span>=...,
