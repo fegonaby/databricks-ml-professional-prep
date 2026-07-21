@@ -240,7 +240,7 @@ pandas UDF    → vectorized Series→Series, parallel row scoring
 2. **[MUST]** Distributed Optuna on Databricks: https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/optuna
 3. **[MUST]** Spark versus Ray decision sections: https://docs.databricks.com/aws/en/machine-learning/ray/spark-ray-overview
 4. **[SKIM]** Ray concepts, use cases, and limitations: https://docs.databricks.com/aws/en/machine-learning/ray/
-5. **[MUST]** Ray Tune — Trainable, search space, Tuner, TuneConfig, reporting, and results only: https://docs.ray.io/en/latest/tune/key-concepts.html
+5. **[REFERENCE]** Upstream Ray Tune API lookup — use only to verify the required call shape in the companion guide: https://docs.ray.io/en/latest/tune/key-concepts.html
 6. **[SKIM]** Ray cluster setup, connection, and shutdown: https://docs.databricks.com/aws/en/machine-learning/ray/ray-create
 7. **[SKIM]** Distributed-training strategies: https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/
 8. **[REFERENCE]** Cluster sizing: https://docs.databricks.com/aws/en/compute/configure
@@ -259,6 +259,8 @@ Distributed Optuna on Databricks: MlflowStorage + MlflowSparkStudy
   MlflowSparkStudy  → distributes trials across Spark executors
 Ray cluster setup: setup_ray_cluster; Ray Tune for HPO
 ```
+
+**Ray Tune API depth:** reconstruct `trainable(config)` -> `tune.report(...)` -> `tune.Tuner(..., param_space=..., tune_config=tune.TuneConfig(metric=..., mode=..., num_samples=..., max_concurrent_trials=...))` -> `tuner.fit()` -> `results.get_best_result().config`. Recognize common search-space functions; do not study advanced schedulers or Ray internals.
 
 **If you use Free Edition:** in Free Edition, treat Ray cluster execution as conceptual because Ray on Spark does not support serverless runtimes. Do the decision-rule drill and write the setup pseudocode instead.
 

@@ -47,14 +47,14 @@ Read only the sections listed here. Documentation trees contain much more than t
 | MUST | [Distributed Optuna on Databricks](https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/optuna) | Introduction, the three workflow steps, `MlflowStorage`, `MlflowSparkStudy`, `optimize`, and best parameters | Installation commands, downloadable notebook, and storage flushing parameters |
 | MUST | [When to use Spark versus Ray](https://docs.databricks.com/aws/en/machine-learning/ray/spark-ray-overview) | When to use Spark, Ray, or both; then recognize the cluster-setup block | Advanced Ray-inside-UDF and concurrent Spark/Ray patterns |
 | SKIM | [Ray on Databricks](https://docs.databricks.com/aws/en/machine-learning/ray/) | What Ray is, ML use cases, and limitations | Platform-benefit marketing detail and GPU troubleshooting |
-| MUST | [Ray Tune key concepts](https://docs.ray.io/en/latest/tune/key-concepts.html) | Trainable, search space, `Tuner`, `TuneConfig`, `tune.report`, `fit`, and best-result retrieval | Specialized search algorithms, schedulers, checkpointing, restoration, and internal architecture |
+| REFERENCE | [Ray Tune key concepts](https://docs.ray.io/en/latest/tune/key-concepts.html) | Use only to verify the exact upstream API after learning the required skeleton in Section 7 | Specialized search algorithms, schedulers, checkpointing, restoration, and internal architecture |
 | SKIM | [Create and connect to Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/ray-create) | Requirements, fixed/autoscaling setup, `ray.init`, and shutdown | Global clusters, remote client connections, dashboard profiling, and detailed authentication setup |
 | SKIM | [Distributed training](https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/) | Opening recommendation plus the DeepSpeed, TorchDistributor, Ray, and Spark ML summaries | Framework-specific tutorials |
 | REFERENCE | [Compute configuration](https://docs.databricks.com/aws/en/compute/configure) | Worker type, single versus multi-node compute, and autoscaling only when a scenario needs them | Cloud instance catalogs, storage, networking, tags, policies, and advanced Spark configuration |
 
-### One current-document warning
+### Source rule and current-document warning
 
-The general Ray overview no longer contains a full Ray Tune walkthrough. Use it for Ray concepts and platform limitations. Use the official Ray Tune key-concepts page for the current `Tuner` workflow, and the Databricks Ray-cluster page for `setup_ray_cluster()`.
+The Databricks Ray overview explains Ray's role and platform limitations but does not contain a complete Ray Tune walkthrough. The upstream Ray page is therefore retained as an optional lookup for the exact API shown in Section 7. Use the Databricks Ray-cluster page for `setup_ray_cluster()`.
 
 ### Legacy recognition
 
@@ -419,6 +419,23 @@ For Free Edition, treat Ray-on-Spark execution as conceptual because Free Editio
 ---
 
 ## 7. Distributed hyperparameter tuning with Ray Tune
+
+### Exam API depth
+
+The upstream Ray page is reference-only, but the minimal workflow below is still required knowledge. The exam objective says to **perform** distributed hyperparameter tuning using Ray, so be ready to recognize the method and parameter names and reconstruct the main call shape without autocomplete.
+
+```text
+WRITE       trainable(config), tune.report({...}),
+            tune.Tuner(trainable, param_space=..., tune_config=...),
+            tune.TuneConfig(metric=..., mode=..., num_samples=...,
+                            max_concurrent_trials=...),
+            tuner.fit(), results.get_best_result(), best_result.config
+
+RECOGNIZE   tune.choice(), tune.uniform(), tune.loguniform()
+
+REFERENCE   specialized search algorithms, scheduler configuration,
+            checkpointing, restoration, and Ray internals
+```
 
 ### The object model
 
@@ -883,7 +900,9 @@ You are done with July 16 when you can:
 
 ---
 
-## 14. Official sources
+## 14. Sources
+
+### Databricks sources
 
 - [Databricks Machine Learning Professional exam guide](https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf)
 - [Databricks hyperparameter tuning](https://docs.databricks.com/aws/en/machine-learning/automl-hyperparam-tuning/)
@@ -893,6 +912,11 @@ You are done with July 16 when you can:
 - [Create and connect to Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/ray-create)
 - [Databricks distributed training](https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/)
 - [Databricks compute configuration](https://docs.databricks.com/aws/en/compute/configure)
+
+### Upstream Ray API references
+
+These are optional lookups for verifying exact Ray API behavior. They do not expand the exam scope defined by the Databricks sources and this guide.
+
 - [Ray Tune key concepts](https://docs.ray.io/en/latest/tune/key-concepts.html)
 - [`ray.tune.Tuner`](https://docs.ray.io/en/latest/tune/api/doc/ray.tune.Tuner.html)
 - [`ray.tune.TuneConfig`](https://docs.ray.io/en/latest/tune/api/doc/ray.tune.TuneConfig.html)
