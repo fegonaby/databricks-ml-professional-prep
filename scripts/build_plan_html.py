@@ -31,6 +31,7 @@ COMPLETED = {
     "2026-07-13",
     "2026-07-14",
     "2026-07-15",
+    "2026-07-16",
 }
 
 # ── Day metadata: id, date, dow, title, badges [(class, label)], focus ──────
