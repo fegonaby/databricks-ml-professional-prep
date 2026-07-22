@@ -48,13 +48,16 @@ Read only the sections listed here. Documentation trees contain much more than t
 | MUST | [When to use Spark versus Ray](https://docs.databricks.com/aws/en/machine-learning/ray/spark-ray-overview) | When to use Spark, Ray, or both; then recognize the cluster-setup block | Advanced Ray-inside-UDF and concurrent Spark/Ray patterns |
 | SKIM | [Ray on Databricks](https://docs.databricks.com/aws/en/machine-learning/ray/) | What Ray is, ML use cases, and limitations | Platform-benefit marketing detail and GPU troubleshooting |
 | REFERENCE | [Ray Tune key concepts](https://docs.ray.io/en/latest/tune/key-concepts.html) | Use only to verify the exact upstream API after learning the required skeleton in Section 7 | Specialized search algorithms, schedulers, checkpointing, restoration, and internal architecture |
-| SKIM | [Create and connect to Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/ray-create) | Requirements, fixed/autoscaling setup, `ray.init`, and shutdown | Global clusters, remote client connections, dashboard profiling, and detailed authentication setup |
+| SKIM | [Create and connect to Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/ray-create) | Requirements, fixed-size setup, `setup_ray_cluster`, `ray.init`, and shutdown | Global clusters, remote client connections, dashboard profiling, and detailed authentication setup |
+| SKIM | [Scale Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/scale-ray) | Fixed size versus autoscaling; current `min_worker_nodes` and `max_worker_nodes` behavior; recognize the older `num_worker_nodes` form | Resource calculations, heterogeneous clusters, log collection, and advanced autoscaling configuration |
 | SKIM | [Distributed training](https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/) | Opening recommendation plus the DeepSpeed, TorchDistributor, Ray, and Spark ML summaries | Framework-specific tutorials |
 | REFERENCE | [Compute configuration](https://docs.databricks.com/aws/en/compute/configure) | Worker type, single versus multi-node compute, and autoscaling only when a scenario needs them | Cloud instance catalogs, storage, networking, tags, policies, and advanced Spark configuration |
 
 ### Source rule and current-document warning
 
-The Databricks Ray overview explains Ray's role and platform limitations but does not contain a complete Ray Tune walkthrough. The upstream Ray page is therefore retained as an optional lookup for the exact API shown in Section 7. Use the Databricks Ray-cluster page for `setup_ray_cluster()`.
+The Databricks Ray overview explains Ray's role and platform limitations but does not contain a complete Ray Tune walkthrough. The upstream Ray page is therefore retained as an optional lookup for the exact API shown in Section 7. Use the Databricks create/connect and scaling pages for `setup_ray_cluster()`.
+
+Do not add separate readings for **Start Ray**, **Combine Ray and Spark**, or **MLflow and Ray**. The required lifecycle and combined-workflow concepts are already covered by the assigned pages and this guide; their detailed examples exceed the July 16 scope.
 
 ### Legacy recognition
 
@@ -449,7 +452,16 @@ ray.init()
 | `max_worker_nodes` | Upper worker-node bound or maximum Ray worker count |
 | `ray.init()` | Connects the notebook/application process to Ray |
 
-Recognize that a fixed-size example may use `max_worker_nodes` or `num_worker_nodes` depending on the documented setup form and installed Ray version. For the exam companion, reconstruct the current min/max pattern and focus on the two-step lifecycle.
+#### Cluster-size patterns to recognize
+
+| Pattern | Setup shape | Meaning |
+|---|---|---|
+| Fixed size, current form | `max_worker_nodes=4` with `min_worker_nodes` omitted | Start four Ray workers |
+| Fixed size, explicit bounds | `min_worker_nodes=4, max_worker_nodes=4` | Minimum and maximum are both four |
+| Autoscaling, current form | `min_worker_nodes=2, max_worker_nodes=4` | Scale between two and four Ray workers |
+| Older form | `num_worker_nodes=4` | Recognize it in older or alternative examples; use the current min/max form for recall |
+
+The worker-count parameters control cluster size. They do not replace the two-step lifecycle: `setup_ray_cluster(...)` creates Ray on the existing Databricks compute, and `ray.init()` connects Python to it.
 
 ### Shut down both layers
 
@@ -963,6 +975,7 @@ You are done with July 16 when you can:
 - [When to use Spark versus Ray](https://docs.databricks.com/aws/en/machine-learning/ray/spark-ray-overview)
 - [Ray on Databricks](https://docs.databricks.com/aws/en/machine-learning/ray/)
 - [Create and connect to Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/ray-create)
+- [Scale Ray clusters](https://docs.databricks.com/aws/en/machine-learning/ray/scale-ray)
 - [Databricks distributed training](https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/)
 - [Databricks compute configuration](https://docs.databricks.com/aws/en/compute/configure)
 

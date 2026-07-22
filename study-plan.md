@@ -242,8 +242,11 @@ pandas UDF    → vectorized Series→Series, parallel row scoring
 4. **[SKIM]** Ray concepts, use cases, and limitations: https://docs.databricks.com/aws/en/machine-learning/ray/
 5. **[REFERENCE]** Upstream Ray Tune API lookup — use only to verify the required call shape in the companion guide: https://docs.ray.io/en/latest/tune/key-concepts.html
 6. **[SKIM]** Ray cluster setup, connection, and shutdown: https://docs.databricks.com/aws/en/machine-learning/ray/ray-create
-7. **[SKIM]** Distributed-training strategies: https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/
-8. **[REFERENCE]** Cluster sizing: https://docs.databricks.com/aws/en/compute/configure
+7. **[SKIM]** Ray fixed-size versus autoscaling setup — read only the current `min_worker_nodes`/`max_worker_nodes` behavior and recognize the older `num_worker_nodes` form: https://docs.databricks.com/aws/en/machine-learning/ray/scale-ray
+8. **[SKIM]** Distributed-training strategies: https://docs.databricks.com/aws/en/machine-learning/train-model/distributed-training/
+9. **[REFERENCE]** Cluster sizing: https://docs.databricks.com/aws/en/compute/configure
+
+**Ray navigation scope:** do not read **Start Ray**, **Combine Ray and Spark**, or **MLflow and Ray** as additional July 16 assignments. The required lifecycle, Spark/Ray workflow, and tracking concepts are already covered by the readings above and the companion.
 
 **Know cold:**
 ```text
