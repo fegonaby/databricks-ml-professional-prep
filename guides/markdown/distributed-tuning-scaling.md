@@ -397,40 +397,33 @@ For example, "use Ray" does not explain whether one training trial is data-paral
 
 ## 6. Ray on Databricks
 
-### One Databricks compute, two runtimes, one connection
+### From Databricks compute to a usable Ray cluster
 
-Ray on Spark does not normally create a second independent set of Databricks machines. It starts Ray processes using resources from the existing Databricks compute.
-
-```text
-Databricks compute / Spark cluster
--> supplies the driver and worker machines
--> already runs the Spark driver and executors
-
-setup_ray_cluster()
--> starts Ray head and worker processes on resources from that compute
--> creates the logical Ray runtime that schedules Ray work
-
-ray.init()
--> connects the notebook's Python process to the Ray head
--> allows that Python process to submit Ray tasks
-```
-
-`setup_ray_cluster()` creates the Ray runtime; `ray.init()` connects Python to it. They are separate calls with separate jobs.
-
-This is the **runtime setup** view. The Spark/Ray patterns in Section 5 describe the **application workflow** after both runtimes are available:
+Section 5 explains when to choose Spark, Ray, or both. This section explains what happens after you decide to run Ray on Databricks Spark compute.
 
 ```text
-Runtime setup:     Where do the Spark and Ray processes run?
-Application flow: Which work should Spark do, and which work should Ray do?
+1. Databricks compute supplies the driver and worker machines.
 
-Common flow:
-Spark reads, joins, and prepares data
--> transfer the prepared data to Ray
--> Ray performs Python training or tuning
--> save results to MLflow or Unity Catalog
+2. Spark already runs on those machines through its driver and executors.
+
+3. setup_ray_cluster() uses resources from that same compute to start
+   Ray head and worker processes. It does not create a second independent
+   Databricks compute resource.
+
+4. ray.init() connects the notebook's Python process to the Ray head so
+   the notebook can submit Ray tasks.
 ```
 
-The advanced alternatives are Ray inside Spark functions and concurrent Spark/Ray operations. Recognize them, but use Spark for data handling and Ray for computation as the main exam pattern.
+The complete setup sequence is:
+
+```text
+existing Databricks compute
+-> setup_ray_cluster() starts Ray processes
+-> ray.init() connects Python to Ray
+-> Python submits Ray work
+```
+
+`setup_ray_cluster()` and `ray.init()` therefore have separate responsibilities: the first creates the Ray-on-Spark cluster, while the second connects the current Python process to it.
 
 ### Create and connect
 

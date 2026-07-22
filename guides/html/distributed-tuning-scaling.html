@@ -221,30 +221,24 @@ Resource scaling:      vertical or horizontal</code></pre>
 <p>For example, "use Ray" does not explain whether one training trial is data-parallel or model-parallel. Ray might instead be distributing many independent trials.</p>
 </section>
 <section class="doc-section" id="6-ray-on-databricks"><h2>6. Ray on Databricks</h2>
-<h3 id="one-databricks-compute-two-runtimes-one-connection">One Databricks compute, two runtimes, one connection</h3>
-<p>Ray on Spark does not normally create a second independent set of Databricks machines. It starts Ray processes using resources from the existing Databricks compute.</p>
-<pre data-language="text"><code>Databricks compute / Spark cluster
--&gt; supplies the driver and worker machines
--&gt; already runs the Spark driver and executors
+<h3 id="from-databricks-compute-to-a-usable-ray-cluster">From Databricks compute to a usable Ray cluster</h3>
+<p>Section 5 explains when to choose Spark, Ray, or both. This section explains what happens after you decide to run Ray on Databricks Spark compute.</p>
+<pre data-language="text"><code>1. Databricks compute supplies the driver and worker machines.
 
-setup_ray_cluster()
--&gt; starts Ray head and worker processes on resources from that compute
--&gt; creates the logical Ray runtime that schedules Ray work
+2. Spark already runs on those machines through its driver and executors.
 
-ray.init()
--&gt; connects the notebook&#x27;s Python process to the Ray head
--&gt; allows that Python process to submit Ray tasks</code></pre>
-<p><code>setup_ray_cluster()</code> creates the Ray runtime; <code>ray.init()</code> connects Python to it. They are separate calls with separate jobs.</p>
-<p>This is the <strong>runtime setup</strong> view. The Spark/Ray patterns in Section 5 describe the <strong>application workflow</strong> after both runtimes are available:</p>
-<pre data-language="text"><code>Runtime setup:     Where do the Spark and Ray processes run?
-Application flow: Which work should Spark do, and which work should Ray do?
+3. setup_ray_cluster() uses resources from that same compute to start
+   Ray head and worker processes. It does not create a second independent
+   Databricks compute resource.
 
-Common flow:
-Spark reads, joins, and prepares data
--&gt; transfer the prepared data to Ray
--&gt; Ray performs Python training or tuning
--&gt; save results to MLflow or Unity Catalog</code></pre>
-<p>The advanced alternatives are Ray inside Spark functions and concurrent Spark/Ray operations. Recognize them, but use Spark for data handling and Ray for computation as the main exam pattern.</p>
+4. ray.init() connects the notebook&#x27;s Python process to the Ray head so
+   the notebook can submit Ray tasks.</code></pre>
+<p>The complete setup sequence is:</p>
+<pre data-language="text"><code>existing Databricks compute
+-&gt; setup_ray_cluster() starts Ray processes
+-&gt; ray.init() connects Python to Ray
+-&gt; Python submits Ray work</code></pre>
+<p><code>setup_ray_cluster()</code> and <code>ray.init()</code> therefore have separate responsibilities: the first creates the Ray-on-Spark cluster, while the second connects the current Python process to it.</p>
 <h3 id="create-and-connect">Create and connect</h3>
 <pre data-language="python"><code><span class="tk-kw">import</span> ray
 <span class="tk-kw">from</span> ray.util.spark <span class="tk-kw">import</span> (
