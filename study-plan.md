@@ -289,6 +289,8 @@ Model parallelism → model itself cannot fit one accelerator/node;
 
 ### Fri Jul 17 — Advanced MLflow + **Lab 1**
 
+**Complete companion:** use the [MLflow tracking and custom PyFunc exam guide](guides/html/mlflow-tracking-pyfunc.html) ([Markdown](guides/markdown/mlflow-tracking-pyfunc.md)). It contains the exact reading scope, tracking and nested-run model, logging APIs, signatures, custom PyFunc lifecycle, scenario rules, Lab 1 output, and closed-book checkpoint required for July 17.
+
 **Read:**
 1. **[MUST]** MLflow tracking — programmatic logging: https://docs.databricks.com/aws/en/mlflow/tracking
 2. **[SKIM]** Databricks autologging: https://docs.databricks.com/aws/en/mlflow/databricks-autologging
@@ -996,6 +998,7 @@ At the start of each session, complete any due retests before new reading. An it
 - Daily schedule and decisions: this document
 - Spark ML, models, metrics, tuning, inference, and pandas scaling: [Markdown](guides/markdown/sparkml-metrics-scaling.md) · [searchable HTML](guides/html/sparkml-metrics-scaling.html)
 - Distributed Optuna, Ray Tune, scaling, and parallelism: [Markdown](guides/markdown/distributed-tuning-scaling.md) · [searchable HTML](guides/html/distributed-tuning-scaling.html)
+- MLflow tracking, nested runs, signatures, and custom PyFunc: [Markdown](guides/markdown/mlflow-tracking-pyfunc.md) · [searchable HTML](guides/html/mlflow-tracking-pyfunc.html)
 - Exact API calls and parameters: [Markdown](guides/markdown/api-reference.md) · [searchable HTML](guides/html/api-reference.html)
 - Exam-focused SQL, Databricks metadata commands, and monitoring queries: [Markdown](guides/markdown/sql-guide.md) · [searchable HTML](guides/html/sql-guide.html)
 
