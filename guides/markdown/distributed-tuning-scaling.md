@@ -97,19 +97,34 @@ Trial 3: max_depth=6, learning_rate=0.01 -> validation loss 0.35
 
 If loss is minimized, Trial 2 is currently best.
 
-### Tuning parallelism is normally task parallelism
+### A tuning job can distribute work at two levels
 
-Different trials can usually run independently. Distributing several trials at once is therefore **task parallelism**.
-
-Do not confuse this with how one trial trains its model:
+A **trial** is one complete training attempt with one hyperparameter configuration. Parallelism can distribute whole trials, or it can distribute the work required to train one trial.
 
 ```text
-Across trials: independent candidates                 -> task parallelism
-Inside one trial: model replicas process data shards  -> data parallelism
-Inside one trial: one large model spans devices       -> model parallelism
+Distribute whole trials:
+Worker 1 trains Trial A, Worker 2 trains Trial B
+-> task parallelism
+
+Distribute the training work inside one trial:
+Each worker holds a complete copy of the same model
+and processes a different part of the training data
+-> data parallelism
+
+Each worker holds a different part of one model because
+the complete model cannot fit on a single device
+-> model parallelism
 ```
 
-A question can combine these layers. For example, Ray Tune can run four trials concurrently, while each individual deep-learning trial uses data parallelism across two GPUs.
+The key distinction is what gets divided:
+
+```text
+Across trials: different candidate configurations train separately          -> task parallelism
+Inside one trial: full model copies train on different subsets of the data  -> data parallelism
+Inside one trial: a model too large for one device is split across devices  -> model parallelism
+```
+
+These levels can be combined. For example, Ray Tune can run four independent trials at once using task parallelism, while each trial trains on two GPUs using data parallelism.
 
 ### Search algorithm versus early stopping
 
@@ -130,9 +145,9 @@ Distributed Optuna on Databricks has three essential pieces:
 
 1. An objective function defines one trial.
 2. `MlflowStorage` provides shared Optuna state through the MLflow Tracking Server.
-3. `MlflowSparkStudy` launches trials through Spark executors.
+3. `MlflowSparkStudy(...)` creates and configures the distributed study wrapper.
 
-Then `study.optimize()` runs the search.
+Then `study.optimize(...)` starts the search and schedules objective calls through Spark executors. Constructing the study alone does not run any trials.
 
 ### Step 1: define one objective
 
@@ -167,6 +182,16 @@ The important methods are:
 | `trial.suggest_float(name, low, high, log=...)` | Continuous search range; `log=True` is useful across orders of magnitude |
 | `trial.suggest_categorical(name, choices)` | Discrete choices such as model family or solver |
 
+**What `log=True` changes:** it spreads suggestions across multiplicative scales rather than ordinary numeric distance.
+
+```text
+Range:                0.001 to 0.1
+Ordinary sampling:    0.001, 0.026, 0.051, 0.076, 0.1
+Logarithmic sampling: 0.001, 0.003, 0.01, 0.03, 0.1
+```
+
+- Useful for learning rates and regularization strengths.
+
 The objective returns the value Optuna compares. If it returns validation loss, lower is better. If it returns AUROC, higher is better. The optimization direction must agree with the metric meaning.
 
 ### Step 2: create shared storage
@@ -184,7 +209,7 @@ storage = MlflowStorage(
 )
 ```
 
-`MlflowStorage` is not merely a logger. It is the shared storage backend through which distributed workers coordinate the study and its trials.
+`MlflowStorage` is not merely a logger. It is the shared storage backend through which distributed workers coordinate the study and its trials. It uses MLflow Tracking Server as the storage backend.
 
 ```text
 MlflowStorage
@@ -193,7 +218,14 @@ MlflowStorage
 -> allows distributed workers to see consistent optimization state
 ```
 
-Do not memorize `batch_flush_interval`, `batch_size_threshold`, or the code used to discover the current notebook path.
+**Recognition only:**
+
+- `name`: optionally labels the storage.
+- `batch_flush_interval`: flushes pending updates periodically; the default is `1.0` second.
+- `batch_size_threshold`: flushes once the pending batch reaches `100` items by default.
+- These parameters control batched writes to reduce MLflow REST API throttling. They do not control trial count, concurrency, search strategy, or the winning metric.
+
+Do not memorize these optional parameters or the code used to discover the current notebook path.
 
 ### Step 3: create and optimize the Spark study
 
@@ -214,18 +246,27 @@ study.optimize(
 best_params = study.best_params
 ```
 
+`MlflowSparkStudy` creates the distributed Optuna study and connects it to the shared `MlflowStorage`. Calling `optimize()` sends independent calls to `objective()` to Spark executors: `n_trials` controls the total number of attempts, while `n_jobs` controls how many may run concurrently. After the trials finish, `best_params` returns the hyperparameter dictionary from the best completed trial.
+
+```text
+MlflowStorage      -> shared study and trial state
+MlflowSparkStudy   -> creates/configures the distributed study wrapper
+study.optimize()   -> starts trials and runs the objective through Spark executors
+study.best_params  -> winning hyperparameter dictionary
+```
+
 ### Parameter meanings
 
-| Parameter or property | Meaning | Common mistake |
-|---|---|---|
-| `study_name` | Logical name of the Optuna study | It is not the MLflow experiment path |
-| `storage` | The `MlflowStorage` used for shared study state | An MLflow callback is not a replacement |
-| `objective` | Callable that executes one candidate trial | It is not the complete Spark study |
-| `n_trials` | Total number of objective evaluations requested | It is not the concurrency level |
-| `n_jobs` | Maximum concurrent trial executions | It does not create additional candidate values by itself |
-| `best_params` | Hyperparameters belonging to the best trial | It is not a fitted prediction model |
-| `sampler` | Strategy for suggesting parameter values | It does not distribute work |
-| `pruner` | Stops weak trials early | It does not choose the final metric direction |
+| Parameter or property | Where it appears | Meaning | Common mistake |
+|---|---|---|---|
+| `study_name` | `MlflowSparkStudy(study_name=...)` | Logical name of the Optuna study | It is not the MLflow experiment path |
+| `storage` | `MlflowSparkStudy(storage=...)` | The `MlflowStorage` used for shared study state | An MLflow callback is not a replacement |
+| `sampler` | `MlflowSparkStudy(sampler=...)` | Strategy for suggesting parameter values | It does not distribute work |
+| `pruner` | `MlflowSparkStudy(pruner=...)` | Stops weak trials early | It does not choose the final metric direction |
+| `objective` | `study.optimize(objective, ...)` | Callable that executes one candidate trial | It is not the complete Spark study |
+| `n_trials` | `study.optimize(n_trials=...)` | Total number of objective evaluations requested | It is not the concurrency level |
+| `n_jobs` | `study.optimize(n_jobs=...)` | Maximum concurrent trial executions | It does not create additional candidate values by itself |
+| `best_params` | `study.best_params` | Hyperparameters belonging to the best trial | It is not a fitted prediction model |
 
 With `n_trials=20` and `n_jobs=4`, Optuna requests 20 trials and can run up to four at once. If the trials took equal time and resources were always available, they would run in roughly five waves. `n_jobs` changes concurrency, not the total requested trial count.
 
@@ -236,7 +277,8 @@ The official exam guide includes a sample question that distinguishes `MLflowCal
 ```text
 MLflowCallback  -> logs trial information to MLflow
 MlflowStorage   -> provides shared Optuna storage through MLflow
-MlflowSparkStudy -> distributes trials with Spark
+MlflowSparkStudy -> configures the distributed Spark study
+study.optimize() -> starts and runs the trials
 ```
 
 Therefore:
@@ -271,7 +313,7 @@ The best parameters still need to be used to train or select the final model. Th
 | Distribute Optuna trials across Spark executors with MLflow-backed state | `MlflowStorage` + `MlflowSparkStudy` | This is the current Databricks integration tested by the official sample |
 | Run general independent Python tuning workloads on Ray | Ray Tune | Ray is designed for task-parallel Python computation |
 
-Do not assume that Optuna means Spark ML. The objective can train a single-node library such as scikit-learn; `MlflowSparkStudy` distributes the independent trials through Spark executors.
+Do not assume that Optuna means Spark ML. The objective can train a single-node library such as scikit-learn; `MlflowSparkStudy` configures distributed execution, and `study.optimize()` launches the independent trials through Spark executors.
 
 ---
 
@@ -738,7 +780,7 @@ Trade-off: good concurrency, but each trial must still fit its allocated resourc
 
 ```text
 Choice: MlflowStorage + MlflowSparkStudy
-Why: storage coordinates Optuna state through MLflow; the Spark study distributes trials
+Why: storage coordinates Optuna state through MLflow; `MlflowSparkStudy` configures the distributed study and `optimize()` starts its trials
 Reject: MLflowCallback alone, async Python orchestration, or Ray added without need
 ```
 
@@ -836,7 +878,7 @@ setup cluster -> connect -> Tuner.fit -> inspect results -> disconnect -> tear d
 
 | Trap | Correct rule |
 |---|---|
-| `MLflowCallback` distributes Optuna trials | A callback logs; `MlflowStorage` provides shared state and `MlflowSparkStudy` distributes trials |
+| `MLflowCallback` distributes Optuna trials | A callback logs; `MlflowStorage` provides shared state, `MlflowSparkStudy` configures the distributed study, and `optimize()` starts the trials |
 | `n_jobs` is the total number of Optuna trials | `n_trials` is total; `n_jobs` is concurrency |
 | More machines always solve an out-of-memory model | If one model cannot fit on one device, choose model parallelism or a larger device |
 | Horizontal scaling and data parallelism are synonyms | Horizontal describes adding machines; data parallelism describes splitting data |

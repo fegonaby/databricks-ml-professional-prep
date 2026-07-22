@@ -67,13 +67,25 @@ Best params  -&gt; configuration associated with the best completed trial</code>
 Trial 2: max_depth=8, learning_rate=0.05 -&gt; validation loss 0.27
 Trial 3: max_depth=6, learning_rate=0.01 -&gt; validation loss 0.35</code></pre>
 <p>If loss is minimized, Trial 2 is currently best.</p>
-<h3 id="tuning-parallelism-is-normally-task-parallelism">Tuning parallelism is normally task parallelism</h3>
-<p>Different trials can usually run independently. Distributing several trials at once is therefore <strong>task parallelism</strong>.</p>
-<p>Do not confuse this with how one trial trains its model:</p>
-<pre data-language="text"><code>Across trials: independent candidates                 -&gt; task parallelism
-Inside one trial: model replicas process data shards  -&gt; data parallelism
-Inside one trial: one large model spans devices       -&gt; model parallelism</code></pre>
-<p>A question can combine these layers. For example, Ray Tune can run four trials concurrently, while each individual deep-learning trial uses data parallelism across two GPUs.</p>
+<h3 id="a-tuning-job-can-distribute-work-at-two-levels">A tuning job can distribute work at two levels</h3>
+<p>A <strong>trial</strong> is one complete training attempt with one hyperparameter configuration. Parallelism can distribute whole trials, or it can distribute the work required to train one trial.</p>
+<pre data-language="text"><code>Distribute whole trials:
+Worker 1 trains Trial A, Worker 2 trains Trial B
+-&gt; task parallelism
+
+Distribute the training work inside one trial:
+Each worker holds a complete copy of the same model
+and processes a different part of the training data
+-&gt; data parallelism
+
+Each worker holds a different part of one model because
+the complete model cannot fit on a single device
+-&gt; model parallelism</code></pre>
+<p>The key distinction is what gets divided:</p>
+<pre data-language="text"><code>Across trials: different candidate configurations train separately          -&gt; task parallelism
+Inside one trial: full model copies train on different subsets of the data  -&gt; data parallelism
+Inside one trial: a model too large for one device is split across devices  -&gt; model parallelism</code></pre>
+<p>These levels can be combined. For example, Ray Tune can run four independent trials at once using task parallelism, while each trial trains on two GPUs using data parallelism.</p>
 <h3 id="search-algorithm-versus-early-stopping">Search algorithm versus early stopping</h3>
 <div class="table-wrap"><table><tr><th>Component</th><th>Question it answers</th><th>Optuna term</th><th>Ray Tune term</th></tr><tr><td>Search strategy</td><td>Which hyperparameters should be tried next?</td><td><code>sampler</code></td><td><code>search_alg</code> or the search-space sampling rules</td></tr><tr><td>Early stopping</td><td>Should an unpromising running trial stop early?</td><td><code>pruner</code></td><td><code>scheduler</code> such as ASHA/HyperBand</td></tr></table></div>
 <p>These are recognition-level distinctions. Do not memorize the algorithm mathematics or a catalog of implementations.</p>
@@ -81,8 +93,8 @@ Inside one trial: one large model spans devices       -&gt; model parallelism</c
 <section class="doc-section" id="4-distributed-optuna-with-mlflow"><h2>4. Distributed Optuna with MLflow</h2>
 <h3 id="the-three-part-workflow">The three-part workflow</h3>
 <p>Distributed Optuna on Databricks has three essential pieces:</p>
-<ol><li>An objective function defines one trial.</li><li><code>MlflowStorage</code> provides shared Optuna state through the MLflow Tracking Server.</li><li><code>MlflowSparkStudy</code> launches trials through Spark executors.</li></ol>
-<p>Then <code>study.optimize()</code> runs the search.</p>
+<ol><li>An objective function defines one trial.</li><li><code>MlflowStorage</code> provides shared Optuna state through the MLflow Tracking Server.</li><li><code>MlflowSparkStudy(...)</code> creates and configures the distributed study wrapper.</li></ol>
+<p>Then <code>study.optimize(...)</code> starts the search and schedules objective calls through Spark executors. Constructing the study alone does not run any trials.</p>
 <h3 id="step-1-define-one-objective">Step 1: define one objective</h3>
 <pre data-language="python"><code><span class="tk-bi">def</span> <span class="tk-fn">objective</span>(trial):
     <span class="tk-pm">max_depth</span> = trial.<span class="tk-fn">suggest_int</span>(<span class="tk-st">&quot;max_depth&quot;</span>, <span class="tk-nm">2</span>, <span class="tk-nm">12</span>)
@@ -106,6 +118,11 @@ Inside one trial: one large model spans devices       -&gt; model parallelism</c
     <span class="tk-kw">return</span> validation_loss</code></pre>
 <p>The important methods are:</p>
 <div class="table-wrap"><table><tr><th>Method</th><th>Defines</th></tr><tr><td><code>trial.suggest_int(name, low, high)</code></td><td>Integer search range</td></tr><tr><td><code>trial.suggest_float(name, low, high, log=...)</code></td><td>Continuous search range; <code>log=True</code> is useful across orders of magnitude</td></tr><tr><td><code>trial.suggest_categorical(name, choices)</code></td><td>Discrete choices such as model family or solver</td></tr></table></div>
+<p><strong>What <code>log=True</code> changes:</strong> it spreads suggestions across multiplicative scales rather than ordinary numeric distance.</p>
+<pre data-language="text"><code>Range:                0.001 to 0.1
+Ordinary sampling:    0.001, 0.026, 0.051, 0.076, 0.1
+Logarithmic sampling: 0.001, 0.003, 0.01, 0.03, 0.1</code></pre>
+<ul><li>Useful for learning rates and regularization strengths.</li></ul>
 <p>The objective returns the value Optuna compares. If it returns validation loss, lower is better. If it returns AUROC, higher is better. The optimization direction must agree with the metric meaning.</p>
 <h3 id="step-2-create-shared-storage">Step 2: create shared storage</h3>
 <pre data-language="python"><code><span class="tk-kw">import</span> mlflow
@@ -118,12 +135,14 @@ Inside one trial: one large model spans devices       -&gt; model parallelism</c
 <span class="tk-pm">storage</span> = <span class="tk-ty">MlflowStorage</span>(
     <span class="tk-pm">experiment_id</span>=experiment.experiment_id,
 )</code></pre>
-<p><code>MlflowStorage</code> is not merely a logger. It is the shared storage backend through which distributed workers coordinate the study and its trials.</p>
+<p><code>MlflowStorage</code> is not merely a logger. It is the shared storage backend through which distributed workers coordinate the study and its trials. It uses MLflow Tracking Server as the storage backend.</p>
 <pre data-language="text"><code>MlflowStorage
 -&gt; receives an MLflow experiment ID
 -&gt; stores shared Optuna study/trial state through MLflow
 -&gt; allows distributed workers to see consistent optimization state</code></pre>
-<p>Do not memorize <code>batch_flush_interval</code>, <code>batch_size_threshold</code>, or the code used to discover the current notebook path.</p>
+<p><strong>Recognition only:</strong></p>
+<ul><li><code>name</code>: optionally labels the storage.</li><li><code>batch_flush_interval</code>: flushes pending updates periodically; the default is <code>1.0</code> second.</li><li><code>batch_size_threshold</code>: flushes once the pending batch reaches <code>100</code> items by default.</li><li>These parameters control batched writes to reduce MLflow REST API throttling. They do not control trial count, concurrency, search strategy, or the winning metric.</li></ul>
+<p>Do not memorize these optional parameters or the code used to discover the current notebook path.</p>
 <h3 id="step-3-create-and-optimize-the-spark-study">Step 3: create and optimize the Spark study</h3>
 <pre data-language="python"><code><span class="tk-kw">from</span> mlflow.pyspark.optuna.study <span class="tk-kw">import</span> <span class="tk-ty">MlflowSparkStudy</span>
 
@@ -139,14 +158,20 @@ study.<span class="tk-fn">optimize</span>(
 )
 
 <span class="tk-pm">best_params</span> = study.best_params</code></pre>
+<p><code>MlflowSparkStudy</code> creates the distributed Optuna study and connects it to the shared <code>MlflowStorage</code>. Calling <code>optimize()</code> sends independent calls to <code>objective()</code> to Spark executors: <code>n_trials</code> controls the total number of attempts, while <code>n_jobs</code> controls how many may run concurrently. After the trials finish, <code>best_params</code> returns the hyperparameter dictionary from the best completed trial.</p>
+<pre data-language="text"><code>MlflowStorage      -&gt; shared study and trial state
+MlflowSparkStudy   -&gt; creates/configures the distributed study wrapper
+study.optimize()   -&gt; starts trials and runs the objective through Spark executors
+study.best_params  -&gt; winning hyperparameter dictionary</code></pre>
 <h3 id="parameter-meanings">Parameter meanings</h3>
-<div class="table-wrap"><table><tr><th>Parameter or property</th><th>Meaning</th><th>Common mistake</th></tr><tr><td><code>study_name</code></td><td>Logical name of the Optuna study</td><td>It is not the MLflow experiment path</td></tr><tr><td><code>storage</code></td><td>The <code>MlflowStorage</code> used for shared study state</td><td>An MLflow callback is not a replacement</td></tr><tr><td><code>objective</code></td><td>Callable that executes one candidate trial</td><td>It is not the complete Spark study</td></tr><tr><td><code>n_trials</code></td><td>Total number of objective evaluations requested</td><td>It is not the concurrency level</td></tr><tr><td><code>n_jobs</code></td><td>Maximum concurrent trial executions</td><td>It does not create additional candidate values by itself</td></tr><tr><td><code>best_params</code></td><td>Hyperparameters belonging to the best trial</td><td>It is not a fitted prediction model</td></tr><tr><td><code>sampler</code></td><td>Strategy for suggesting parameter values</td><td>It does not distribute work</td></tr><tr><td><code>pruner</code></td><td>Stops weak trials early</td><td>It does not choose the final metric direction</td></tr></table></div>
+<div class="table-wrap"><table><tr><th>Parameter or property</th><th>Where it appears</th><th>Meaning</th><th>Common mistake</th></tr><tr><td><code>study_name</code></td><td><code>MlflowSparkStudy(study_name=...)</code></td><td>Logical name of the Optuna study</td><td>It is not the MLflow experiment path</td></tr><tr><td><code>storage</code></td><td><code>MlflowSparkStudy(storage=...)</code></td><td>The <code>MlflowStorage</code> used for shared study state</td><td>An MLflow callback is not a replacement</td></tr><tr><td><code>sampler</code></td><td><code>MlflowSparkStudy(sampler=...)</code></td><td>Strategy for suggesting parameter values</td><td>It does not distribute work</td></tr><tr><td><code>pruner</code></td><td><code>MlflowSparkStudy(pruner=...)</code></td><td>Stops weak trials early</td><td>It does not choose the final metric direction</td></tr><tr><td><code>objective</code></td><td><code>study.optimize(objective, ...)</code></td><td>Callable that executes one candidate trial</td><td>It is not the complete Spark study</td></tr><tr><td><code>n_trials</code></td><td><code>study.optimize(n_trials=...)</code></td><td>Total number of objective evaluations requested</td><td>It is not the concurrency level</td></tr><tr><td><code>n_jobs</code></td><td><code>study.optimize(n_jobs=...)</code></td><td>Maximum concurrent trial executions</td><td>It does not create additional candidate values by itself</td></tr><tr><td><code>best_params</code></td><td><code>study.best_params</code></td><td>Hyperparameters belonging to the best trial</td><td>It is not a fitted prediction model</td></tr></table></div>
 <p>With <code>n_trials=20</code> and <code>n_jobs=4</code>, Optuna requests 20 trials and can run up to four at once. If the trials took equal time and resources were always available, they would run in roughly five waves. <code>n_jobs</code> changes concurrency, not the total requested trial count.</p>
 <h3 id="the-official-callback-trap">The official callback trap</h3>
 <p>The official exam guide includes a sample question that distinguishes <code>MLflowCallback</code> from <code>MlflowStorage</code>.</p>
 <pre data-language="text"><code>MLflowCallback  -&gt; logs trial information to MLflow
 MlflowStorage   -&gt; provides shared Optuna storage through MLflow
-MlflowSparkStudy -&gt; distributes trials with Spark</code></pre>
+MlflowSparkStudy -&gt; configures the distributed Spark study
+study.optimize() -&gt; starts and runs the trials</code></pre>
 <p>Therefore:</p>
 <pre data-language="text"><code>Distributed Optuna + MLflow, minimal setup
 -&gt; MlflowStorage(experiment_id=...)
@@ -162,7 +187,7 @@ study.best_params                   -&gt; dictionary of winning parameters</code
 <p>The best parameters still need to be used to train or select the final model. They are not themselves a model artifact.</p>
 <h3 id="optuna-versus-spark-crossvalidator">Optuna versus Spark CrossValidator</h3>
 <div class="table-wrap"><table><tr><th>Situation</th><th>Better fit</th><th>Why</th></tr><tr><td>Tune a Spark ML Pipeline over a small explicit parameter grid</td><td><code>CrossValidator</code> or <code>TrainValidationSplit</code></td><td>Native Spark ML tuning over <code>ParamMap</code> combinations</td></tr><tr><td>Use a dynamic or conditional search space</td><td>Optuna</td><td>The objective can suggest values conditionally</td></tr><tr><td>Distribute Optuna trials across Spark executors with MLflow-backed state</td><td><code>MlflowStorage</code> + <code>MlflowSparkStudy</code></td><td>This is the current Databricks integration tested by the official sample</td></tr><tr><td>Run general independent Python tuning workloads on Ray</td><td>Ray Tune</td><td>Ray is designed for task-parallel Python computation</td></tr></table></div>
-<p>Do not assume that Optuna means Spark ML. The objective can train a single-node library such as scikit-learn; <code>MlflowSparkStudy</code> distributes the independent trials through Spark executors.</p>
+<p>Do not assume that Optuna means Spark ML. The objective can train a single-node library such as scikit-learn; <code>MlflowSparkStudy</code> configures distributed execution, and <code>study.optimize()</code> launches the independent trials through Spark executors.</p>
 </section>
 <section class="doc-section" id="5-spark-versus-ray"><h2>5. Spark versus Ray</h2>
 <h3 id="the-main-distinction">The main distinction</h3>
@@ -397,7 +422,7 @@ Why: each trial is an independent Python computation
 Trade-off: good concurrency, but each trial must still fit its allocated resources</code></pre>
 <p><strong>Scenario D:</strong> The question explicitly requires distributed Optuna with outcomes associated with an MLflow experiment and minimal setup.</p>
 <pre data-language="text"><code>Choice: MlflowStorage + MlflowSparkStudy
-Why: storage coordinates Optuna state through MLflow; the Spark study distributes trials
+Why: storage coordinates Optuna state through MLflow; `MlflowSparkStudy` configures the distributed study and `optimize()` starts its trials
 Reject: MLflowCallback alone, async Python orchestration, or Ray added without need</code></pre>
 <p><strong>Scenario E:</strong> One neural network cannot fit in the memory of a single GPU.</p>
 <pre data-language="text"><code>Choice: model parallelism, potentially through DeepSpeed
@@ -467,7 +492,7 @@ Ray on Databricks:
 setup cluster -&gt; connect -&gt; Tuner.fit -&gt; inspect results -&gt; disconnect -&gt; tear down</code></pre>
 </section>
 <section class="doc-section" id="12-common-exam-traps"><h2>12. Common exam traps</h2>
-<div class="table-wrap"><table><tr><th>Trap</th><th>Correct rule</th></tr><tr><td><code>MLflowCallback</code> distributes Optuna trials</td><td>A callback logs; <code>MlflowStorage</code> provides shared state and <code>MlflowSparkStudy</code> distributes trials</td></tr><tr><td><code>n_jobs</code> is the total number of Optuna trials</td><td><code>n_trials</code> is total; <code>n_jobs</code> is concurrency</td></tr><tr><td>More machines always solve an out-of-memory model</td><td>If one model cannot fit on one device, choose model parallelism or a larger device</td></tr><tr><td>Horizontal scaling and data parallelism are synonyms</td><td>Horizontal describes adding machines; data parallelism describes splitting data</td></tr><tr><td>Ray is the first choice for joins and aggregations</td><td>Spark is optimized for large-scale DataFrame processing</td></tr><tr><td>Spark is the first choice for many unrelated Python tasks</td><td>Ray is designed for independent task-parallel computation</td></tr><tr><td><code>setup_ray_cluster()</code> connects the notebook automatically in every pattern</td><td><code>ray.init()</code> is the explicit connection step</td></tr><tr><td><code>ray.init()</code> creates the Databricks/Spark compute</td><td>Databricks compute already exists; Ray is created on top of it</td></tr><tr><td><code>Tuner.fit()</code> returns the fitted production model</td><td>It returns a <code>ResultGrid</code>; retrieve a best result/configuration and train/select the final model appropriately</td></tr><tr><td><code>num_samples</code> controls Ray trial concurrency</td><td><code>num_samples</code> controls sampled trials; <code>max_concurrent_trials</code> limits concurrency</td></tr><tr><td>Ray on Spark works on Free Edition/serverless</td><td>Ray-on-Spark cluster initialization is not supported on serverless runtimes</td></tr><tr><td>Hyperopt is the safest current answer</td><td>It is legacy; current objectives name Optuna and Ray</td></tr></table></div>
+<div class="table-wrap"><table><tr><th>Trap</th><th>Correct rule</th></tr><tr><td><code>MLflowCallback</code> distributes Optuna trials</td><td>A callback logs; <code>MlflowStorage</code> provides shared state, <code>MlflowSparkStudy</code> configures the distributed study, and <code>optimize()</code> starts the trials</td></tr><tr><td><code>n_jobs</code> is the total number of Optuna trials</td><td><code>n_trials</code> is total; <code>n_jobs</code> is concurrency</td></tr><tr><td>More machines always solve an out-of-memory model</td><td>If one model cannot fit on one device, choose model parallelism or a larger device</td></tr><tr><td>Horizontal scaling and data parallelism are synonyms</td><td>Horizontal describes adding machines; data parallelism describes splitting data</td></tr><tr><td>Ray is the first choice for joins and aggregations</td><td>Spark is optimized for large-scale DataFrame processing</td></tr><tr><td>Spark is the first choice for many unrelated Python tasks</td><td>Ray is designed for independent task-parallel computation</td></tr><tr><td><code>setup_ray_cluster()</code> connects the notebook automatically in every pattern</td><td><code>ray.init()</code> is the explicit connection step</td></tr><tr><td><code>ray.init()</code> creates the Databricks/Spark compute</td><td>Databricks compute already exists; Ray is created on top of it</td></tr><tr><td><code>Tuner.fit()</code> returns the fitted production model</td><td>It returns a <code>ResultGrid</code>; retrieve a best result/configuration and train/select the final model appropriately</td></tr><tr><td><code>num_samples</code> controls Ray trial concurrency</td><td><code>num_samples</code> controls sampled trials; <code>max_concurrent_trials</code> limits concurrency</td></tr><tr><td>Ray on Spark works on Free Edition/serverless</td><td>Ray-on-Spark cluster initialization is not supported on serverless runtimes</td></tr><tr><td>Hyperopt is the safest current answer</td><td>It is legacy; current objectives name Optuna and Ray</td></tr></table></div>
 </section>
 <section class="doc-section" id="13-closed-book-checkpoint"><h2>13. Closed-book checkpoint</h2>
 <p>Answer these without opening the guide.</p>

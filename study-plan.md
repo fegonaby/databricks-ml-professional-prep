@@ -256,7 +256,8 @@ Model parallelism  → model too big for one device, split across resources
 Distributed Optuna on Databricks: MlflowStorage + MlflowSparkStudy
   MLflow callback   → logs trial info
   MlflowStorage     → MLflow-backed storage for Optuna
-  MlflowSparkStudy  → distributes trials across Spark executors
+  MlflowSparkStudy  → creates/configures the distributed study wrapper
+  study.optimize    → starts trials across Spark executors
 Ray cluster setup: setup_ray_cluster; Ray Tune for HPO
 ```
 
@@ -1064,7 +1065,7 @@ At the start of each session, complete any due retests before new reading. An it
 4. **On-demand `FeatureFunction`.** A governed UC Python UDF computes the feature consistently from request-time bindings.
 5. **`FeatureEngineeringClient.score_batch`.** The model's stored feature metadata recreates the training lookups before scoring.
 6. **One parent run plus child runs.** The parent represents the search; each parameter configuration is a nested child.
-7. **`MlflowStorage` + `MlflowSparkStudy`.** Storage shares Optuna state through MLflow; the Spark study distributes trials.
+7. **`MlflowStorage` + `MlflowSparkStudy`, followed by `study.optimize(...)`.** Storage shares Optuna state through MLflow, the Spark study configures distributed execution, and `optimize()` starts the trials.
 8. **MLflow model artifact.** Package the vocabulary through `artifacts=` and load it from `context.artifacts`.
 9. **Custom MLflow PyFunc.** Put preprocessing in `predict` and reusable initialization in `load_context`.
 10. **UC model alias.** A mutable alias such as `@champion` avoids hardcoding a version number.

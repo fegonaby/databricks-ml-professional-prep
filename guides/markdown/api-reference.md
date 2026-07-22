@@ -113,7 +113,7 @@ query = (predictions.writeStream
 | WRITE | `pandas_udf(func, returnType)` | Vectorized pandas function, Spark return type | Spark UDF evaluated in Arrow batches | Best for vectorized column/prediction work, not per-group model training. |
 | RECOGNIZE | `mlflow.pyfunc.spark_udf(spark, model_uri, result_type, env_manager)` | Spark session, model URI, output type | Spark UDF backed by a PyFunc model | `load_model(...).predict()` alone is not distributed over a Spark DataFrame. |
 | WRITE | `MlflowStorage(experiment_id=...)` | MLflow experiment ID | Shared Optuna state backed by MLflow | `MLflowCallback` logs trials but is not distributed storage. |
-| WRITE | `MlflowSparkStudy(study_name=..., storage=...)` | Study name and `MlflowStorage` | Optuna study distributed through Spark | Do not pair Spark study with callback alone. |
+| WRITE | `MlflowSparkStudy(study_name=..., storage=...)` | Study name and `MlflowStorage` | Configured distributed Optuna study wrapper | Construction does not start trials; `optimize()` does. |
 | WRITE | `study.optimize(objective, n_trials=..., n_jobs=...)` | Objective, total trials, concurrency | Executes the HPO search | `n_trials` is total work; `n_jobs` controls parallel execution. |
 | WRITE | `setup_ray_cluster(min_worker_nodes=..., max_worker_nodes=...)` | Worker-node bounds | Creates Ray-on-Spark cluster | Ray on Spark is unavailable on serverless compute. |
 | WRITE | `ray.init()` | Usually no explicit address after setup | Connects Python to Ray cluster | Setup and initialization are separate. |
@@ -728,7 +728,7 @@ response = client.predict(
 | If the question says... | Think... | Reject... |
 |---|---|---|
 | Log trial metrics and parameters | Active MLflow run plus `log_metric(s)` / `log_param(s)` | Registry or serving client |
-| Distribute Optuna trials through Spark | `MlflowStorage` plus `MlflowSparkStudy` | Callback as storage/distribution |
+| Distribute Optuna trials through Spark | `MlflowStorage` plus `MlflowSparkStudy`, then `study.optimize(...)` | Callback as storage/distribution |
 | One model per group | `groupBy(...).applyInPandas(...)` | Series pandas UDF |
 | Point-in-time feature correctness | Feature-table time key plus `timestamp_lookup_key` | Latest feature value without event time |
 | Automatic lookup during batch scoring | `FeatureEngineeringClient.score_batch` | Plain local `model.predict` |
