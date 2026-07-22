@@ -23,6 +23,16 @@ OUT_PATH = ROOT / "plan.html"
 
 MONTHS = {"Jul": "07", "Aug": "08"}
 
+# Completed study days, baked into plan.html so progress persists across
+# re-renders and shows on any machine that opens the file. Edit this set as
+# days are finished, then rebuild. Dates use the day's YYYY-MM-DD.
+COMPLETED = {
+    "2026-07-10",
+    "2026-07-13",
+    "2026-07-14",
+    "2026-07-15",
+}
+
 # ── Day metadata: id, date, dow, title, badges [(class, label)], focus ──────
 DAYS = [
     ("d0710", "2026-07-10", "Fri", "Jul 10", "Orientation, lifecycle & setup",
@@ -578,7 +588,8 @@ JS = """
     if (!box) return;
     boxes.push(box);
 
-    if (checks[id]) { box.checked = true; day.classList.add("checked"); }
+    // Baked-in (committed) checks are the floor; localStorage can add more.
+    if (box.checked || checks[id]) { box.checked = true; day.classList.add("checked"); }
     if (date < today && !box.checked) { day.classList.add("overdue"); }
 
     box.addEventListener("change", function () {
@@ -610,9 +621,10 @@ def day_html(day, details):
         detail = ('<details class="day-detail"><summary>Full day plan</summary>'
                   '<div class="detail-body">%s</div></details>'
                   % md_to_html(details[date]))
-    check = ('<div class="day-check"><input type="checkbox" aria-label="Mark %s complete"></div>'
-             % dom) if "examday" not in extra else '<div class="day-check" aria-hidden="true"></div>'
-    cls = ("day " + extra).strip()
+    done = date in COMPLETED
+    check = ('<div class="day-check"><input type="checkbox"%s aria-label="Mark %s complete"></div>'
+             % (" checked" if done else "", dom)) if "examday" not in extra else '<div class="day-check" aria-hidden="true"></div>'
+    cls = ("day " + extra + (" checked" if done else "")).strip()
     return ('<li class="%s" data-date="%s" data-id="%s">'
             '<div class="day-date"><span class="dow">%s</span><span class="dom mono">%s</span></div>'
             '<div class="day-main"><div class="day-titleline"><span class="day-title">%s</span>%s</div>'
