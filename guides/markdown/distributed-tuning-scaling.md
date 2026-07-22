@@ -397,22 +397,40 @@ For example, "use Ray" does not explain whether one training trial is data-paral
 
 ## 6. Ray on Databricks
 
-### Two clusters and one connection
+### One Databricks compute, two runtimes, one connection
 
-Ray on Spark introduces layers that are easy to collapse mentally:
+Ray on Spark does not normally create a second independent set of Databricks machines. It starts Ray processes using resources from the existing Databricks compute.
 
 ```text
 Databricks compute / Spark cluster
--> supplies the machines and Spark executors
+-> supplies the driver and worker machines
+-> already runs the Spark driver and executors
 
-Ray cluster created on that compute
--> supplies Ray head/worker processes and schedules Ray work
+setup_ray_cluster()
+-> starts Ray head and worker processes on resources from that compute
+-> creates the logical Ray runtime that schedules Ray work
 
 ray.init()
--> connects the current Python process to Ray
+-> connects the notebook's Python process to the Ray head
+-> allows that Python process to submit Ray tasks
 ```
 
-`setup_ray_cluster()` and `ray.init()` are therefore separate calls with separate jobs.
+`setup_ray_cluster()` creates the Ray runtime; `ray.init()` connects Python to it. They are separate calls with separate jobs.
+
+This is the **runtime setup** view. The Spark/Ray patterns in Section 5 describe the **application workflow** after both runtimes are available:
+
+```text
+Runtime setup:     Where do the Spark and Ray processes run?
+Application flow: Which work should Spark do, and which work should Ray do?
+
+Common flow:
+Spark reads, joins, and prepares data
+-> transfer the prepared data to Ray
+-> Ray performs Python training or tuning
+-> save results to MLflow or Unity Catalog
+```
+
+The advanced alternatives are Ray inside Spark functions and concurrent Spark/Ray operations. Recognize them, but use Spark for data handling and Ray for computation as the main exam pattern.
 
 ### Create and connect
 

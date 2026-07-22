@@ -221,17 +221,30 @@ Resource scaling:      vertical or horizontal</code></pre>
 <p>For example, "use Ray" does not explain whether one training trial is data-parallel or model-parallel. Ray might instead be distributing many independent trials.</p>
 </section>
 <section class="doc-section" id="6-ray-on-databricks"><h2>6. Ray on Databricks</h2>
-<h3 id="two-clusters-and-one-connection">Two clusters and one connection</h3>
-<p>Ray on Spark introduces layers that are easy to collapse mentally:</p>
+<h3 id="one-databricks-compute-two-runtimes-one-connection">One Databricks compute, two runtimes, one connection</h3>
+<p>Ray on Spark does not normally create a second independent set of Databricks machines. It starts Ray processes using resources from the existing Databricks compute.</p>
 <pre data-language="text"><code>Databricks compute / Spark cluster
--&gt; supplies the machines and Spark executors
+-&gt; supplies the driver and worker machines
+-&gt; already runs the Spark driver and executors
 
-Ray cluster created on that compute
--&gt; supplies Ray head/worker processes and schedules Ray work
+setup_ray_cluster()
+-&gt; starts Ray head and worker processes on resources from that compute
+-&gt; creates the logical Ray runtime that schedules Ray work
 
 ray.init()
--&gt; connects the current Python process to Ray</code></pre>
-<p><code>setup_ray_cluster()</code> and <code>ray.init()</code> are therefore separate calls with separate jobs.</p>
+-&gt; connects the notebook&#x27;s Python process to the Ray head
+-&gt; allows that Python process to submit Ray tasks</code></pre>
+<p><code>setup_ray_cluster()</code> creates the Ray runtime; <code>ray.init()</code> connects Python to it. They are separate calls with separate jobs.</p>
+<p>This is the <strong>runtime setup</strong> view. The Spark/Ray patterns in Section 5 describe the <strong>application workflow</strong> after both runtimes are available:</p>
+<pre data-language="text"><code>Runtime setup:     Where do the Spark and Ray processes run?
+Application flow: Which work should Spark do, and which work should Ray do?
+
+Common flow:
+Spark reads, joins, and prepares data
+-&gt; transfer the prepared data to Ray
+-&gt; Ray performs Python training or tuning
+-&gt; save results to MLflow or Unity Catalog</code></pre>
+<p>The advanced alternatives are Ray inside Spark functions and concurrent Spark/Ray operations. Recognize them, but use Spark for data handling and Ray for computation as the main exam pattern.</p>
 <h3 id="create-and-connect">Create and connect</h3>
 <pre data-language="python"><code><span class="tk-kw">import</span> ray
 <span class="tk-kw">from</span> ray.util.spark <span class="tk-kw">import</span> (
