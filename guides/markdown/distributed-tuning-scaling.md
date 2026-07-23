@@ -490,16 +490,23 @@ For Free Edition, treat Ray-on-Spark execution as conceptual because Free Editio
 The upstream Ray page is reference-only, but the minimal workflow below is still required knowledge. The exam objective says to **perform** distributed hyperparameter tuning using Ray, so be ready to recognize the method and parameter names and reconstruct the main call shape without autocomplete.
 
 ```text
-WRITE       trainable(config), tune.report({...}),
-            tune.Tuner(trainable, param_space=..., tune_config=...),
-            tune.TuneConfig(metric=..., mode=..., num_samples=...,
-                            max_concurrent_trials=...),
-            tuner.fit(), results.get_best_result(), best_result.config
+WRITE       trainable(config)
+WRITE       tune.report({...})
+WRITE       tune.Tuner(trainable, param_space=..., tune_config=...)
+WRITE       tune.TuneConfig(metric=..., mode=..., num_samples=..., max_concurrent_trials=...)
+WRITE       tuner.fit()
+WRITE       results.get_best_result()
+WRITE       best_result.config
 
-RECOGNIZE   tune.choice(), tune.uniform(), tune.loguniform()
+RECOGNIZE   tune.choice()
+RECOGNIZE   tune.uniform()
+RECOGNIZE   tune.loguniform()
 
-REFERENCE   specialized search algorithms, scheduler configuration,
-            checkpointing, restoration, and Ray internals
+REFERENCE   specialized search algorithms
+REFERENCE   scheduler configuration
+REFERENCE   checkpointing
+REFERENCE   restoration
+REFERENCE   Ray internals
 ```
 
 ### The object model

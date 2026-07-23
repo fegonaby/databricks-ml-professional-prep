@@ -268,16 +268,23 @@ ray.<span class="tk-fn">init</span>()</code></pre>
 <section class="doc-section" id="7-distributed-hyperparameter-tuning-with-ray-tune"><h2>7. Distributed hyperparameter tuning with Ray Tune</h2>
 <h3 id="exam-api-depth">Exam API depth</h3>
 <p>The upstream Ray page is reference-only, but the minimal workflow below is still required knowledge. The exam objective says to <strong>perform</strong> distributed hyperparameter tuning using Ray, so be ready to recognize the method and parameter names and reconstruct the main call shape without autocomplete.</p>
-<pre data-language="text"><code>WRITE       trainable(config), tune.report({...}),
-            tune.Tuner(trainable, param_space=..., tune_config=...),
-            tune.TuneConfig(metric=..., mode=..., num_samples=...,
-                            max_concurrent_trials=...),
-            tuner.fit(), results.get_best_result(), best_result.config
+<pre data-language="text"><code>WRITE       trainable(config)
+WRITE       tune.report({...})
+WRITE       tune.Tuner(trainable, param_space=..., tune_config=...)
+WRITE       tune.TuneConfig(metric=..., mode=..., num_samples=..., max_concurrent_trials=...)
+WRITE       tuner.fit()
+WRITE       results.get_best_result()
+WRITE       best_result.config
 
-RECOGNIZE   tune.choice(), tune.uniform(), tune.loguniform()
+RECOGNIZE   tune.choice()
+RECOGNIZE   tune.uniform()
+RECOGNIZE   tune.loguniform()
 
-REFERENCE   specialized search algorithms, scheduler configuration,
-            checkpointing, restoration, and Ray internals</code></pre>
+REFERENCE   specialized search algorithms
+REFERENCE   scheduler configuration
+REFERENCE   checkpointing
+REFERENCE   restoration
+REFERENCE   Ray internals</code></pre>
 <h3 id="the-object-model">The object model</h3>
 <pre data-language="text"><code>trainable   -&gt; function/class that trains and reports metrics
 param_space -&gt; hyperparameter values or distributions
