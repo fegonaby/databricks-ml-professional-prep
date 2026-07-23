@@ -299,10 +299,16 @@ Model parallelism → model itself cannot fit one accelerator/node;
 
 **Know cold:**
 ```text
-Experiment = collection of runs · Run = one execution
-Param = configuration · Metric = numeric result · Artifact = file/model · Tag = metadata
-Parent run = the whole hyperparameter search · Child run = one trial (nested=True)
-Autologging = automatic capture · Manual logging = custom metrics/artifacts
+Experiment = collection of runs
+Run = one execution
+Param = configuration
+Metric = numeric result
+Artifact = file/model
+Tag = metadata
+Parent run = the whole hyperparameter search
+Child run = one trial (nested=True)
+Autologging = automatic capture
+Manual logging = custom metrics/artifacts
 Custom logging: log_metric (with step), log_param, log_artifact, log_dict, log_figure
 New UC model version → model signature required
 Existing unsigned version → downstream limitations (no input enforcement, fewer generated schemas/examples)
