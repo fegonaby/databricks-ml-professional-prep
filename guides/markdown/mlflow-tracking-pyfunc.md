@@ -832,10 +832,56 @@ Endpoint querying is studied later.
 
 ## 15. Choose the correct MLflow API owner
 
+### Top-level functions versus `MlflowClient`
+
+MLflow provides two common ways to work with tracking and registry objects:
+
+```text
+Top-level mlflow functions -> convenient workflow calls that often use the active run
+MlflowClient methods       -> direct calls targeting stored objects by ID or name
+```
+
+For example, the top-level fluent API knows which run is active:
+
+```python
+with mlflow.start_run():
+    mlflow.log_metric("validation_auc", 0.91)
+```
+
+`MlflowClient` creates a client object for directly retrieving or changing a particular stored object:
+
+```python
+from mlflow import MlflowClient
+
+client = MlflowClient()
+run = client.get_run(run_id)
+client.set_tag(run_id, "team", "risk")
+```
+
+### `MlflowClient` methods to recognize
+
+| Method | What it does |
+|---|---|
+| `client.get_run(run_id)` | Retrieves one run's information, parameters, metrics, and tags using its run ID |
+| `client.set_tag(run_id, "team", "risk")` | Adds or updates the `team` tag on that specific run |
+| `client.get_model_version(model_name, version)` | Retrieves the metadata for one registered model version |
+| `client.set_registered_model_alias(model_name, "Champion", version)` | Makes the `Champion` alias point to the specified model version; it does not need to be the highest version number |
+| `client.delete_model_version(model_name, version)` | Permanently deletes that one registered model version, not the entire registered model |
+
+```text
+Run ID required            -> get_run(), set_tag()
+Model name/version required -> get_model_version(), set_registered_model_alias(),
+                               delete_model_version()
+```
+
+The registry operations are studied in detail on July 22. They are listed here so you can recognize why they belong to `MlflowClient`.
+
+The client is not a different tracking system. Both styles communicate with MLflow; the difference is whether the current workflow supplies the target implicitly or you identify the target explicitly.
+
 | Scenario wording | Correct owner | Why |
 |---|---|---|
 | Start a run and log metrics | Top-level `mlflow` fluent API | Operates on active tracking runs |
-| Retrieve or administratively mutate objects by ID/name | `MlflowClient` | Lower-level tracking and registry client |
+| Read or change a specific object by ID/name | `MlflowClient` | Directly targets stored tracking or registry objects |
 | Serialize or load a framework-native model | `mlflow.<flavor>` | Framework-specific model behavior |
 | Package custom Python inference logic | `mlflow.pyfunc` | Generic/custom model contract |
 | Infer a signature or validate a model | `mlflow.models` | Cross-flavor model utility |
