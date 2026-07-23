@@ -351,6 +351,8 @@ Custom PyFunc use case: real-time feature engineering inside predict()
 5. **[MUST]** Point-in-time joins: https://docs.databricks.com/aws/en/machine-learning/feature-store/time-series
 6. **[REFERENCE]** Python API catalog: https://docs.databricks.com/aws/en/machine-learning/feature-store/python-api
 
+**Complete companion:** use [Part I of the Feature Engineering and Serving exam guide](guides/html/feature-engineering-serving.html#part-i-july-20-offline-features-and-training-sets) ([Markdown](guides/markdown/feature-engineering-serving.md#part-i---july-20-offline-features-and-training-sets)). It contains the exact reading scope, feature-table contract, training-set workflow, point-in-time reasoning, API signatures, scenarios, and July 20 checkpoint.
+
 **What matters:** feature governance, reuse, and lineage; `FeatureEngineeringClient.create_table` / `write_table`; primary and timestamp keys; training sets; point-in-time joins.
 
 **API recall:** use [API companion §6](guides/html/api-reference.html#6-feature-engineering-and-point-in-time-lookups). Reconstruct `FeatureLookup` → `create_training_set` → `load_df`, including the point-in-time parameter and the later `log_model`/`score_batch` pair.
@@ -374,6 +376,8 @@ fe.log_model → packages lookups so score_batch auto-joins features
 4. **[MUST]** On-demand features: https://docs.databricks.com/aws/en/machine-learning/feature-store/on-demand-features
 5. **[REFERENCE]** Real-time feature-computation blog: https://www.databricks.com/blog/best-practices-realtime-feature-computation-databricks
 6. **[REFERENCE]** Demo: https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/feature-store-and-online-inference
+
+**Complete companion:** continue with [Part II of the Feature Engineering and Serving exam guide](guides/html/feature-engineering-serving.html#part-ii-july-21-online-streaming-and-on-demand-features) ([Markdown](guides/markdown/feature-engineering-serving.md#part-ii---july-21-online-streaming-and-on-demand-features)). It contains the exact reading scope, current and guide-era online workflows, automatic lookup, Feature Serving, on-demand features, streaming freshness, API signatures, scenarios, and combined checkpoint.
 
 **Decision rules:**
 ```text
@@ -999,6 +1003,7 @@ At the start of each session, complete any due retests before new reading. An it
 - Spark ML, models, metrics, tuning, inference, and pandas scaling: [Markdown](guides/markdown/sparkml-metrics-scaling.md) · [searchable HTML](guides/html/sparkml-metrics-scaling.html)
 - Distributed Optuna, Ray Tune, scaling, and parallelism: [Markdown](guides/markdown/distributed-tuning-scaling.md) · [searchable HTML](guides/html/distributed-tuning-scaling.html)
 - MLflow tracking, nested runs, signatures, and custom PyFunc: [Markdown](guides/markdown/mlflow-tracking-pyfunc.md) · [searchable HTML](guides/html/mlflow-tracking-pyfunc.html)
+- Feature tables, point-in-time training, online stores, streaming, and feature serving: [Markdown](guides/markdown/feature-engineering-serving.md) · [searchable HTML](guides/html/feature-engineering-serving.html)
 - Exact API calls and parameters: [Markdown](guides/markdown/api-reference.md) · [searchable HTML](guides/html/api-reference.html)
 - Exam-focused SQL, Databricks metadata commands, and monitoring queries: [Markdown](guides/markdown/sql-guide.md) · [searchable HTML](guides/html/sql-guide.html)
 

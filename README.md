@@ -20,6 +20,7 @@ The exam-focused guides are:
 - [`guides/markdown/sparkml-metrics-scaling.md`](guides/markdown/sparkml-metrics-scaling.md) for July 13-15 Spark ML, metrics, tuning, inference, and pandas scaling
 - [`guides/markdown/distributed-tuning-scaling.md`](guides/markdown/distributed-tuning-scaling.md) for July 16 Optuna, Ray, and parallelism strategies
 - [`guides/markdown/mlflow-tracking-pyfunc.md`](guides/markdown/mlflow-tracking-pyfunc.md) for July 17 MLflow tracking, nested runs, signatures, and custom PyFunc models
+- [`guides/markdown/feature-engineering-serving.md`](guides/markdown/feature-engineering-serving.md) for July 20-21 feature tables, point-in-time training, online stores, streaming, and feature serving
 - [`guides/markdown/api-reference.md`](guides/markdown/api-reference.md) for exact API recall
 - [`guides/markdown/sql-guide.md`](guides/markdown/sql-guide.md) for the required SQL baseline and Databricks SQL recognition
 
@@ -36,6 +37,7 @@ python3 scripts/build_sql_guide_html.py
 python3 scripts/build_sparkml_guide_html.py
 python3 scripts/build_distributed_tuning_guide_html.py
 python3 scripts/build_mlflow_tracking_guide_html.py
+python3 scripts/build_feature_engineering_guide_html.py
 ```
 
 ### Math in guides

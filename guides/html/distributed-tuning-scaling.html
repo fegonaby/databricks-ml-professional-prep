@@ -367,8 +367,20 @@ plain value              -&gt; fixed for every trial</code></pre>
 More machines running separate trials  -&gt; horizontal + task parallelism
 More devices holding pieces of a model -&gt; horizontal + model parallelism</code></pre>
 <h3 id="driver-versus-worker-memory">Driver versus worker memory</h3>
-<p>In Databricks multi-node compute, the driver coordinates the application and workers execute distributed processing. A larger worker type helps executor-side work. A larger driver helps driver-side state or deliberate collection, but <code>collect()</code> can still be the wrong design for a large dataset.</p>
-<p>Do not answer a large-data problem with "increase driver memory" when the requirement is to preserve distributed processing.</p>
+<p>In Databricks multi-node compute:</p>
+<pre data-language="text"><code>Driver  -&gt; plans the Spark job, schedules tasks, and runs the notebook/application code
+Workers -&gt; hold data partitions and execute the distributed transformations</code></pre>
+<p>A small final result may safely return to the driver. For example, workers can process millions of transactions and reduce them to three summary rows:</p>
+<pre data-language="python"><code><span class="tk-pm">summary</span> = transactions.<span class="tk-fn">groupBy</span>(<span class="tk-st">&quot;risk_level&quot;</span>).<span class="tk-fn">count</span>()
+<span class="tk-pm">rows</span> = summary.<span class="tk-fn">collect</span>()</code></pre>
+<p>The large transaction table stays distributed while Spark performs the aggregation. Only the three <code>risk_level</code> summary rows are stored in driver memory.</p>
+<p>The dangerous version is:</p>
+<pre data-language="python"><code><span class="tk-pm">rows</span> = transactions.<span class="tk-fn">collect</span>()</code></pre>
+<p>This tries to move every transaction from all workers into the driver's memory. Increasing driver memory might postpone the failure, but it centralizes a dataset that should remain distributed.</p>
+<pre data-language="text"><code>Worker/executor memory pressure -&gt; larger workers, more workers, better partitioning, or smaller batches
+Small final summary             -&gt; returning it to the driver is reasonable
+Large result sent to driver     -&gt; keep it distributed; filter, aggregate, or write it instead</code></pre>
+<p>For exam scenarios, do not answer a large-data problem with "increase driver memory" when the requirement is to preserve distributed processing. A larger driver is appropriate only when genuinely driver-side state or a deliberately small returned result needs more room.</p>
 </section>
 <section class="doc-section" id="9-data-task-and-model-parallelism"><h2>9. Data, task, and model parallelism</h2>
 <h3 id="data-parallelism">Data parallelism</h3>

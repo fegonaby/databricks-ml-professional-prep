@@ -659,9 +659,37 @@ More devices holding pieces of a model -> horizontal + model parallelism
 
 ### Driver versus worker memory
 
-In Databricks multi-node compute, the driver coordinates the application and workers execute distributed processing. A larger worker type helps executor-side work. A larger driver helps driver-side state or deliberate collection, but `collect()` can still be the wrong design for a large dataset.
+In Databricks multi-node compute:
 
-Do not answer a large-data problem with "increase driver memory" when the requirement is to preserve distributed processing.
+```text
+Driver  -> plans the Spark job, schedules tasks, and runs the notebook/application code
+Workers -> hold data partitions and execute the distributed transformations
+```
+
+A small final result may safely return to the driver. For example, workers can process millions of transactions and reduce them to three summary rows:
+
+```python
+summary = transactions.groupBy("risk_level").count()
+rows = summary.collect()
+```
+
+The large transaction table stays distributed while Spark performs the aggregation. Only the three `risk_level` summary rows are stored in driver memory.
+
+The dangerous version is:
+
+```python
+rows = transactions.collect()
+```
+
+This tries to move every transaction from all workers into the driver's memory. Increasing driver memory might postpone the failure, but it centralizes a dataset that should remain distributed.
+
+```text
+Worker/executor memory pressure -> larger workers, more workers, better partitioning, or smaller batches
+Small final summary             -> returning it to the driver is reasonable
+Large result sent to driver     -> keep it distributed; filter, aggregate, or write it instead
+```
+
+For exam scenarios, do not answer a large-data problem with "increase driver memory" when the requirement is to preserve distributed processing. A larger driver is appropriate only when genuinely driver-side state or a deliberately small returned result needs more room.
 
 ---
 
