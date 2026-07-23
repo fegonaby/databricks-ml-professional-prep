@@ -26,7 +26,7 @@ def main():
 <title>{html.escape(title)}</title><style>{CSS}{GUIDE_CSS}</style></head><body>
 <header class="top"><div class="top-inner"><span class="brand">MLflow and PyFunc Guide</span><input id="search" class="search" type="search" placeholder="Filter runs, logging, signatures, PyFunc, APIs, or traps" aria-label="Filter MLflow and PyFunc guide"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2>{toc_html}</nav><main>
-<div class="meta">Generated from <a href="../markdown/mlflow-tracking-pyfunc.md">the Markdown source</a>. Verified July 22, 2026.</div>
+<div class="meta">Generated from <a href="../markdown/mlflow-tracking-pyfunc.md">the Markdown source</a>. Verified July 23, 2026.</div>
 {content}<p id="empty" class="empty">No matching sections.</p></main></div><script>{JS}{SCROLLSPY_JS}</script></body></html>"""
     OUT_PATH.write_text(page, encoding="utf-8")
     print(f"wrote {OUT_PATH} ({len(page)} bytes)")

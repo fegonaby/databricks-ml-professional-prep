@@ -19,10 +19,10 @@ pre .tk-cm{color:#6a9955}pre .tk-st{color:#ce9178}pre .tk-kw{color:#c586c0}pre .
 </style></head><body>
 <header class="top"><div class="top-inner"><span class="brand">MLflow and PyFunc Guide</span><input id="search" class="search" type="search" placeholder="Filter runs, logging, signatures, PyFunc, APIs, or traps" aria-label="Filter MLflow and PyFunc guide"></div></header>
 <div class="layout"><nav class="toc" aria-label="Contents"><h2>Contents</h2><a href="#1-exam-scope-and-target">1. Exam scope and target</a><a href="#2-july-17-reading-scope">2. July 17 reading scope</a><a href="#3-the-mlflow-tracking-hierarchy">3. The MLflow tracking hierarchy</a><a href="#4-what-belongs-inside-a-run">4. What belongs inside a run</a><a href="#5-manual-tracking-workflow">5. Manual tracking workflow</a><a href="#6-autologging-versus-manual-logging">6. Autologging versus manual logging</a><a href="#7-parent-and-child-runs">7. Parent and child runs</a><a href="#8-search-and-compare-runs">8. Search and compare runs</a><a href="#9-from-a-framework-model-to-a-pyfunc">9. From a framework model to a PyFunc</a><a href="#10-signatures-and-input-examples">10. Signatures and input examples</a><a href="#11-the-custom-pyfunc-lifecycle">11. The custom PyFunc lifecycle</a><a href="#12-package-each-dependency-in-the-right-place">12. Package each dependency in the right place</a><a href="#13-request-time-feature-engineering-example">13. Request-time feature engineering example</a><a href="#14-load-validate-and-distribute-inference">14. Load, validate, and distribute inference</a><a href="#15-choose-the-correct-mlflow-api-owner">15. Choose the correct MLflow API owner</a><a href="#16-worked-exam-scenarios">16. Worked exam scenarios</a><a href="#17-common-exam-traps">17. Common exam traps</a><a href="#18-lab-1-required-output">18. Lab 1: required output</a><a href="#19-api-signatures-to-reconstruct">19. API signatures to reconstruct</a><a href="#20-closed-book-checkpoint">20. Closed-book checkpoint</a><a href="#21-completion-standard">21. Completion standard</a><a href="#22-sources">22. Sources</a></nav><main>
-<div class="meta">Generated from <a href="../markdown/mlflow-tracking-pyfunc.md">the Markdown source</a>. Verified July 22, 2026.</div>
+<div class="meta">Generated from <a href="../markdown/mlflow-tracking-pyfunc.md">the Markdown source</a>. Verified July 23, 2026.</div>
 <h1 id="mlflow-tracking-and-custom-pyfunc-exam-guide">MLflow Tracking and Custom PyFunc Exam Guide</h1>
 <p><strong>What this is for:</strong> the complete July 17 guide for the Databricks Machine Learning Professional objectives on advanced MLflow tracking, nested runs, model signatures, and custom PyFunc models.</p>
-<p><strong>Last checked:</strong> July 22, 2026 against the live September 2025 exam guide and current Databricks and MLflow documentation.</p>
+<p><strong>Last checked:</strong> July 23, 2026 against the live September 2025 exam guide and current Databricks and MLflow documentation.</p>
 <section class="doc-section" id="1-exam-scope-and-target"><h2>1. Exam scope and target</h2>
 <p>The official exam outline expects you to:</p>
 <ol><li>Use nested MLflow runs to track complex experiments.</li><li>Log custom metrics, parameters, and artifacts programmatically.</li><li>Create custom model objects that perform request-time feature engineering.</li></ol>
@@ -88,14 +88,23 @@ validation_loss=0.24 -&gt; metric; it measured the outcome</code></pre>
 <pre data-language="text"><code>step 0 -&gt; validation_loss 0.62
 step 1 -&gt; validation_loss 0.45
 step 2 -&gt; validation_loss 0.34</code></pre>
-<p>Without <code>step</code>, a one-time final metric is still valid. Do not use <code>step</code> to identify separate hyperparameter configurations; those should normally be separate child runs.</p>
+<p>If <code>step</code> is omitted, MLflow defaults it to <code>0</code>. A one-time final metric therefore needs no explicit step. If a loop logs the same metric repeatedly without a step, MLflow still records the values at different timestamps, but every value has step <code>0</code>; the history no longer shows which value belongs to epoch 0, 1, 2, and so on.</p>
+<pre data-language="text"><code>Repeated measurements inside one run -&gt; same metric key, increasing step
+Separate hyperparameter candidates    -&gt; separate child runs</code></pre>
+<p><code>step</code> represents an iteration within one run. It does not identify a run or a hyperparameter configuration.</p>
 <h3 id="singular-and-plural-logging-methods">Singular and plural logging methods</h3>
 <div class="table-wrap"><table><tr><th>One item</th><th>Several items</th><th>Important distinction</th></tr><tr><td><code>log_param(key, value)</code></td><td><code>log_params({...})</code></td><td>Plural accepts a dictionary</td></tr><tr><td><code>log_metric(key, value, step=...)</code></td><td><code>log_metrics({...}, step=...)</code></td><td>Metric values must be numeric</td></tr><tr><td><code>set_tag(key, value)</code></td><td><code>set_tags({...})</code></td><td>Tags are metadata, not performance measurements</td></tr><tr><td><code>log_artifact(local_path)</code></td><td><code>log_artifacts(local_dir)</code></td><td>Plural logs the contents of a directory</td></tr></table></div>
 <h3 id="artifact-helpers">Artifact helpers</h3>
-<pre data-language="python"><code>mlflow.<span class="tk-fn">log_artifact</span>(<span class="tk-st">&quot;reports/confusion_matrix.csv&quot;</span>, <span class="tk-pm">artifact_path</span>=<span class="tk-st">&quot;reports&quot;</span>)
+<pre data-language="python"><code>mlflow.<span class="tk-fn">log_artifact</span>(<span class="tk-st">&quot;confusion_matrix.csv&quot;</span>, <span class="tk-pm">artifact_path</span>=<span class="tk-st">&quot;reports&quot;</span>)
 mlflow.<span class="tk-fn">log_dict</span>({<span class="tk-st">&quot;threshold&quot;</span>: <span class="tk-nm">0.82</span>}, <span class="tk-st">&quot;config/decision_rule.json&quot;</span>)
 mlflow.<span class="tk-fn">log_figure</span>(fig, <span class="tk-st">&quot;plots/roc_curve.png&quot;</span>)</code></pre>
-<div class="table-wrap"><table><tr><th>Method</th><th>Use it when</th></tr><tr><td><code>log_artifact</code></td><td>The file already exists locally</td></tr><tr><td><code>log_artifacts</code></td><td>A whole local directory should be uploaded</td></tr><tr><td><code>log_dict</code></td><td>A dictionary should be serialized as JSON or YAML</td></tr><tr><td><code>log_figure</code></td><td>A supported plotting object should be serialized directly</td></tr></table></div>
+<p>These helpers all create files under the active run's artifact area. The difference is what you already have in Python:</p>
+<div class="table-wrap"><table><tr><th>Method</th><th>What you provide</th><th>What MLflow stores</th></tr><tr><td><code>log_artifact(local_path, artifact_path=...)</code></td><td>Path to one existing local file</td><td>That file under an optional destination directory</td></tr><tr><td><code>log_artifacts(local_dir, artifact_path=...)</code></td><td>Path to an existing local directory</td><td>The directory's files</td></tr><tr><td><code>log_dict(dictionary, artifact_file)</code></td><td>Python dictionary</td><td>JSON or YAML file at the supplied artifact filename</td></tr><tr><td><code>log_figure(figure, artifact_file)</code></td><td>Supported in-memory plotting object</td><td>Serialized image file such as PNG</td></tr></table></div>
+<pre data-language="text"><code>Local source file: confusion_matrix.csv
+Run destination:   reports/confusion_matrix.csv
+
+Python dictionary: {&quot;threshold&quot;: 0.82}
+Run destination:   config/decision_rule.json</code></pre>
 <p><code>artifact_path</code> in <code>log_artifact()</code> is the destination subdirectory inside the run's artifact area. It does not register a model and is not the same argument as the model name in <code>log_model()</code>.</p>
 </section>
 <section class="doc-section" id="5-manual-tracking-workflow"><h2>5. Manual tracking workflow</h2>
@@ -145,7 +154,18 @@ mlflow.<span class="tk-fn">set_experiment</span>(<span class="tk-st">&quot;/Shar
 <div class="table-wrap"><table><tr><th>Situation</th><th>Better choice</th><th>Why</th></tr><tr><td>Capture standard supported-framework training information quickly</td><td>Autologging</td><td>Minimal code and broad default capture</td></tr><tr><td>Log a business-specific cost or fairness metric</td><td>Manual logging</td><td>The framework does not know the custom meaning</td></tr><tr><td>Log a custom report, plot, or configuration file</td><td>Manual logging</td><td>You choose the artifact and its name</td></tr><tr><td>Use both standard capture and custom outputs</td><td>Autologging plus manual calls in the same run</td><td>The approaches complement each other</td></tr><tr><td>Use an unsupported custom training loop</td><td>Manual logging</td><td>There may be nothing for autologging to instrument</td></tr></table></div>
 <h3 id="databricks-behavior-to-recognize">Databricks behavior to recognize</h3>
 <ul><li>Databricks Autologging normally configures <code>mlflow.autolog()</code> for supported training in interactive Python notebooks.</li><li>On serverless compute, explicitly call <code>mlflow.autolog()</code> when you want it enabled.</li><li>Databricks Autologging is not automatically applied to a run created with the fluent <code>mlflow.start_run()</code> API. Call <code>mlflow.autolog()</code> when you want supported framework content captured in that run.</li><li>Autologging runs on the driver by default. Worker-side code does not automatically inherit driver instrumentation.</li><li>Manual logging is still required for custom metrics, tags, and artifacts that autologging does not know about.</li></ul>
-<p>You do not need to memorize every <code>mlflow.autolog()</code> option. Recognize <code>disable=True</code>, <code>log_models</code>, <code>log_model_signatures</code>, <code>log_input_examples</code>, and <code>exclusive</code> when they appear.</p>
+<h3 id="autolog-options-to-recognize">Autolog options to recognize</h3>
+<pre data-language="python"><code>mlflow.<span class="tk-fn">autolog</span>(
+    <span class="tk-pm">log_input_examples</span>=<span class="tk-bi">False</span>,
+    <span class="tk-pm">log_model_signatures</span>=<span class="tk-bi">True</span>,
+    <span class="tk-pm">log_models</span>=<span class="tk-bi">True</span>,
+    <span class="tk-pm">disable</span>=<span class="tk-bi">False</span>,
+    <span class="tk-pm">exclusive</span>=<span class="tk-bi">False</span>,
+    <span class="tk-pm">disable_for_unsupported_versions</span>=<span class="tk-bi">True</span>,
+    <span class="tk-pm">silent</span>=<span class="tk-bi">False</span>,
+)</code></pre>
+<div class="table-wrap"><table><tr><th>Option</th><th>Meaning in this example</th></tr><tr><td><code>log_models=True</code></td><td>Log supported trained models; model signatures and input examples depend on model logging being enabled</td></tr><tr><td><code>log_model_signatures=True</code></td><td>Infer and store a model signature when the integration supports it</td></tr><tr><td><code>log_input_examples=False</code></td><td>Do not store a representative model input</td></tr><tr><td><code>disable=False</code></td><td>Enable rather than disable autologging</td></tr><tr><td><code>exclusive=False</code></td><td>Autologged content may be added to an existing user-created active run</td></tr><tr><td><code>disable_for_unsupported_versions=True</code></td><td>Turn autologging off when the installed library version is outside the integration's tested compatibility range</td></tr><tr><td><code>silent=False</code></td><td>Do not suppress autologging warnings and events</td></tr></table></div>
+<p>The current open-source MLflow default for <code>disable_for_unsupported_versions</code> is <code>False</code>; the explicit <code>True</code> above is a deliberate safer-compatibility choice, not a default to memorize. Know what each switch changes, but do not memorize the full function signature.</p>
 </section>
 <section class="doc-section" id="7-parent-and-child-runs"><h2>7. Parent and child runs</h2>
 <p>Nested runs organize a workflow that would otherwise produce a flat, difficult-to-read list.</p>
@@ -205,6 +225,7 @@ mlflow.<span class="tk-fn">set_experiment</span>(<span class="tk-st">&quot;/Shar
 <pre data-language="text"><code>metrics.validation_auc
 params.max_depth
 tags.team
+tags.mlflow.parentRunId
 attributes.status</code></pre>
 <p>Examples:</p>
 <pre data-language="python"><code>mlflow.<span class="tk-fn">search_runs</span>(
@@ -213,13 +234,16 @@ attributes.status</code></pre>
     <span class="tk-pm">order_by</span>=[<span class="tk-st">&quot;metrics.validation_auc DESC&quot;</span>],
 )</code></pre>
 <h3 id="important-distinctions">Important distinctions</h3>
-<div class="table-wrap"><table><tr><th>Argument</th><th>Job</th></tr><tr><td><code>experiment_ids</code> or <code>experiment_names</code></td><td>Select experiments to search</td></tr><tr><td><code>filter_string</code></td><td>Keep runs matching conditions</td></tr><tr><td><code>order_by</code></td><td>Sort matching runs; include <code>ASC</code> or <code>DESC</code></td></tr></table></div>
+<div class="table-wrap"><table><tr><th>Argument</th><th>Job</th></tr><tr><td><code>experiment_ids</code> or <code>experiment_names</code></td><td>Select experiments to search; supply at most one of these arguments</td></tr><tr><td><code>filter_string</code></td><td>Keep runs matching conditions</td></tr><tr><td><code>order_by</code></td><td>Sort matching runs; include <code>ASC</code> or <code>DESC</code></td></tr></table></div>
+<p>Use either IDs or names in one call, not both. If neither is supplied, MLflow defaults to the active experiment.</p>
 <p><code>search_runs()</code> searches experiments and runs. It does not search registered model versions or send inference requests to serving endpoints.</p>
 </section>
 <section class="doc-section" id="9-from-a-framework-model-to-a-pyfunc"><h2>9. From a framework model to a PyFunc</h2>
 <p>An MLflow model can contain one or more <strong>flavors</strong>. A flavor describes how a particular tool or framework can load and use the model.</p>
 <div class="table-wrap"><table><tr><th>Namespace</th><th>Use</th><th>Example result</th></tr><tr><td><code>mlflow.sklearn</code></td><td>Log or load with sklearn-specific behavior</td><td>Native sklearn estimator</td></tr><tr><td><code>mlflow.spark</code></td><td>Log or load a Spark ML model</td><td>Native Spark model</td></tr><tr><td><code>mlflow.pyfunc</code></td><td>Use the generic Python prediction interface or define custom logic</td><td><code>PyFuncModel</code> with <code>.predict()</code></td></tr><tr><td><code>mlflow.models</code></td><td>Model-wide utilities</td><td>Signature inference or validation</td></tr></table></div>
-<p>Most built-in Python flavors also include the generic <code>python_function</code> flavor.</p>
+<p>Most built-in Python flavors also include the generic <code>python_function</code> flavor. This means one stored MLflow Model can describe both:</p>
+<pre data-language="text"><code>How its original framework loads it -&gt; sklearn, Spark, XGBoost, and so on
+How MLflow loads it generically      -&gt; python_function / PyFunc</code></pre>
 <pre data-language="python"><code><span class="tk-pm">model_info</span> = mlflow.sklearn.<span class="tk-fn">log_model</span>(
     <span class="tk-pm">sk_model</span>=model,
     <span class="tk-pm">name</span>=<span class="tk-st">&quot;fraud_model&quot;</span>,
@@ -229,10 +253,14 @@ attributes.status</code></pre>
 <span class="tk-pm">generic_model</span> = mlflow.pyfunc.<span class="tk-fn">load_model</span>(model_info.model_uri)</code></pre>
 <pre data-language="text"><code>Flavor-specific load -&gt; native framework object and framework methods
 PyFunc load           -&gt; common MLflow wrapper and predict() interface</code></pre>
+<p>These calls load the same logged model URI in two different ways; they do not create two models. Use the native loader when you need framework-specific methods such as an estimator's <code>predict_proba()</code>. Use PyFunc when a common <code>.predict()</code> interface is enough or when downstream MLflow tooling expects that generic interface.</p>
 <h3 id="when-custom-pyfunc-is-appropriate">When custom PyFunc is appropriate</h3>
 <p>Use a custom <code>PythonModel</code> when prediction requires logic that is not represented by a built-in flavor alone, such as:</p>
 <ul><li>Request-time feature calculations.</li><li>Custom preprocessing followed by prediction.</li><li>Loading a lookup file, encoder, threshold table, or another packaged model.</li><li>Returning a custom prediction structure.</li><li>Combining several Python components behind one <code>.predict()</code> contract.</li></ul>
 <p>Do not build a custom PyFunc merely to log a standard supported model when the built-in flavor already provides the required behavior.</p>
+<pre data-language="text"><code>Standard sklearn model with ordinary prediction -&gt; mlflow.sklearn.log_model()
+Sklearn model plus custom request transformation -&gt; custom PythonModel
+Several files/models behind one prediction API   -&gt; custom PythonModel</code></pre>
 </section>
 <section class="doc-section" id="10-signatures-and-input-examples"><h2>10. Signatures and input examples</h2>
 <h3 id="they-solve-different-problems">They solve different problems</h3>
@@ -247,6 +275,11 @@ Input example:
   amount=120.0, txn_count=3</code></pre>
 <h3 id="unity-catalog-rule">Unity Catalog rule</h3>
 <p>A model signature is required when registering a new model version in Unity Catalog. An input example is strongly recommended and, in current MLflow, can automatically produce a signature when an explicit signature is not supplied.</p>
+<p>The signature must be attached to the <strong>logged model package before registration</strong>. You do not pass a new signature to <code>register_model()</code>.</p>
+<pre data-language="text"><code>1. Log      -&gt; attach or infer the signature in log_model()
+2. Register -&gt; Unity Catalog checks that the logged model has a signature
+3. Predict  -&gt; MLflow can validate inputs against that stored contract</code></pre>
+<p>So the practical answer is yes: when a model may later be registered in Unity Catalog, log it with <code>signature=...</code> or with a valid <code>input_example</code> that lets MLflow infer one. If an older model has no suitable signature, use MLflow's signature-update workflow where supported or re-log the package; do not expect registration to invent the contract.</p>
 <p>For exam recall, know both valid patterns:</p>
 <pre data-language="python"><code><span class="tk-cm"># Explicit inference from representative inputs and outputs</span>
 <span class="tk-pm">signature</span> = <span class="tk-fn">infer_signature</span>(input_example, output_example)
@@ -284,15 +317,59 @@ mlflow.pyfunc.<span class="tk-fn">log_model</span>(
 <p>Suppose a model uses a 500 MB encoder file. Loading it inside <code>predict()</code> would repeat the expensive operation for every request or batch.</p>
 <pre data-language="text"><code>load_context() -&gt; load encoder once
 predict()      -&gt; reuse self.encoder many times</code></pre>
-<p><code>context.artifacts</code> maps the logical names supplied to <code>log_model(artifacts=...)</code> to local paths inside the loaded model environment.</p>
+<p><code>context.artifacts</code> maps the logical names supplied to <code>log_model(artifacts=...)</code> to absolute local paths inside the loaded model environment. MLflow downloads or copies the files when packaging/loading; your model uses the stable logical name instead of assuming the original machine's path.</p>
+<pre data-language="python"><code><span class="tk-bi">class</span> <span class="tk-ty">FraudModel</span>(mlflow.pyfunc.<span class="tk-ty">PythonModel</span>):
+    <span class="tk-bi">def</span> <span class="tk-fn">load_context</span>(<span class="tk-bi">self</span>, context):
+        <span class="tk-cm"># This is a local path in the loaded model environment.</span>
+        <span class="tk-pm">rules_path</span> = context.artifacts[<span class="tk-st">&quot;rules&quot;</span>]
+        <span class="tk-kw">with</span> <span class="tk-fn">open</span>(rules_path, <span class="tk-pm">encoding</span>=<span class="tk-st">&quot;utf-8&quot;</span>) <span class="tk-kw">as</span> handle:
+            <span class="tk-bi">self</span>.<span class="tk-pm">rules</span> = json.<span class="tk-fn">load</span>(handle)
+
+
+mlflow.pyfunc.<span class="tk-fn">log_model</span>(
+    <span class="tk-pm">name</span>=<span class="tk-st">&quot;model&quot;</span>,
+    <span class="tk-pm">python_model</span>=<span class="tk-ty">FraudModel</span>(),
+    <span class="tk-pm">artifacts</span>={
+        <span class="tk-st">&quot;rules&quot;</span>: <span class="tk-st">&quot;/Volumes/ml/rules/fraud_rules.json&quot;</span>,
+    },
+    <span class="tk-pm">signature</span>=signature,
+    <span class="tk-pm">input_example</span>=input_example,
+)</code></pre>
+<p><code>&quot;rules&quot;</code> is the logical key. The <code>/Volumes/...</code> URI is where the file came from. <code>context.artifacts[&quot;rules&quot;]</code> is where MLflow made it available after the model was loaded.</p>
 <h3 id="current-predict-shape">Current <code>predict()</code> shape</h3>
 <pre data-language="python"><code><span class="tk-fn">predict</span>(<span class="tk-bi">self</span>, context, model_input, <span class="tk-pm">params</span>=<span class="tk-bi">None</span>)</code></pre>
 <ul><li><code>model_input</code> contains the request or batch data.</li><li><code>context</code> exposes packaged artifacts and model configuration.</li><li><code>params</code> contains optional inference-time parameters when the model signature supports them.</li></ul>
 <p>Current MLflow also permits omitting <code>context</code> when it is unused, but the full form above is the clearest exam pattern and is required when using <code>context.artifacts</code>.</p>
 </section>
 <section class="doc-section" id="12-package-each-dependency-in-the-right-place"><h2>12. Package each dependency in the right place</h2>
-<p><code>mlflow.pyfunc.log_model()</code> packages the custom prediction object and everything it needs to run elsewhere.</p>
-<div class="table-wrap"><table><tr><th>Argument</th><th>Contains</th><th>Access or effect</th></tr><tr><td><code>python_model</code></td><td><code>PythonModel</code> instance or supported model definition</td><td>Supplies custom inference behavior</td></tr><tr><td><code>artifacts</code></td><td>Named data/model files or directories</td><td>Available through <code>context.artifacts[name]</code></td></tr><tr><td><code>code_paths</code></td><td>Local Python modules or package directories</td><td>Added to the model's packaged code/import path</td></tr><tr><td><code>pip_requirements</code></td><td>Required Python packages</td><td>Recreates the Python dependency environment</td></tr><tr><td><code>signature</code></td><td>Input/output/parameter contract</td><td>Enables validation and UC registration</td></tr><tr><td><code>input_example</code></td><td>Representative valid input</td><td>Documentation, validation, and possible signature inference</td></tr><tr><td><code>registered_model_name</code></td><td>Optional registry destination</td><td>Logs and registers in one operation; registry behavior is studied later</td></tr></table></div>
+<p><code>mlflow.pyfunc.log_model()</code> packages the custom prediction object and everything it needs to run elsewhere. For the custom <code>PythonModel</code> workflow shown in this guide:</p>
+<div class="table-wrap"><table><tr><th>Argument</th><th>Requirement</th><th>Contains or does</th></tr><tr><td><code>name</code></td><td>Required exam pattern</td><td>Names the logged model within the run/model workflow</td></tr><tr><td><code>python_model</code></td><td>Required for this custom-model workflow</td><td>Supplies the custom inference behavior</td></tr><tr><td><code>signature</code></td><td>Required for a new UC model version</td><td>Stores the input/output/parameter contract; may instead be inferred from <code>input_example</code></td></tr><tr><td><code>input_example</code></td><td>Strongly recommended</td><td>Stores a representative valid input and can trigger signature inference</td></tr><tr><td><code>artifacts</code></td><td>Only when external files/data are needed</td><td>Makes named files or directories available through <code>context.artifacts[name]</code></td></tr><tr><td><code>code_paths</code></td><td>Only when local imported code must travel with the model</td><td>Packages local Python modules or package directories</td></tr><tr><td><code>pip_requirements</code></td><td>When runtime packages must be declared</td><td>Records packages for recreation of the Python environment</td></tr><tr><td><code>registered_model_name</code></td><td>Optional</td><td>Logs and registers in one operation; registry behavior is studied later</td></tr></table></div>
+<p>Minimal custom PyFunc logging:</p>
+<pre data-language="python"><code><span class="tk-pm">model_info</span> = mlflow.pyfunc.<span class="tk-fn">log_model</span>(
+    <span class="tk-pm">name</span>=<span class="tk-st">&quot;model&quot;</span>,
+    <span class="tk-pm">python_model</span>=<span class="tk-ty">FraudModel</span>(),
+    <span class="tk-pm">signature</span>=signature,
+    <span class="tk-pm">input_example</span>=input_example,
+)</code></pre>
+<p>Add only the dependencies the model actually uses:</p>
+<pre data-language="python"><code><span class="tk-cm"># src/fraud_features.py defines score_frame().</span>
+<span class="tk-kw">from</span> src.fraud_features <span class="tk-kw">import</span> score_frame
+
+
+<span class="tk-bi">class</span> <span class="tk-ty">FraudModel</span>(mlflow.pyfunc.<span class="tk-ty">PythonModel</span>):
+    <span class="tk-bi">def</span> <span class="tk-fn">predict</span>(<span class="tk-bi">self</span>, context, model_input, <span class="tk-pm">params</span>=<span class="tk-bi">None</span>):
+        <span class="tk-kw">return</span> <span class="tk-fn">score_frame</span>(model_input)
+
+
+<span class="tk-pm">model_info</span> = mlflow.pyfunc.<span class="tk-fn">log_model</span>(
+    <span class="tk-pm">name</span>=<span class="tk-st">&quot;model&quot;</span>,
+    <span class="tk-pm">python_model</span>=<span class="tk-ty">FraudModel</span>(),
+    <span class="tk-pm">code_paths</span>=[<span class="tk-st">&quot;src&quot;</span>],
+    <span class="tk-pm">pip_requirements</span>=[<span class="tk-st">&quot;pandas&quot;</span>],
+    <span class="tk-pm">signature</span>=signature,
+    <span class="tk-pm">input_example</span>=input_example,
+)</code></pre>
+<p>Use <code>code_paths</code> when <code>predict()</code> or <code>load_context()</code> imports a local module that will not already be installed in the destination environment. It is unnecessary when all custom logic is contained in the serialized <code>PythonModel</code> itself or comes from an installed package declared in <code>pip_requirements</code>.</p>
 <h3 id="common-classification-mistakes">Common classification mistakes</h3>
 <pre data-language="text"><code>thresholds.json       -&gt; artifacts
 serialized encoder    -&gt; artifacts
@@ -358,12 +435,13 @@ Packaged model uses amount_per_txn to produce the result.</code></pre>
         <span class="tk-pm">name</span>=<span class="tk-st">&quot;model&quot;</span>,
         <span class="tk-pm">python_model</span>=<span class="tk-ty">FraudRiskModel</span>(),
         <span class="tk-pm">artifacts</span>={<span class="tk-st">&quot;rules&quot;</span>: <span class="tk-st">&quot;rules.json&quot;</span>},
-        <span class="tk-pm">code_paths</span>=[<span class="tk-st">&quot;src&quot;</span>],
         <span class="tk-pm">pip_requirements</span>=[<span class="tk-st">&quot;pandas&quot;</span>],
         <span class="tk-pm">signature</span>=signature,
         <span class="tk-pm">input_example</span>=input_example,
     )</code></pre>
-<p>The shared <code>score_frame()</code> helper lets the unlogged example and the packaged model use the same transformation logic. The exam point is the chain:</p>
+<p><code>score_frame()</code> is called in two places:</p>
+<ol><li>Before logging, it creates <code>output_example</code>, which is paired with <code>input_example</code> to infer the signature.</li><li>After loading, <code>FraudRiskModel.predict()</code> calls the same helper to transform real prediction inputs.</li></ol>
+<p>Keeping one transformation function prevents the example used to define the model contract from drifting away from the logic the packaged model actually executes. The exam point is the chain:</p>
 <pre data-language="text"><code>representative input
 -&gt; representative output
 -&gt; infer_signature
@@ -375,14 +453,16 @@ Packaged model uses amount_per_txn to produce the result.</code></pre>
 <h3 id="local-generic-prediction">Local/generic prediction</h3>
 <pre data-language="python"><code><span class="tk-pm">loaded_model</span> = mlflow.pyfunc.<span class="tk-fn">load_model</span>(model_info.model_uri)
 <span class="tk-pm">predictions</span> = loaded_model.<span class="tk-fn">predict</span>(input_example)</code></pre>
-<p><code>load_model()</code> returns a <code>PyFuncModel</code> wrapper with a generic <code>.predict()</code> interface. The call above runs locally in the current Python process.</p>
+<p><code>load_model()</code> returns a <code>PyFuncModel</code> wrapper with a generic <code>.predict()</code> interface. The model is downloaded and loaded into the current Python process, and <code>.predict()</code> returns the prediction object directly. This is the straightforward choice when the current environment already has the required dependencies.</p>
 <h3 id="pre-deployment-validation">Pre-deployment validation</h3>
 <pre data-language="python"><code>mlflow.models.<span class="tk-fn">predict</span>(
     <span class="tk-pm">model_uri</span>=model_info.model_uri,
     <span class="tk-pm">input_data</span>=input_example,
-    <span class="tk-pm">env_manager</span>=<span class="tk-st">&quot;local&quot;</span>,
+    <span class="tk-pm">env_manager</span>=<span class="tk-st">&quot;uv&quot;</span>,
 )</code></pre>
-<p>Recognize <code>mlflow.models.predict()</code> as a model validation/prediction utility. It does not query a deployed serving endpoint.</p>
+<p><code>mlflow.models.predict()</code> is a one-call model-package test. With a non-local environment manager such as <code>&quot;uv&quot;</code> or <code>&quot;virtualenv&quot;</code>, it recreates an independent environment from the model's recorded dependencies and then runs prediction there. This is useful before deployment because it can reveal missing packages, missing packaged code, or incompatible inputs.</p>
+<div class="table-wrap"><table><tr><th>Call</th><th>Where it runs</th><th>Best use</th></tr><tr><td><code>mlflow.pyfunc.load_model(uri).predict(data)</code></td><td>Current Python process and current environment</td><td>Load the PyFunc once and call it directly, possibly many times</td></tr><tr><td><code>mlflow.models.predict(uri, input_data=data, env_manager=&quot;uv&quot;)</code></td><td>Restored independent model environment</td><td>Test that the packaged model, dependencies, and input contract work away from the development environment</td></tr></table></div>
+<p><code>env_manager=&quot;local&quot;</code> is also accepted by <code>mlflow.models.predict()</code>, but it uses the current environment and therefore does not test dependency restoration. Neither form queries a deployed serving endpoint.</p>
 <h3 id="distributed-spark-inference">Distributed Spark inference</h3>
 <pre data-language="python"><code><span class="tk-pm">predict_udf</span> = mlflow.pyfunc.<span class="tk-fn">spark_udf</span>(
     spark,
@@ -439,7 +519,7 @@ MlflowClient        -&gt; lower-level CRUD by ID or name</code></pre>
 <p><strong>Why:</strong> Loading a PyFunc and calling <code>.predict()</code> directly is a local Python operation; the Spark UDF provides a distributed Spark expression.</p>
 </section>
 <section class="doc-section" id="17-common-exam-traps"><h2>17. Common exam traps</h2>
-<div class="table-wrap"><table><tr><th>Trap</th><th>Correct rule</th></tr><tr><td>An experiment is one training execution</td><td>An experiment contains related runs; a run is one execution</td></tr><tr><td>A metric is a model setting</td><td>Parameters configure training; metrics measure results</td></tr><tr><td>Put every tuning candidate in one run using metric steps</td><td>Use child runs for distinct candidates; use steps for a metric's history inside a run</td></tr><tr><td><code>nested=True</code> starts the overall search</td><td>The outer run is the parent; <code>nested=True</code> creates a child while the parent is active</td></tr><tr><td>A parent and child are different experiments</td><td>They normally belong to the same experiment and are connected by the parent-run tag</td></tr><tr><td>Autologging removes the need for manual logging</td><td>Add manual calls for custom metrics, tags, and artifacts</td></tr><tr><td><code>log_artifact()</code> logs a model with its flavor</td><td>Use a flavor's <code>log_model()</code> or <code>mlflow.pyfunc.log_model()</code> for an MLflow Model</td></tr><tr><td><code>artifact_path</code> in <code>log_artifact()</code> registers an artifact</td><td>It only chooses a destination subdirectory in the active run</td></tr><tr><td>Put a JSON lookup file in <code>code_paths</code></td><td>Data files belong in <code>artifacts</code>; importable project code belongs in <code>code_paths</code></td></tr><tr><td>Load a large artifact inside every <code>predict()</code> call</td><td>Initialize reusable state once in <code>load_context()</code></td></tr><tr><td>A signature and input example are identical</td><td>The signature is a schema contract; the example is concrete data</td></tr><tr><td>A new UC model version can omit a signature</td><td>Unity Catalog requires a model signature</td></tr><tr><td><code>mlflow.pyfunc.load_model()</code> returns the original native model</td><td>It returns a generic <code>PyFuncModel</code>; flavor-specific loading returns the native object</td></tr><tr><td><code>mlflow.models.predict()</code> queries Model Serving</td><td>It validates/runs a model package; use the Deployments client or REST for an endpoint</td></tr><tr><td><code>Tuner.fit()</code> and MLflow nested runs are the same feature</td><td>Ray Tune executes trials; MLflow nested runs organize tracking metadata</td></tr></table></div>
+<div class="table-wrap"><table><tr><th>Trap</th><th>Correct rule</th></tr><tr><td>An experiment is one training execution</td><td>An experiment contains related runs; a run is one execution</td></tr><tr><td>A metric is a model setting</td><td>Parameters configure training; metrics measure results</td></tr><tr><td>Put every tuning candidate in one run using metric steps</td><td>Use child runs for distinct candidates; use steps for a metric's history inside a run</td></tr><tr><td>Omit <code>step</code> in an epoch loop and expect epoch numbers automatically</td><td>An omitted step defaults to <code>0</code>; pass the iteration number when the history needs that ordering</td></tr><tr><td><code>nested=True</code> starts the overall search</td><td>The outer run is the parent; <code>nested=True</code> creates a child while the parent is active</td></tr><tr><td>A parent and child are different experiments</td><td>They normally belong to the same experiment and are connected by the parent-run tag</td></tr><tr><td>Autologging removes the need for manual logging</td><td>Add manual calls for custom metrics, tags, and artifacts</td></tr><tr><td><code>log_artifact()</code> logs a model with its flavor</td><td>Use a flavor's <code>log_model()</code> or <code>mlflow.pyfunc.log_model()</code> for an MLflow Model</td></tr><tr><td><code>artifact_path</code> in <code>log_artifact()</code> registers an artifact</td><td>It only chooses a destination subdirectory in the active run</td></tr><tr><td>Put a JSON lookup file in <code>code_paths</code></td><td>Data files belong in <code>artifacts</code>; importable project code belongs in <code>code_paths</code></td></tr><tr><td>Load a large artifact inside every <code>predict()</code> call</td><td>Initialize reusable state once in <code>load_context()</code></td></tr><tr><td>A signature and input example are identical</td><td>The signature is a schema contract; the example is concrete data</td></tr><tr><td>Pass a signature to <code>register_model()</code></td><td>Attach or infer the signature while logging; registration checks the stored model package</td></tr><tr><td><code>mlflow.pyfunc.load_model()</code> returns the original native model</td><td>It returns a generic <code>PyFuncModel</code>; flavor-specific loading returns the native object</td></tr><tr><td><code>mlflow.models.predict()</code> queries Model Serving</td><td>It validates/runs a model package; use the Deployments client or REST for an endpoint</td></tr><tr><td><code>Tuner.fit()</code> and MLflow nested runs are the same feature</td><td>Ray Tune executes trials; MLflow nested runs organize tracking metadata</td></tr></table></div>
 </section>
 <section class="doc-section" id="18-lab-1-required-output"><h2>18. Lab 1: required output</h2>
 <p>The lab connects the Spark ML work from July 14-16 to the MLflow work from today.</p>
@@ -502,9 +582,9 @@ Short explanation of artifacts vs code_paths vs pip_requirements</code></pre>
 </section>
 <section class="doc-section" id="20-closed-book-checkpoint"><h2>20. Closed-book checkpoint</h2>
 <p>Answer these without notes.</p>
-<ol><li>What is the difference between an experiment and a run?</li><li>What should be logged as a parameter rather than a metric?</li><li>What does the <code>step</code> argument represent?</li><li>When should you use <code>log_artifact</code>, <code>log_dict</code>, and <code>log_figure</code>?</li><li>Why can autologging and manual logging be used together?</li><li>What does <code>nested=True</code> do?</li><li>In a hyperparameter search, what normally belongs in the parent and child runs?</li><li>Which system tag connects a child run to its parent?</li><li>How do <code>filter_string</code> and <code>order_by</code> differ in <code>search_runs()</code>?</li><li>What is the difference between native flavor loading and PyFunc loading?</li><li>When is a custom <code>PythonModel</code> preferable to a built-in flavor alone?</li><li>What should happen in <code>load_context()</code> rather than <code>predict()</code>?</li><li>What are the separate jobs of <code>artifacts</code>, <code>code_paths</code>, and <code>pip_requirements</code>?</li><li>What is the difference between a signature and an input example?</li><li>Why does a new Unity Catalog model version need a signature?</li><li>What does <code>mlflow.pyfunc.log_model()</code> return?</li><li>What does <code>mlflow.pyfunc.load_model()</code> return?</li><li>Which API scores a logged PyFunc across a large Spark DataFrame?</li><li>Which API validates/runs a packaged model, and which API queries a serving endpoint?</li><li>Where can request-time feature engineering be placed in a custom PyFunc?</li></ol>
+<ol><li>What is the difference between an experiment and a run?</li><li>What should be logged as a parameter rather than a metric?</li><li>What does the <code>step</code> argument represent, and what happens when it is omitted?</li><li>When should you use <code>log_artifact</code>, <code>log_dict</code>, and <code>log_figure</code>?</li><li>Why can autologging and manual logging be used together?</li><li>What does <code>nested=True</code> do?</li><li>In a hyperparameter search, what normally belongs in the parent and child runs?</li><li>Which system tag connects a child run to its parent?</li><li>How do <code>filter_string</code> and <code>order_by</code> differ in <code>search_runs()</code>, and can IDs and names be supplied together?</li><li>What is the difference between native flavor loading and PyFunc loading?</li><li>When is a custom <code>PythonModel</code> preferable to a built-in flavor alone?</li><li>What should happen in <code>load_context()</code> rather than <code>predict()</code>?</li><li>Which <code>log_model()</code> arguments are always needed for the shown custom PyFunc pattern, and when are <code>artifacts</code>, <code>code_paths</code>, and <code>pip_requirements</code> added?</li><li>What is the difference between a signature and an input example?</li><li>Why does a new Unity Catalog model version need a signature?</li><li>What does <code>mlflow.pyfunc.log_model()</code> return?</li><li>What does <code>mlflow.pyfunc.load_model()</code> return?</li><li>Which API scores a logged PyFunc across a large Spark DataFrame?</li><li>How does local <code>load_model().predict()</code> differ from <code>mlflow.models.predict()</code> with a non-local environment manager?</li><li>Where can request-time feature engineering be placed in a custom PyFunc?</li></ol>
 <h3 id="answer-key">Answer key</h3>
-<ol><li>An experiment is a collection/comparison boundary; a run is one execution.</li><li>A configuration chosen for training, such as learning rate or maximum depth.</li><li>The iteration or epoch associated with a metric value inside one run.</li><li>Existing file; dictionary serialized as JSON/YAML; plotting object serialized as an image.</li><li>Autologging captures standard framework information while manual calls add custom information.</li><li>It creates a child under the active parent run and records the parent relationship.</li><li>Parent: overall search settings and summary; child: one candidate's parameters and results.</li><li><code>mlflow.parentRunId</code>.</li><li>The filter keeps matching runs; the ordering sorts the matches.</li><li>Native loading returns a framework object; PyFunc loading returns a generic <code>PyFuncModel</code> interface.</li><li>When prediction needs custom preprocessing, feature logic, artifacts, or combined components.</li><li>Expensive reusable artifacts/state should be loaded once.</li><li>Packaged data files; packaged importable project code; packages to install.</li><li>A schema contract versus one concrete valid input.</li><li>Unity Catalog requires the input/output contract for a new registered model version.</li><li><code>ModelInfo</code>, including a model URI and, in MLflow 3, a model ID.</li><li>A <code>PyFuncModel</code> wrapper with <code>.predict()</code>.</li><li><code>mlflow.pyfunc.spark_udf()</code>.</li><li><code>mlflow.models.predict()</code> validates/runs the package; a Deployments client or REST call queries an endpoint.</li><li>Inside <code>predict()</code>, with reusable assets initialized in <code>load_context()</code>.</li></ol>
+<ol><li>An experiment is a collection/comparison boundary; a run is one execution.</li><li>A configuration chosen for training, such as learning rate or maximum depth.</li><li>The iteration or epoch associated with a metric value inside one run; when omitted, it defaults to <code>0</code>.</li><li>Existing file; dictionary serialized as JSON/YAML; plotting object serialized as an image.</li><li>Autologging captures standard framework information while manual calls add custom information.</li><li>It creates a child under the active parent run and records the parent relationship.</li><li>Parent: overall search settings and summary; child: one candidate's parameters and results.</li><li><code>mlflow.parentRunId</code>.</li><li>The filter keeps matching runs; the ordering sorts the matches. Use <code>experiment_ids</code> or <code>experiment_names</code>, not both.</li><li>Native loading returns a framework object; PyFunc loading returns a generic <code>PyFuncModel</code> interface.</li><li>When prediction needs custom preprocessing, feature logic, artifacts, or combined components.</li><li>Expensive reusable artifacts/state should be loaded once.</li><li>Use <code>name</code> and <code>python_model</code>, plus a signature or an input example that can infer it for UC. Add artifacts for external files, code paths for local imports, and pip requirements for packages to install.</li><li>A schema contract versus one concrete valid input.</li><li>Unity Catalog requires the input/output contract for a new registered model version.</li><li><code>ModelInfo</code>, including a model URI and, in MLflow 3, a model ID.</li><li>A <code>PyFuncModel</code> wrapper with <code>.predict()</code>.</li><li><code>mlflow.pyfunc.spark_udf()</code>.</li><li>The first loads and calls the model in the current process; the second can recreate an independent environment and test the packaged dependencies and inputs.</li><li>Inside <code>predict()</code>, with reusable assets initialized in <code>load_context()</code>.</li></ol>
 </section>
 <section class="doc-section" id="21-completion-standard"><h2>21. Completion standard</h2>
 <p>You are done with July 17 when you can:</p>
@@ -512,9 +592,9 @@ Short explanation of artifacts vs code_paths vs pip_requirements</code></pre>
 </section>
 <section class="doc-section" id="22-sources"><h2>22. Sources</h2>
 <h3 id="official-exam-and-databricks-documentation">Official exam and Databricks documentation</h3>
-<ul><li><a href="https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf">Databricks Machine Learning Professional exam guide</a></li><li><a href="https://docs.databricks.com/aws/en/mlflow/tracking">Track model development using MLflow</a></li><li><a href="https://docs.databricks.com/aws/en/mlflow/databricks-autologging">Databricks Autologging</a></li><li><a href="https://docs.databricks.com/aws/en/mlflow/models">Log, load, and register MLflow models</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/model-serving/custom-models">Custom models overview</a></li></ul>
+<ul><li><a href="https://www.databricks.com/sites/default/files/2025-10/databricks-certified-machine-learning-professional-exam-guide-september.pdf">Databricks Machine Learning Professional exam guide</a></li><li><a href="https://docs.databricks.com/aws/en/mlflow/tracking">Track model development using MLflow</a></li><li><a href="https://docs.databricks.com/aws/en/mlflow/databricks-autologging">Databricks Autologging</a></li><li><a href="https://docs.databricks.com/aws/en/mlflow/models">Log, load, and register MLflow models</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/">Manage model lifecycle in Unity Catalog</a></li><li><a href="https://docs.databricks.com/aws/en/machine-learning/model-serving/custom-models">Custom models overview</a></li></ul>
 <h3 id="official-mlflow-documentation">Official MLflow documentation</h3>
-<ul><li><a href="https://mlflow.org/docs/latest/ml/tracking/tracking-api/">MLflow Tracking API</a></li><li><a href="https://mlflow.org/docs/latest/ml/traditional-ml/tutorials/hyperparameter-tuning/part1-child-runs/">Parent and child runs</a></li><li><a href="https://mlflow.org/docs/latest/api_reference/python_api/mlflow.pyfunc.html">MLflow PyFunc API</a></li><li><a href="https://mlflow.org/docs/latest/ml/model/signatures/">Model signatures and input examples</a></li></ul>
+<ul><li><a href="https://mlflow.org/docs/latest/ml/tracking/tracking-api/">MLflow Tracking API</a></li><li><a href="https://mlflow.org/docs/latest/api_reference/python_api/mlflow.html">MLflow fluent Python API</a></li><li><a href="https://mlflow.org/docs/latest/ml/traditional-ml/tutorials/hyperparameter-tuning/part1-child-runs/">Parent and child runs</a></li><li><a href="https://mlflow.org/docs/latest/api_reference/python_api/mlflow.pyfunc.html">MLflow PyFunc API</a></li><li><a href="https://mlflow.org/docs/latest/api_reference/python_api/mlflow.models.html">MLflow Models API</a></li><li><a href="https://mlflow.org/docs/latest/ml/model/signatures/">Model signatures and input examples</a></li></ul>
 </section><p id="empty" class="empty">No matching sections.</p></main></div><script>
 const search = document.getElementById('search');
 const sections = [...document.querySelectorAll('.doc-section')];

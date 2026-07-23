@@ -137,7 +137,7 @@ query = (predictions.writeStream
 | WRITE | `mlflow.start_run(run_name=..., nested=...)` | Name; `nested=True` for child | Active run context | Child run needs `nested=True` while parent is active. |
 | WRITE | `mlflow.log_param(key, value)` | One key/value | Logs configuration | Parameters are not time-varying numeric observations. |
 | WRITE | `mlflow.log_params(dict)` | Parameter dictionary | Logs several parameters | Values belong to the active run. |
-| WRITE | `mlflow.log_metric(key, value, step=...)` | Numeric value and optional step | Logs metric history | Use `step` for iterations/epochs. |
+| WRITE | `mlflow.log_metric(key, value, step=...)` | Numeric value and optional step | Logs metric history | Use `step` for iterations/epochs; omitted step defaults to `0`. |
 | WRITE | `mlflow.log_metrics(dict, step=...)` | Numeric dictionary and optional step | Logs several metrics | Do not use for strings/configuration. |
 | WRITE | `mlflow.set_tag(key, value)` / `set_tags(dict)` | Searchable metadata | Adds or updates tags | Tags are metadata, not metrics. |
 | WRITE | `mlflow.log_artifact(local_path, artifact_path=...)` | Local file and optional destination | Uploads one file | `artifact_path` here is a destination directory, not model registration. |
@@ -145,7 +145,7 @@ query = (predictions.writeStream
 | WRITE | `mlflow.log_dict(dictionary, artifact_file)` | Dictionary, artifact filename | Serializes JSON/YAML artifact | This is an artifact, not a parameter map. |
 | WRITE | `mlflow.log_figure(figure, artifact_file)` | Figure object, artifact filename | Serializes plot artifact | `log_artifact` expects an existing file path. |
 | RECOGNIZE | `mlflow.autolog()` or flavor-specific `.autolog()` | Optional logging configuration | Enables automatic framework logging | Manual calls are still needed for custom outputs. |
-| WRITE | `mlflow.search_runs(...)` | `experiment_ids`/`experiment_names`, `filter_string`, `order_by` | pandas DataFrame of runs | It queries tracking data; it does not query serving predictions. |
+| WRITE | `mlflow.search_runs(...)` | One of `experiment_ids`/`experiment_names`, plus `filter_string`, `order_by` | pandas DataFrame of runs | IDs and names cannot both be supplied; it queries tracking data, not serving predictions. |
 | RECOGNIZE | `MlflowClient().get_run(run_id)` | Run ID | Run entity | Lower-level client call, not active-run fluent logging. |
 
 ### Parent and child run example
